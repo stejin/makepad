@@ -20,10 +20,12 @@ live_design!{
         draw_text: {
             instance active: 0.0
             instance hover: 0.0
+            instance disabled: 0.0
 
             uniform color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
             uniform color_active: (THEME_COLOR_TEXT_DOWN)
+            uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
 
             text_style: <THEME_FONT_REGULAR> {
                 font_size: (THEME_FONT_SIZE_P),
@@ -32,12 +34,16 @@ live_design!{
             fn get_color(self) -> vec4 {
                 return mix(
                     mix(
-                        self.color,
-                        self.color_active,
-                        self.active
+                        mix(
+                            self.color,
+                            self.color_active,
+                            self.active
+                        ),
+                        self.color_hover,
+                        self.hover
                     ),
-                    self.color_hover,
-                    self.hover
+                    self.color_disabled,
+                    self.disabled
                 )
             }
         }
@@ -45,6 +51,7 @@ live_design!{
         draw_bg: {
             instance active: 0.0
             instance hover: 0.0
+            instance disabled: 0.0
 
             uniform border_size: (THEME_BEVELING)
             uniform border_radius: (THEME_CORNER_RADIUS)
@@ -54,17 +61,21 @@ live_design!{
             uniform color: (THEME_COLOR_U_HIDDEN)
             uniform color_hover: (THEME_COLOR_OUTSET_HOVER)
             uniform color_active: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_disabled: (THEME_COLOR_OUTSET_ACTIVE)
 
             uniform border_color_1: (THEME_COLOR_U_HIDDEN)
             uniform border_color_1_hover: (THEME_COLOR_U_HIDDEN)
             uniform border_color_1_active: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
             uniform border_color_2: (THEME_COLOR_U_HIDDEN)
             uniform border_color_2_hover: (THEME_COLOR_U_HIDDEN)
             uniform border_color_2_active: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
 
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
             uniform mark_color_active: (THEME_COLOR_TEXT)
+            uniform mark_color_disabled: (THEME_COLOR_TEXT)
             
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
@@ -82,24 +93,32 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            self.color,
-                            self.color_active,
-                            self.active
+                            mix(
+                                self.color,
+                                self.color_active,
+                                self.active
+                            ),
+                            self.color_hover,
+                            self.hover
                         ),
-                        self.color_hover,
-                        self.hover
+                        self.color_disabled,
+                        self.disabled
                     )
                 );
 
                 sdf.stroke(
                     mix(
                         mix(
-                            mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
-                            mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
-                            self.hover
+                            mix(
+                                mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                self.hover
+                            ),
+                            mix(self.border_color_1_active, self.border_color_2_active, self.pos.y + dither),
+                            self.active
                         ),
-                        mix(self.border_color_1_active, self.border_color_2_active, self.pos.y + dither),
-                        self.active
+                        mix(self.border_color_1_disabled, self.border_color_2_disabled, self.pos.y + dither),
+                        self.disabled
                     ), self.border_size
                 );
 
@@ -111,13 +130,40 @@ live_design!{
                 sdf.line_to(c.x, c.y + sz);
                 sdf.line_to(c.x + sz, c.y - sz);
 
-                sdf.stroke(mix(self.mark_color, self.mark_color_active, self.active), 1.);
+                sdf.stroke(
+                    mix(
+                        mix(
+                            self.mark_color,
+                            self.mark_color_active,
+                            self.active
+                        ),
+                        self.mark_color_disabled,
+                        self.disabled
+                    ), 1.
+                );
                 
                 return sdf.result;
             }
         }
         
         animator: {
+            disabled = {
+                deault: on,
+                off = {
+                    from: {all: Forward {duration: 0.}}
+                    apply: {
+                        draw_bg: {disabled: 0.0}
+                        draw_text: {disabled: 0.0}
+                    }
+                }
+                on = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {disabled: 1.0}
+                        draw_text: {disabled: 1.0}
+                    }
+                }
+            }
             hover = {
                 default: off
                 off = {
@@ -166,14 +212,17 @@ live_design!{
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
             color_active: (THEME_COLOR_OUTSET_ACTIVE)
+            color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             border_color_1: (THEME_COLOR_U_HIDDEN)
             border_color_1_hover: (THEME_COLOR_U_HIDDEN)
             border_color_1_active: (THEME_COLOR_U_HIDDEN)
+            border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
             border_color_2: (THEME_COLOR_U_HIDDEN)
             border_color_2_hover: (THEME_COLOR_U_HIDDEN)
             border_color_2_active: (THEME_COLOR_U_HIDDEN)
+            border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
 
             mark_color: (THEME_COLOR_U_HIDDEN)
             mark_color_active: (THEME_COLOR_TEXT)
@@ -191,21 +240,26 @@ live_design!{
             uniform color_1: (THEME_COLOR_U_HIDDEN)
             uniform color_1_hover: (THEME_COLOR_OUTSET_HOVER * 2.)
             uniform color_1_active: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_1_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             uniform color_2: (THEME_COLOR_U_HIDDEN)
             uniform color_2_hover: (THEME_COLOR_OUTSET_HOVER)
             uniform color_2_active: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_2_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_U_HIDDEN)
             uniform border_color_1_hover: (THEME_COLOR_U_HIDDEN)
             uniform border_color_1_active: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
             uniform border_color_2: (THEME_COLOR_U_HIDDEN)
             uniform border_color_2_hover: (THEME_COLOR_U_HIDDEN)
             uniform border_color_2_active: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
 
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
-            uniform mark_color_active: (THEME_COLOR_TEXT)
+            uniform mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
+            uniform mark_color_disabled: (THEME_COLOR_TEXT_DISABLED)
             
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
@@ -223,24 +277,32 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            mix(self.color_1, self.color_2, self.pos.x),
-                            mix(self.color_1_active, self.color_2_active, self.pos.x),
-                            self.active
+                            mix(
+                                mix(self.color_1, self.color_2, self.pos.x),
+                                mix(self.color_1_active, self.color_2_active, self.pos.x),
+                                self.active
+                            ),
+                            mix(self.color_1_hover, self.color_2_hover, self.pos.x),
+                            self.hover
                         ),
-                        mix(self.color_1_hover, self.color_2_hover, self.pos.x),
-                        self.hover
+                        mix(self.color_1_disabled, self.color_2_disabled, self.pos.x),
+                        self.disabled
                     )
                 );
 
                 sdf.stroke(
                     mix(
                         mix(
-                            mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
-                            mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
-                            self.hover
+                            mix(
+                                mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                self.hover
+                            ),
+                            mix(self.border_color_1_active, self.border_color_2_active, self.pos.y + dither),
+                            self.active
                         ),
-                        mix(self.border_color_1_active, self.border_color_2_active, self.pos.y + dither),
-                        self.active
+                        mix(self.border_color_1_disabled, self.border_color_2_disabled, self.pos.y + dither),
+                        self.disabled
                     ), self.border_size
                 );
 
@@ -252,7 +314,16 @@ live_design!{
                 sdf.line_to(c.x, c.y + sz);
                 sdf.line_to(c.x + sz, c.y - sz);
 
-                sdf.stroke(mix(self.mark_color, self.mark_color_active, self.active), 1.);
+                sdf.stroke(
+                    mix(
+                        mix(
+                            self.mark_color,
+                            self.mark_color_active,
+                            self.active
+                        ),
+                        self.mark_color_disabled,
+                        self.disabled
+                    ), 1.);
                 
                 return sdf.result;
             }
@@ -273,21 +344,26 @@ live_design!{
             uniform color_1: (THEME_COLOR_U_HIDDEN)
             uniform color_1_hover: (THEME_COLOR_OUTSET_HOVER * 2.)
             uniform color_1_active: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_1_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             uniform color_2: (THEME_COLOR_U_HIDDEN)
             uniform color_2_hover: (THEME_COLOR_OUTSET_HOVER)
             uniform color_2_active: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_2_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_U_HIDDEN)
             uniform border_color_1_hover: (THEME_COLOR_U_HIDDEN)
             uniform border_color_1_active: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
             uniform border_color_2: (THEME_COLOR_U_HIDDEN)
             uniform border_color_2_hover: (THEME_COLOR_U_HIDDEN)
             uniform border_color_2_active: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
 
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
-            uniform mark_color_active: (THEME_COLOR_TEXT)
+            uniform mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
+            uniform mark_color_disabled: (THEME_COLOR_TEXT_DISABLED)
             
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
@@ -305,24 +381,32 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            mix(self.color_1, self.color_2, self.pos.y),
-                            mix(self.color_1_active, self.color_2_active, self.pos.y),
-                            self.active
+                            mix(
+                                mix(self.color_1, self.color_2, self.pos.y),
+                                mix(self.color_1_active, self.color_2_active, self.pos.y),
+                                self.active
+                            ),
+                            mix(self.color_1_hover, self.color_2_hover, self.pos.y),
+                            self.hover
                         ),
-                        mix(self.color_1_hover, self.color_2_hover, self.pos.y),
-                        self.hover
+                        mix(self.color_1_disabled, self.color_2_disabled, self.pos.y),
+                        self.disabled
                     )
                 );
 
                 sdf.stroke(
                     mix(
                         mix(
-                            mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
-                            mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
-                            self.hover
+                            mix(
+                                mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                self.hover
+                            ),
+                            mix(self.border_color_1_active, self.border_color_2_active, self.pos.y + dither),
+                            self.active
                         ),
-                        mix(self.border_color_1_active, self.border_color_2_active, self.pos.y + dither),
-                        self.active
+                        mix(self.border_color_1_disabled, self.border_color_2_disabled, self.pos.y + dither),
+                        self.disabled
                     ), self.border_size
                 );
 
@@ -334,7 +418,13 @@ live_design!{
                 sdf.line_to(c.x, c.y + sz);
                 sdf.line_to(c.x + sz, c.y - sz);
 
-                sdf.stroke(mix(self.mark_color, self.mark_color_active, self.active), 1.);
+                sdf.stroke(
+                    mix(
+                        mix( self.mark_color, self.mark_color_active, self.active),
+                        self.mark_color_disabled,
+                        self.disabled
+                    ), 1.
+                );
                 
                 return sdf.result;
             }
