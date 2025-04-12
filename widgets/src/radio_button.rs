@@ -46,14 +46,14 @@ live_design!{
             uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             uniform color_1: (THEME_COLOR_INSET_1)
-            uniform color_1_hover: (THEME_COLOR_INSET_1)
-            uniform color_1_active: (THEME_COLOR_INSET_1)
+            uniform color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            uniform color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET_2)
-            uniform color_2_hover: (THEME_COLOR_INSET_2)
-            uniform color_2_active: (THEME_COLOR_INSET_2)
+            uniform color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            uniform color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -72,10 +72,10 @@ live_design!{
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
             uniform mark_color_hover: (THEME_COLOR_OUTSET_HOVER)
             uniform mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            uniform mark_color_focus: (THEME_COLOR_MARK_HOVER)
+            uniform mark_color_focus: (THEME_COLOR_MARK_FOCUS)
             uniform mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
             uniform mark_color_active_focus: (THEME_COLOR_MARK_ACTIVE_FOCUS)
-            uniform mark_color_active_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
+            uniform mark_color_active_hover: (THEME_COLOR_MARK_ACTIVE_HOVER)
             
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size)
@@ -241,8 +241,8 @@ live_design!{
             instance disabled: 0.,
                 
             uniform color: (THEME_COLOR_TEXT)
-            uniform color_hover: (THEME_COLOR_TEXT)
-            uniform color_active: (THEME_COLOR_TEXT)
+            uniform color_hover: (THEME_COLOR_TEXT_HOVER)
+            uniform color_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
                 
@@ -273,13 +273,13 @@ live_design!{
             instance disabled: 0.,
 
             uniform color_1: (THEME_COLOR_INSET_1)
-            uniform color_1_hover: (THEME_COLOR_WHITE)
+            uniform color_1_hover: (THEME_COLOR_TEXT_HOVER)
             uniform color_1_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET_2)
-            uniform color_2_hover: (THEME_COLOR_WHITE)
+            uniform color_2_hover: (THEME_COLOR_TEXT_HOVER)
             uniform color_2_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
