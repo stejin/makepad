@@ -261,15 +261,15 @@ live_design! {
 
             color_dither: 1.0
 
-            uniform color_1: (THEME_COLOR_OUTSET)
-            uniform color_1_hover: (THEME_COLOR_OUTSET)
-            uniform color_1_down: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
+            uniform color_1: (THEME_COLOR_OUTSET_1)
+            uniform color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
+            uniform color_1_down: (THEME_COLOR_OUTSET_1_DOWN)
             uniform color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
 
-            uniform color_2: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 0.5)
-            uniform color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 0.25)
-            uniform color_2_down: (THEME_COLOR_OUTSET_DOWN)
+            uniform color_2: (THEME_COLOR_OUTSET_2)
+            uniform color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
+            uniform color_2_down: (THEME_COLOR_OUTSET_2_DOWN)
             uniform color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
 
@@ -352,14 +352,14 @@ live_design! {
 
             color_dither: 1.0
 
-            color_1: (THEME_COLOR_OUTSET)
-            color_1_hover: (THEME_COLOR_OUTSET)
+            color_1: (THEME_COLOR_OUTSET_1)
+            color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
             color_1_down: (THEME_COLOR_OUTSET_1_DOWN)
             color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 0.5)
-            color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 0.25)
+            color_2: (THEME_COLOR_OUTSET_2)
+            color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
             color_2_down: (THEME_COLOR_OUTSET_2_DOWN)
             color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
@@ -456,16 +456,16 @@ live_design! {
             color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             border_color_1: (THEME_COLOR_U_HIDDEN)
-            border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
+            border_color_1_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_1_down: (THEME_COLOR_U_HIDDEN)
+            border_color_1_focus: (THEME_COLOR_U_HIDDEN)
+            border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
             border_color_2: (THEME_COLOR_D_HIDDEN)
-            border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
+            border_color_2_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_2_down: (THEME_COLOR_U_HIDDEN)
+            border_color_2_focus: (THEME_COLOR_U_HIDDEN)
+            border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
 
         }
         
@@ -478,6 +478,7 @@ live_design! {
 
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_U_HIDDEN)
+            color_focus: (THEME_COLOR_U_HIDDEN)
             color_down: (THEME_COLOR_U_HIDDEN)
             color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
