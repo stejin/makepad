@@ -35,7 +35,7 @@ live_design!{
         draw_bg: {
             uniform color_1: (THEME_COLOR_BG_EVEN)
             uniform color_2: (THEME_COLOR_BG_ODD)
-            uniform color_active: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_active: (THEME_COLOR_ACTIVE)
 
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
@@ -84,7 +84,7 @@ live_design!{
         
         draw_text: {
             uniform color: (THEME_COLOR_TEXT)
-            uniform color_active: (THEME_COLOR_TEXT)
+            uniform color_active: (THEME_COLOR_TEXT_ACTIVE)
             
             fn get_color(self) -> vec4 {
                 return mix(
