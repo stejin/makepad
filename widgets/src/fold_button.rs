@@ -19,7 +19,7 @@ live_design!{
             instance active: 0.0
             instance hover: 0.0
 
-            uniform color: (THEME_COLOR_TEXT_INACTIVE)
+            uniform color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
             uniform color_active: (THEME_COLOR_TEXT_ACTIVE)
 
