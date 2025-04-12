@@ -34,14 +34,14 @@ live_design!{
             uniform color_dither: 1.0
 
             uniform color_1: (THEME_COLOR_INSET_1)
-            uniform color_1_hover: (THEME_COLOR_INSET_1)
-            uniform color_1_active: (THEME_COLOR_INSET_1)
+            uniform color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            uniform color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET_2)
-            uniform color_2_hover: (THEME_COLOR_INSET_2)
-            uniform color_2_active: (THEME_COLOR_INSET_2)
+            uniform color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            uniform color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -451,15 +451,15 @@ live_design!{
             border_size: (THEME_BEVELING)
             border_radius: (THEME_CORNER_RADIUS)
 
-            color_1: (THEME_COLOR_INSET)
-            color_1_hover: (THEME_COLOR_INSET_HOVER)
-            color_1_active: (THEME_COLOR_INSET_ACTIVE)
+            color_1: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_INSET)
-            color_2_hover: (THEME_COLOR_INSET_HOVER)
-            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -491,15 +491,15 @@ live_design!{
             border_size: 0.0
             border_radius: (THEME_CORNER_RADIUS)
 
-            color_1: (THEME_COLOR_INSET)
-            color_1_hover: (THEME_COLOR_INSET_HOVER)
-            color_1_active: (THEME_COLOR_INSET_ACTIVE)
+            color_1: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_INSET)
-            color_2_hover: (THEME_COLOR_INSET_HOVER)
-            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -535,14 +535,14 @@ live_design!{
             color_dither: 1.0
 
             color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1)
-            color_1_active: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2)
-            color_2_active: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -663,14 +663,14 @@ live_design!{
             color_dither: 1.0
 
             color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1)
-            color_1_active: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2)
-            color_2_active: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -697,67 +697,67 @@ live_design!{
             margin: <THEME_MSPACE_H_1> { left: 22.5 }
         }
             
-        // animator: {
-        //     hover = {
-        //         default: off
-        //         off = {
-        //             from: {all: Forward {duration: 0.25}}
-        //             apply: {
-        //                 draw_bg: {hover: 0.0}
-        //                 draw_text: {hover: 0.0}
-        //                 draw_icon: {hover: 0.0}
-        //             }
-        //         }
-        //         on = {
-        //             from: {all: Snap}
-        //             apply: {
-        //                 draw_bg: {hover: 1.0}
-        //                 draw_text: {hover: 1.0}
-        //                 draw_icon: {hover: 1.0}
-        //             }
-        //         }
-        //     }
-        //     focus = {
-        //         default: off
-        //         off = {
-        //             from: {all: Snap}
-        //             apply: {
-        //                 draw_bg: {focus: 0.0}
-        //                 draw_text: {focus: 0.0}
-        //                 draw_icon: {focus: 0.0}
-        //             }
-        //         }
-        //         on = {
-        //             from: {all: Snap}
-        //             apply: {
-        //                 draw_bg: {focus: 1.0}
-        //                 draw_text: {focus: 1.0}
-        //                 draw_icon: {focus: 1.0}
-        //             }
-        //         }
-        //     }
-        //     active = {
-        //         default: off
-        //         off = {
-        //             ease: OutQuad
-        //             from: {all: Forward {duration: 0.1}}
-        //             apply: {
-        //                 draw_bg: {active: 0.0},
-        //                 draw_text: {active: 0.0},
-        //                 draw_icon: {active: 0.0},
-        //             }
-        //         }
-        //         on = {
-        //             ease: OutQuad
-        //             from: {all: Forward {duration: 0.1}}
-        //             apply: {
-        //                 draw_bg: {active: 1.0}
-        //                 draw_text: {active: 1.0}
-        //                 draw_icon: {active: 1.0},
-        //             }
-        //         }
-        //     }
-        // }
+        animator: {
+            hover = {
+                default: off
+                off = {
+                    from: {all: Forward {duration: 0.25}}
+                    apply: {
+                        draw_bg: {hover: 0.0}
+                        draw_text: {hover: 0.0}
+                        draw_icon: {hover: 0.0}
+                    }
+                }
+                on = {
+                    from: {all: Snap}
+                    apply: {
+                        draw_bg: {hover: 1.0}
+                        draw_text: {hover: 1.0}
+                        draw_icon: {hover: 1.0}
+                    }
+                }
+            }
+            focus = {
+                default: off
+                off = {
+                    from: {all: Snap}
+                    apply: {
+                        draw_bg: {focus: 0.0}
+                        draw_text: {focus: 0.0}
+                        draw_icon: {focus: 0.0}
+                    }
+                }
+                on = {
+                    from: {all: Snap}
+                    apply: {
+                        draw_bg: {focus: 1.0}
+                        draw_text: {focus: 1.0}
+                        draw_icon: {focus: 1.0}
+                    }
+                }
+            }
+            active = {
+                default: off
+                off = {
+                    ease: OutQuad
+                    from: {all: Forward {duration: 0.1}}
+                    apply: {
+                        draw_bg: {active: 0.0},
+                        draw_text: {active: 0.0},
+                        draw_icon: {active: 0.0},
+                    }
+                }
+                on = {
+                    ease: OutQuad
+                    from: {all: Forward {duration: 0.1}}
+                    apply: {
+                        draw_bg: {active: 1.0}
+                        draw_text: {active: 1.0}
+                        draw_icon: {active: 1.0},
+                    }
+                }
+            }
+        }
     }
 
     pub ToggleFlat = <Toggle> {
@@ -767,15 +767,15 @@ live_design!{
             border_size: (THEME_BEVELING)
             border_radius: (THEME_CORNER_RADIUS)
 
-            color_1: (THEME_COLOR_INSET)
-            color_1_hover: (THEME_COLOR_INSET_HOVER)
-            color_1_active: (THEME_COLOR_INSET_ACTIVE)
+            color_1: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_INSET)
-            color_2_hover: (THEME_COLOR_INSET_HOVER)
-            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -807,15 +807,15 @@ live_design!{
             border_size: 0.
             border_radius: (THEME_CORNER_RADIUS)
 
-            color_1: (THEME_COLOR_INSET)
-            color_1_hover: (THEME_COLOR_INSET_HOVER)
-            color_1_active: (THEME_COLOR_INSET_ACTIVE)
+            color_1: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_INSET)
-            color_2_hover: (THEME_COLOR_INSET_HOVER)
-            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
@@ -847,18 +847,20 @@ live_design!{
             border_size: 0.
             border_radius: (THEME_CORNER_RADIUS)
 
-            color_1: (THEME_COLOR_INSET)
-            color_1_hover: (THEME_COLOR_INSET_HOVER)
-            color_1_active: (THEME_COLOR_INSET_ACTIVE)
-            color_1_disabled: (THEME_COLOR_INSET_DISABLED)
+            color_1: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
+            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
+            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_INSET)
-            color_2_hover: (THEME_COLOR_INSET_HOVER)
-            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             uniform mark_size: 0.75
+
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
@@ -878,14 +880,14 @@ live_design!{
             color_dither: 1.0
 
             color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1)
-            color_1_active: (THEME_COLOR_INSET_1)
+            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2)
-            color_2_active: (THEME_COLOR_INSET_2)
+            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
