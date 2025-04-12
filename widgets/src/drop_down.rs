@@ -223,7 +223,7 @@ live_design!{
     
     pub DropDownFlat = <DropDown> {
         draw_bg: {
-            border_size: 1.,
+            border_size: (THEME_BEVELING)
 
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
