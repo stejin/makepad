@@ -67,7 +67,7 @@ live_design!{
 
             uniform color: (THEME_COLOR_OUTSET)
             uniform color_hover: (THEME_COLOR_OUTSET_HOVER)
-            uniform color_focus: (THEME_COLOR_OUTSET * 1.2)
+            uniform color_focus: (THEME_COLOR_OUTSET_FOCUS)
             uniform color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
@@ -81,8 +81,8 @@ live_design!{
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW)
 
             uniform arrow_color: (THEME_COLOR_TEXT)
-            uniform arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
+            uniform arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform arrow_color_disabled: (THEME_COLOR_TEXT_DISABLED)
             
             fn pixel(self) -> vec4 {
@@ -139,21 +139,21 @@ live_design!{
                         self.disabled
                     ), self.border_size)
 
-                sdf.fill( mix(#f00, #0, self.disabled))
-                        // #0,
-                        // mix(
-                        //     mix(
-                        //         self.color,
-                        //         self.color_hover,
-                        //         self.hover
-                        //     ),
-                        //     self.color_focus,
-                        //     self.focus
-                        // ),
-                    //     #f00,
-                    //     self.disabled
-                    // )
-                // )
+                sdf.fill(mix(
+                    mix(
+                        mix(
+                            self.color,
+                            self.color_hover,
+                            self.hover
+                        ),
+                        self.color_focus,
+                        self.focus
+                    ),
+                    self.color_disabled,
+                    self.disabled
+                    )
+                )
+
                 return sdf.result
             }
         }
@@ -164,7 +164,7 @@ live_design!{
         
         animator: {
             disabled = {
-                deault: on,
+                deault: off,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {
@@ -227,7 +227,7 @@ live_design!{
 
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_focus: (THEME_COLOR_OUTSET * 1.2)
+            color_focus: (THEME_COLOR_OUTSET_FOCUS)
             color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
@@ -250,7 +250,7 @@ live_design!{
 
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_focus: (THEME_COLOR_OUTSET * 1.2)
+            color_focus: (THEME_COLOR_OUTSET_FOCUS)
             color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             border_color_1: (THEME_COLOR_U_HIDDEN)
@@ -279,14 +279,14 @@ live_design!{
 
             uniform color_dither: 1.0
 
-            uniform color_1: (THEME_COLOR_OUTSET * 1.75)
-            uniform color_1_hover: (THEME_COLOR_OUTSET_HOVER * 1.5)
-            uniform color_1_focus: (THEME_COLOR_OUTSET * 2.5)
+            uniform color_1: (THEME_COLOR_OUTSET_1)
+            uniform color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
+            uniform color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
 
-            uniform color_2: (THEME_COLOR_OUTSET)
-            uniform color_2_hover: (THEME_COLOR_OUTSET_HOVER)
-            uniform color_2_focus: (THEME_COLOR_OUTSET * 1.25)
+            uniform color_2: (THEME_COLOR_OUTSET_2)
+            uniform color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
+            uniform color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
@@ -393,15 +393,15 @@ live_design!{
 
             color_dither: 1.0
 
-            color_1: (THEME_COLOR_OUTSET * 1.75)
-            color_1_hover: (THEME_COLOR_OUTSET_HOVER * 1.5)
-            color_1_focus: (THEME_COLOR_OUTSET * 2.5)
-            color_1_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            color_1: (THEME_COLOR_OUTSET_1)
+            color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
+            color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
+            color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_OUTSET)
-            color_2_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_2_focus: (THEME_COLOR_OUTSET * 1.25)
-            color_2_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            color_2: (THEME_COLOR_OUTSET_2)
+            color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
+            color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
+            color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL_LIGHT)
             border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
