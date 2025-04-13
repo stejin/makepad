@@ -70,16 +70,20 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            self.border_color_2,
-                            self.border_color_2_focus,
-                            self.focus
+                            mix(
+                                self.border_color_2,
+                                self.border_color_2_focus,
+                                self.focus
+                            ),
+                            mix(
+                                self.border_color_2_hover,
+                                self.border_color_2_drag,
+                                self.drag
+                            ),
+                            self.hover
                         ),
-                        mix(
-                            self.border_color_2_hover,
-                            self.border_color_2_drag,
-                            self.drag
-                        ),
-                        self.hover
+                        self.border_color_2_disabled,
+                        self.disabled
                     )
                 );
                     
@@ -87,11 +91,22 @@ live_design!{
                 sdf.rect(0, self.rect_size.y - slider_height * 0.5, self.rect_size.x, slider_height)
                 sdf.fill(
                     mix(
-                        mix(self.border_color_1, self.border_color_1_focus, self.focus),
-                        mix(self.border_color_1_hover, self.border_color_1_drag, self.drag),
-                        self.hover
+                        mix(
+                            mix(
+                                self.border_color_1,
+                                self.border_color_1_focus,
+                                self.focus
+                            ),
+                            mix(
+                                self.border_color_1_hover, 
+                                self.border_color_1_drag,
+                                self.drag
+                            ),
+                            self.hover
+                        ),
+                        self.border_color_1_disabled,
+                        self.disabled
                     )
-
                 );
                     
                 // Amount
@@ -101,10 +116,23 @@ live_design!{
                     self.slide_pos * (self.rect_size.x) + handle_size,
                     slider_height
                 )
-                sdf.fill(mix(
-                        mix(self.val_color, self.val_color_focus, self.focus),
-                        mix(self.val_color_hover, self.val_color_drag, self.drag),
-                        self.hover
+                sdf.fill(
+                    mix(
+                        mix(
+                            mix(
+                                self.val_color,
+                                self.val_color_focus,
+                                self.focus
+                            ),
+                            mix(
+                                self.val_color_hover,
+                                self.val_color_drag,
+                                self.drag
+                            ),
+                            self.hover
+                        ),
+                        self.val_color_disabled,
+                        self.disabled
                     )
                 );
                     
@@ -118,10 +146,23 @@ live_design!{
                     slider_height
                 )
 
-                sdf.fill(mix(
-                        mix(self.handle_color, self.handle_color_focus, self.focus),
-                        mix(self.handle_color_hover, self.handle_color_drag, self.drag),
-                        self.hover
+                sdf.fill(
+                    mix(
+                        mix(
+                            mix(
+                                self.handle_color,
+                                self.handle_color_focus,
+                                self.focus
+                            ),
+                            mix(
+                                self.handle_color_hover,
+                                self.handle_color_drag,
+                                self.drag
+                            ),
+                            self.hover
+                        ),
+                        self.handle_color_disabled,
+                        self.disabled
                     )
                 );
 
@@ -143,9 +184,21 @@ live_design!{
 
             fn get_color(self) -> vec4 {
                 return mix(
-                    mix(self.color, self.color_focus, self.focus),
-                    mix(self.color_hover, self.color_drag, self.drag),
-                    self.hover
+                    mix(
+                        mix(
+                            self.color,
+                            self.color_focus,
+                            self.focus
+                        ),
+                        mix(
+                            self.color_hover,
+                            self.color_drag,
+                            self.drag
+                        ),
+                        self.hover
+                    ),
+                    self.color_disabled,
+                    self.disabled
                 )
             }
 
@@ -345,9 +398,7 @@ live_design!{
             uniform val_color_drag: (THEME_COLOR_VAL_DRAG)
 
             uniform bipolar: 0.0,
-
         }
-
     }
         
     pub Slider = <SliderMinimal> {
@@ -419,36 +470,44 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            mix(self.color_1, self.color_2, self.pos.y + dither),
-                            mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
                             mix(
+                                mix(self.color_1, self.color_2, self.pos.y + dither),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                                mix(self.color_1_drag, self.color_2_drag, self.pos.y + dither),
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
+                                mix(
+                                    mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
+                                    mix(self.color_1_drag, self.color_2_drag, self.pos.y + dither),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.color_1_disabled, self.color_2_disabled, self.pos.y + dither),
+                        self.disabled
                     )
                 )
                     
                 sdf.stroke(
                     mix(
-                        mix(self.border_color_1, self.border_color_2, pow(self.pos.y, 10.0) + dither),
                         mix(
-                            mix(self.border_color_1_focus, self.border_color_2_focus, pow(self.pos.y, 10.0) + dither),
+                            mix(self.border_color_1, self.border_color_2, pow(self.pos.y, 10.0) + dither),
                             mix(
-                                mix(self.border_color_1_hover, self.border_color_2_hover, pow(self.pos.y, 10.0) + dither),
-                                mix(self.border_color_1_drag, self.border_color_2_drag, pow(self.pos.y, 10.0) + dither),
-                                self.drag
+                                mix(self.border_color_1_focus, self.border_color_2_focus, pow(self.pos.y, 10.0) + dither),
+                                mix(
+                                    mix(self.border_color_1_hover, self.border_color_2_hover, pow(self.pos.y, 10.0) + dither),
+                                    mix(self.border_color_1_drag, self.border_color_2_drag, pow(self.pos.y, 10.0) + dither),
+                                    self.drag
+                                ),
+                                self.hover
                             ),
-                            self.hover
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.border_color_1_disabled, self.border_color_2_disabled, pow(self.pos.y, 10.0) + dither),
+                        self.disabled
                     ), self.border_size
                 )
 
@@ -459,17 +518,21 @@ live_design!{
 
                 sdf.fill(
                     mix(
-                        mix(self.border_color_1, self.border_color_1_hover, self.hover),
                         mix(
-                            self.border_color_1_focus,
+                            mix(self.border_color_1, self.border_color_1_hover, self.hover),
                             mix(
-                                self.border_color_1_hover,
-                                self.border_color_1_drag,
-                                self.drag
+                                self.border_color_1_focus,
+                                mix(
+                                    self.border_color_1_hover,
+                                    self.border_color_1_drag,
+                                    self.drag
+                                ),
+                                self.hover
                             ),
-                            self.hover
+                            self.focus
                         ),
-                        self.focus
+                        self.border_color_1_disabled,
+                        self.disabled
                     )
                 );
 
@@ -477,17 +540,25 @@ live_design!{
                 sdf.rect(1.0 + offset_sides, top + offset_top, self.rect_size.x - 2 - 2 * offset_sides, 1.5);
                 sdf.fill(
                     mix(
-                        mix(self.border_color_2, self.border_color_2_hover, self.hover),
                         mix(
-                            self.border_color_2_focus,
                             mix(
+                                self.border_color_2,
                                 self.border_color_2_hover,
-                                self.border_color_2_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.border_color_2_focus,
+                                mix(
+                                    self.border_color_2_hover,
+                                    self.border_color_2_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.border_color_2_disabled,
+                        self.disabled
                     )
                 );
                     
@@ -499,18 +570,27 @@ live_design!{
 
                 sdf.stroke(
                     mix(
-                        mix(self.val_color, self.val_color_hover, self.hover),
                         mix(
-                            self.val_color_focus,
                             mix(
+                                self.val_color,
                                 self.val_color_hover,
-                                self.val_color_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.val_color_focus,
+                                mix(
+                                    self.val_color_hover,
+                                    self.val_color_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
-                    ), self.val_size)
+                        self.val_color_disabled,
+                        self.disabled
+                    ), self.val_size
+                )
                     
 
                 let ctrl_height = self.rect_size.y - top - 4;
@@ -520,36 +600,44 @@ live_design!{
                 sdf.fill_keep( 
                     mix(
                         mix(
-                            mix(self.handle_color_1, self.handle_color_2, pow(self.pos.y, 1.5) + dither),
-                            mix(self.handle_color_1_hover, self.handle_color_2_hover, pow(self.pos.y, 1.5) + dither),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.handle_color_1_focus, self.handle_color_2_focus, pow(self.pos.y, 1.5) + dither),
                             mix(
+                                mix(self.handle_color_1, self.handle_color_2, pow(self.pos.y, 1.5) + dither),
                                 mix(self.handle_color_1_hover, self.handle_color_2_hover, pow(self.pos.y, 1.5) + dither),
-                                mix(self.handle_color_1_drag, self.handle_color_2_drag, pow(self.pos.y, 1.5) + dither),
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.handle_color_1_focus, self.handle_color_2_focus, pow(self.pos.y, 1.5) + dither),
+                                mix(
+                                    mix(self.handle_color_1_hover, self.handle_color_2_hover, pow(self.pos.y, 1.5) + dither),
+                                    mix(self.handle_color_1_drag, self.handle_color_2_drag, pow(self.pos.y, 1.5) + dither),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.handle_color_1_disabled, self.handle_color_2_disabled, pow(self.pos.y, 1.5) + dither),
+                        self.disabled
                     )
                 )
                 
                 sdf.stroke(
                     mix(
-                        mix(self.border_color_2, self.border_color_1, pow(self.pos.y, 2.) + dither),
                         mix(
-                            mix(self.border_color_2_focus, self.border_color_1_focus, pow(self.pos.y, 2.0) + dither),
+                            mix(self.border_color_2, self.border_color_1, pow(self.pos.y, 2.) + dither),
                             mix(
-                                mix(self.border_color_2_hover, self.border_color_1_hover, pow(self.pos.y, 2.0) + dither),
-                                mix(self.border_color_2_drag, self.border_color_1_drag, pow(self.pos.y, 2.0) + dither),
-                                self.drag
+                                mix(self.border_color_2_focus, self.border_color_1_focus, pow(self.pos.y, 2.0) + dither),
+                                mix(
+                                    mix(self.border_color_2_hover, self.border_color_1_hover, pow(self.pos.y, 2.0) + dither),
+                                    mix(self.border_color_2_drag, self.border_color_1_drag, pow(self.pos.y, 2.0) + dither),
+                                    self.drag
+                                ),
+                                self.hover
                             ),
-                            self.hover
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.border_color_2_disabled, self.border_color_1_disabled, pow(self.pos.y, 2.0) + dither),
+                        self.disabled
                     ), self.border_size
                 );
                 
@@ -733,36 +821,44 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            mix(self.color_1, self.color_2, self.pos.y + dither),
-                            mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
                             mix(
+                                mix(self.color_1, self.color_2, self.pos.y + dither),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                                mix(self.color_1_drag, self.color_2_drag, self.pos.y + dither),
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
+                                mix(
+                                    mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
+                                    mix(self.color_1_drag, self.color_2_drag, self.pos.y + dither),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.color_1_disabled, self.color_2_disabled, self.pos.y + dither),
+                        self.disabled
                     )
                 )
 
                 sdf.stroke(
                     mix(
-                        mix(self.border_color_1, self.border_color_2, pow(self.pos.y, self.val_heat) + dither),
                         mix(
-                            mix(self.border_color_1_focus, self.border_color_2_focus, pow(self.pos.y, self.val_heat) + dither),
+                            mix(self.border_color_1, self.border_color_2, pow(self.pos.y, self.val_heat) + dither),
                             mix(
-                                mix(self.border_color_1_hover, self.border_color_2_hover, pow(self.pos.y, self.val_heat) + dither),
-                                mix(self.border_color_1_drag, self.border_color_2_drag, pow(self.pos.y, self.val_heat) + dither),
-                                self.drag
+                                mix(self.border_color_1_focus, self.border_color_2_focus, pow(self.pos.y, self.val_heat) + dither),
+                                mix(
+                                    mix(self.border_color_1_hover, self.border_color_2_hover, pow(self.pos.y, self.val_heat) + dither),
+                                    mix(self.border_color_1_drag, self.border_color_2_drag, pow(self.pos.y, self.val_heat) + dither),
+                                    self.drag
+                                ),
+                                self.hover
                             ),
-                            self.hover
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.border_color_1_disabled, self.border_color_2_disabled, pow(self.pos.y, self.val_heat) + dither),
+                        self.disabled
                     ), self.border_size * 1.5
                 )
 
@@ -778,20 +874,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.val_color_1, self.val_color_2, pow(self.pos.x, 10.0) + dither),
-                            mix(self.val_color_1_hover, self.val_color_2_hover, pow(self.pos.x, 10.0) + dither),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.val_color_1_focus, self.val_color_2_focus, pow(self.pos.x, 10.0) + dither),
                             mix(
-                                mix(self.val_color_1_hover, self.val_color_2_hover, pow(self.pos.x, 10) + dither),
-                                mix(self.val_color_1_drag, self.val_color_2_drag, pow(self.pos.x, 10.0) + dither),
-                                self.drag
+                                mix(self.val_color_1, self.val_color_2, pow(self.pos.x, 10.0) + dither),
+                                mix(self.val_color_1_hover, self.val_color_2_hover, pow(self.pos.x, 10.0) + dither),
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.val_color_1_focus, self.val_color_2_focus, pow(self.pos.x, 10.0) + dither),
+                                mix(
+                                    mix(self.val_color_1_hover, self.val_color_2_hover, pow(self.pos.x, 10) + dither),
+                                    mix(self.val_color_1_drag, self.val_color_2_drag, pow(self.pos.x, 10.0) + dither),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.val_color_1_disabled, self.val_color_2_disabled, pow(self.pos.x, 10) + dither),
+                        self.disabled
                     )
                 )
 
@@ -807,20 +907,24 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            self.handle_color,
-                            self.handle_color_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.handle_color_focus,
                             mix(
+                                self.handle_color,
                                 self.handle_color_hover,
-                                self.handle_color_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.handle_color_focus,
+                                mix(
+                                    self.handle_color_hover,
+                                    self.handle_color_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.handle_color_disabled,
+                        self.disabled
                     )
                 )
                 
@@ -1000,20 +1104,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.color_1, self.color_2, self.pos.y + dither),
-                            mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
                             mix(
+                                mix(self.color_1, self.color_2, self.pos.y + dither),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                                mix(self.color_1_drag, self.color_2_drag, self.pos.y + dither),
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
+                                mix(
+                                    mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
+                                    mix(self.color_1_drag, self.color_2_drag, self.pos.y + dither),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.color_1_disabled, self.color_2_disabled, self.pos.y + dither),
+                        self.disabled
                     )
                 )
 
@@ -1030,20 +1138,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            self.border_color_2,
-                            self.border_color_2_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.border_color_2_focus,
                             mix(
+                                self.border_color_2,
                                 self.border_color_2_hover,
-                                self.border_color_2_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.border_color_2_focus,
+                                mix(
+                                    self.border_color_2_hover,
+                                    self.border_color_2_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.border_color_2_disabled,
+                        self.disabled
                     )
                 );
 
@@ -1059,20 +1171,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            self.border_color_1,
-                            self.border_color_1_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.border_color_1_focus,
                             mix(
+                                self.border_color_1,
                                 self.border_color_1_hover,
-                                self.border_color_1_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.border_color_1_focus,
+                                mix(
+                                    self.border_color_1_hover,
+                                    self.border_color_1_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.border_color_1_disabled,
+                        self.disabled
                     )
                 );
 
@@ -1089,20 +1205,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            self.border_color_1,
-                            self.border_color_1_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.border_color_1_focus,
                             mix(
+                                self.border_color_1,
                                 self.border_color_1_hover,
-                                self.border_color_1_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.border_color_1_focus,
+                                mix(
+                                    self.border_color_1_hover,
+                                    self.border_color_1_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.border_color_1_disabled,
+                        self.disabled
                     )
                 );
 
@@ -1119,20 +1239,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.border_color_1, self.border_color_2, gradient_y),
-                            mix(self.border_color_1_hover, self.border_color_2_hover, gradient_y),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.border_color_1_focus, self.border_color_2_focus, gradient_y),
                             mix(
-                            mix(self.border_color_1_hover, self.border_color_2_hover, gradient_y),
-                            mix(self.border_color_1_drag, self.border_color_2_drag, gradient_y),
-                                self.drag
+                                mix(self.border_color_1, self.border_color_2, gradient_y),
+                                mix(self.border_color_1_hover, self.border_color_2_hover, gradient_y),
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.border_color_1_focus, self.border_color_2_focus, gradient_y),
+                                mix(
+                                mix(self.border_color_1_hover, self.border_color_2_hover, gradient_y),
+                                mix(self.border_color_1_drag, self.border_color_2_drag, gradient_y),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.border_color_1_disabled, self.border_color_2_disabled, gradient_y),
+                        self.disabled
                     )
                 )
 
@@ -1151,20 +1275,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.border_color_2, #0000, gradient_y_inner),
-                            mix(self.border_color_2_hover, #0000, gradient_y_inner),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.border_color_2_focus, #0000, gradient_y_inner),
                             mix(
-                            mix(self.border_color_2_hover, #0000, gradient_y_inner),
-                            mix(self.border_color_2_drag, #0000, gradient_y_inner),
-                                self.drag
+                                mix(self.border_color_2, #0000, gradient_y_inner),
+                                mix(self.border_color_2_hover, #0000, gradient_y_inner),
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.border_color_2_focus, #0000, gradient_y_inner),
+                                mix(
+                                mix(self.border_color_2_hover, #0000, gradient_y_inner),
+                                mix(self.border_color_2_drag, #0000, gradient_y_inner),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.border_color_2_disabled, #0000, gradient_y_inner),
+                        self.disabled
                     )
                 );
 
@@ -1187,20 +1315,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.val_color_1, self.val_color_2, self.slide_pos),
-                            mix(self.val_color_1_hover, self.val_color_2_hover, self.slide_pos),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.val_color_1_focus, self.val_color_2_focus, self.slide_pos),
                             mix(
-                            mix(self.val_color_1_focus, self.val_color_2_hover, self.slide_pos),
-                            mix(self.val_color_1_drag, self.val_color_2_drag, self.slide_pos),
-                                self.drag
+                                mix(self.val_color_1, self.val_color_2, self.slide_pos),
+                                mix(self.val_color_1_hover, self.val_color_2_hover, self.slide_pos),
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.val_color_1_focus, self.val_color_2_focus, self.slide_pos),
+                                mix(
+                                mix(self.val_color_1_focus, self.val_color_2_hover, self.slide_pos),
+                                mix(self.val_color_1_drag, self.val_color_2_drag, self.slide_pos),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.color_1_disabled,
+                        self.disabled
                     )
                 )
 
@@ -1222,20 +1354,24 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            self.handle_color,
-                            self.handle_color_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.handle_color_focus,
                             mix(
+                                self.handle_color,
                                 self.handle_color_hover,
-                                self.handle_color_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.handle_color_focus,
+                                mix(
+                                    self.handle_color_hover,
+                                    self.handle_color_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.handle_color_disabled,
+                        self.disabled
                     )
                 )
                 
@@ -1316,41 +1452,48 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            self.color,
-                            self.color_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.color_focus,
                             mix(
+                                self.color,
                                 self.color_hover,
-                                self.color_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.color_focus,
+                                mix(
+                                    self.color_hover,
+                                    self.color_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.color_disabled,
+                        self.disabled
                     )
                 )
                 sdf.stroke(
                     mix(
                         mix(
-                            self.border_color,
-                            self.border_color_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.border_color_focus,
                             mix(
+                                self.border_color,
                                 self.border_color_hover,
-                                self.border_color_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.border_color_focus,
+                                mix(
+                                    self.border_color_hover,
+                                    self.border_color_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
-                    )
-                    , self.border_size);
+                        self.border_color_disabled,
+                        self.disabled
+                    ), self.border_size);
 
                 let val_size = (self.val_size - self.val_padding) * width_fix;
                 let val_size_scaled = min(
@@ -1371,20 +1514,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.val_color_1, self.val_color_2, self.slide_pos),
-                            mix(self.val_color_1_hover, self.val_color_2_hover, self.slide_pos),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.val_color_1_focus, self.val_color_2_focus, self.slide_pos),
                             mix(
+                                mix(self.val_color_1, self.val_color_2, self.slide_pos),
                                 mix(self.val_color_1_hover, self.val_color_2_hover, self.slide_pos),
-                                mix(self.val_color_1_drag, self.val_color_2_drag, self.slide_pos),
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.val_color_1_focus, self.val_color_2_focus, self.slide_pos),
+                                mix(
+                                    mix(self.val_color_1_hover, self.val_color_2_hover, self.slide_pos),
+                                    mix(self.val_color_1_drag, self.val_color_2_drag, self.slide_pos),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.val_color_1_disabled, self.val_color_2_disabled, self.slide_pos),
+                        self.disabled
                     )
                 )
 
@@ -1405,20 +1552,24 @@ live_design!{
                 sdf.fill_keep(
                     mix(
                         mix(
-                            self.handle_color,
-                            self.handle_color_hover,
-                            self.hover
-                        ),
-                        mix(
-                            self.handle_color_focus,
                             mix(
+                                self.handle_color,
                                 self.handle_color_hover,
-                                self.handle_color_drag,
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                self.handle_color_focus,
+                                mix(
+                                    self.handle_color_hover,
+                                    self.handle_color_drag,
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        self.handle_color_disabled,
+                        self.disabled
                     )
                 )
                 
@@ -1525,20 +1676,24 @@ live_design!{
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.color_1 * texture, self.color_2 * texture, self.pos.y + dither),
-                            mix(self.color_1_hover * texture, self.color_2_hover * texture, self.pos.y + dither),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.color_1_focus * texture, self.color_2_focus * texture, self.pos.y + dither),
                             mix(
+                                mix(self.color_1 * texture, self.color_2 * texture, self.pos.y + dither),
                                 mix(self.color_1_hover * texture, self.color_2_hover * texture, self.pos.y + dither),
-                                mix(self.color_1_drag * texture, self.color_2_drag * texture, self.pos.y + dither),
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
+                            mix(
+                                mix(self.color_1_focus * texture, self.color_2_focus * texture, self.pos.y + dither),
+                                mix(
+                                    mix(self.color_1_hover * texture, self.color_2_hover * texture, self.pos.y + dither),
+                                    mix(self.color_1_drag * texture, self.color_2_drag * texture, self.pos.y + dither),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.color_1_disabled * texture, self.color_2_disabled * texture, self.pos.y + dither),
+                        self.disabled
                     )
                 )
 
@@ -1551,17 +1706,21 @@ live_design!{
 
                 sdf.stroke(
                     mix(
-                        mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
                         mix(
-                            mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                            mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
                             mix(
-                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
-                                mix(self.border_color_1_drag, self.border_color_2_drag, self.pos.y + dither),
-                                self.drag
+                                mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                                mix(
+                                    mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                    mix(self.border_color_1_drag, self.border_color_2_drag, self.pos.y + dither),
+                                    self.drag
+                                ),
+                                self.hover
                             ),
-                            self.hover
+                            self.focus
                         ),
-                        self.focus
+                        mix(self.border_color_1_disabled, self.border_color_2_disabled, self.pos.y + dither),
+                        self.disabled
                     ), self.border_size
                 )
 
@@ -1573,23 +1732,23 @@ live_design!{
                 );
 
                 sdf.fill_keep(
-                    mix(
                         mix(
-                            mix(self.color_1, self.color_2, self.pos.y + dither),
-                            mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                            self.hover
-                        ),
-                        mix(
-                            mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
                             mix(
+                                mix(self.color_1, self.color_2, self.pos.y + dither),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                                mix(self.color_2_drag, self.color_1_drag, self.pos.y + dither),
-                                self.drag
+                                self.hover
                             ),
-                            self.hover
-                        ),
-                        self.focus
-                    )
+                            mix(
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
+                                mix(
+                                    mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
+                                    mix(self.color_2_drag, self.color_1_drag, self.pos.y + dither),
+                                    self.drag
+                                ),
+                                self.hover
+                            ),
+                            self.focus
+                        )
                 );
 
                 sdf.stroke(
