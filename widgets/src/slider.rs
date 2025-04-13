@@ -32,6 +32,7 @@ live_design!{
             instance hover: float
             instance focus: float
             instance drag: float
+            instance disabled: float
 
             uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT_HOVER)
@@ -132,6 +133,7 @@ live_design!{
             instance hover: 0.0,
             instance focus: 0.0,
             instance drag: 0.0,
+            instance disabled: 0.0,
 
             uniform color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
@@ -188,6 +190,8 @@ live_design!{
                 }
 
             draw_text: {
+                instance disabled: 0.0,
+
                 color: (THEME_COLOR_TEXT)
                 color_hover: (THEME_COLOR_TEXT_HOVER)
                 color_focus: (THEME_COLOR_TEXT_FOCUS)
@@ -211,6 +215,23 @@ live_design!{
         }
             
         animator: {
+            disabled = {
+                default: on,
+                off = {
+                    from: {all: Forward {duration: 0.}}
+                    apply: {
+                        draw_bg: {disabled: 0.0}
+                        draw_text: {disabled: 0.0}
+                    }
+                }
+                on = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {disabled: 1.0}
+                        draw_text: {disabled: 1.0}
+                    }
+                }
+            }
             hover = {
                 default: off
                 off = {
@@ -272,6 +293,8 @@ live_design!{
 
     pub SliderMinimalFlat = <SliderMinimal> {
         draw_bg: {
+            instance disabled: 0.0,
+
             uniform border_size: (THEME_BEVELING)
             uniform border_radius: (THEME_CORNER_RADIUS)
 
@@ -331,6 +354,8 @@ live_design!{
         height: 36
 
         draw_bg: {
+            instance disabled: 0.0,
+
             uniform border_size: (THEME_BEVELING)
             uniform border_radius: (THEME_CORNER_RADIUS)
 
@@ -535,6 +560,8 @@ live_design!{
 
     pub SliderFlat = <Slider> {
         draw_bg: {
+            instance disabled: 0.0,
+
             border_size: (THEME_BEVELING)
             border_radius: (THEME_CORNER_RADIUS)
 
@@ -592,6 +619,8 @@ live_design!{
 
     pub SliderFlatter = <SliderFlat> {
         draw_bg: {
+            instance disabled: 0.0,
+
             handle_size: 0.
             border_size: 0.
         }
@@ -616,6 +645,7 @@ live_design!{
             margin: { right: 7.5, top: (SLIDER_ALT1_DATA_FONT_TOPMARGIN) } 
 
             draw_text: {
+                instance disabled: 0.0,
                 text_style: <THEME_FONT_REGULAR> {
                     font_size: (SLIDER_ALT1_DATA_FONTSIZE)
                 }
@@ -626,6 +656,7 @@ live_design!{
             instance hover: float
             instance focus: float
             instance drag: float
+            instance instance: float
 
             label_size: (SLIDER_ALT1_LABEL_SIZE);
 
