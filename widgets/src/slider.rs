@@ -1331,7 +1331,7 @@ live_design!{
                             ),
                             self.focus
                         ),
-                        self.color_1_disabled,
+                            mix(self.val_color_1_disabled, self.val_color_2_disabled, self.slide_pos),
                         self.disabled
                     )
                 )
