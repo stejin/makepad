@@ -154,12 +154,8 @@ live_design!{
                                     ),
                                     mix(
                                         mix(
-                                            mix(
-                                                self.mark_color_active,
-                                                self.mark_color_active_focus,
-                                                self.focus
-                                            ),
-                                            self.mark_color_focus,
+                                            self.mark_color_active,
+                                            self.mark_color_active_focus,
                                             self.focus
                                         ),
                                         self.mark_color_active_hover,
@@ -257,7 +253,10 @@ live_design!{
                             self.color_hover,
                             self.hover
                         ),
-                        mix(self.color_active, self.color_focus, self.focus),
+                        mix(
+                            self.color_active,
+                            self.color_focus,
+                            self.focus),
                         self.active
                     ),
                     self.color_disabled,
@@ -414,7 +413,7 @@ live_design!{
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL)
             border_color_1_active: (THEME_COLOR_BEVEL)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
+            border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
@@ -422,6 +421,9 @@ live_design!{
             border_color_2_active: (THEME_COLOR_BEVEL)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
+
+            mark_color_active_focus: (THEME_COLOR_MARK_ACTIVE_FOCUS)
+            mark_color_active_hover: (THEME_COLOR_MARK_ACTIVE_HOVER)
         }
 
     }
@@ -441,6 +443,9 @@ live_design!{
             color_2_active: (THEME_COLOR_INSET_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
+
+            mark_color_active_focus: (THEME_COLOR_MARK_ACTIVE_FOCUS)
+            mark_color_active_hover: (THEME_COLOR_MARK_ACTIVE_HOVER)
         }
 
     }
@@ -488,8 +493,7 @@ live_design!{
             uniform mark_color_focus: (THEME_COLOR_MARK_HOVER)
             uniform mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
             uniform mark_color_active_focus: (THEME_COLOR_MARK_ACTIVE_FOCUS)
-            uniform mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            uniform mark_color_active_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
+            uniform mark_color_active_hover: (THEME_COLOR_MARK_ACTIVE_HOVER)
             
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size)
@@ -557,13 +561,9 @@ live_design!{
                             mix(
                                 mix(
                                     mix(
-                                        mix(
-                                            self.mark_color,
-                                            self.mark_color_focus,
-                                            self.focus
-                                        ),
-                                        self.mark_color_hover,
-                                        self.hover
+                                        self.mark_color,
+                                        self.mark_color_focus,
+                                        self.focus
                                     ),
                                     mix(
                                         mix(
