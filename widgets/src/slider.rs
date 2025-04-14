@@ -38,13 +38,13 @@ live_design!{
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT_HOVER)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             uniform border_color_1_drag: (THEME_COLOR_BEVEL_LIGHT_DRAG)
-            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT_DRAG)
+            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW_HOVER)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             uniform border_color_2_drag: (THEME_COLOR_BEVEL_SHADOW_DRAG)
-            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW_DRAG)
+            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform val_color: (THEME_COLOR_VAL)
             uniform val_color_hover: (THEME_COLOR_VAL_HOVER)
@@ -386,7 +386,7 @@ live_design!{
             uniform border_color_2: (THEME_COLOR_OUTSET)
             uniform border_color_2_hover: (THEME_COLOR_OUTSET_HOVER)
             uniform border_color_2_focus: (THEME_COLOR_OUTSET_FOCUS)
-            uniform border_color_2_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
             uniform border_color_2_drag: (THEME_COLOR_OUTSET_DRAG)
 
             uniform val_size: 3.
@@ -439,13 +439,13 @@ live_design!{
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
             uniform border_color_1_drag: (THEME_COLOR_BEVEL_SHADOW)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
             uniform border_color_2_drag: (THEME_COLOR_BEVEL_LIGHT)
 
             uniform val_size: 3.
@@ -770,13 +770,13 @@ live_design!{
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
             uniform border_color_1_drag: (THEME_COLOR_BEVEL_SHADOW)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
             uniform border_color_2_drag: (THEME_COLOR_BEVEL_LIGHT)
 
             uniform val_color_1: (SLIDER_ALT1_VAL_COLOR_A)
