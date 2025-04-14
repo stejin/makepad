@@ -1049,7 +1049,7 @@ live_design!{
             uniform handle_color: (ROTARY_HANDLE_COLOR);
             uniform handle_color_hover: (THEME_COLOR_U_4);
             uniform handle_color_focus: (THEME_COLOR_U_3);
-            uniform handle_color_disabled: (THEME_COLOR_U_3);
+            uniform handle_color_disabled: (THEME_COLOR_VAL_DISABLED);
             uniform handle_color_drag: (THEME_COLOR_W);
 
             uniform val_color_1: (ROTARY_VAL_COLOR_A);
