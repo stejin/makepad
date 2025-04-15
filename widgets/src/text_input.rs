@@ -346,12 +346,14 @@ live_design! {
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_1_focus: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_DISABLED)
+            border_color_1_empty: (THEME_COLOR_BEVEL)
+            border_color_1_disabled: (THEME_COLOR_BEVEL)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_2_focus: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_DISABLED)
+            border_color_2_empty: (THEME_COLOR_BEVEL)
+            border_color_2_disabled: (THEME_COLOR_BEVEL)
         }
     }
 
