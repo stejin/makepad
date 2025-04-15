@@ -43,6 +43,7 @@ live_design! {
         draw_bg: {
             instance hover: 0.0
             instance focus: 0.0
+            instance empty: 0.0
             instance disabled: 0.0
 
             uniform border_radius: (THEME_CORNER_RADIUS)

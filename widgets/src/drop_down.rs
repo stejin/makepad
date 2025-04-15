@@ -164,7 +164,7 @@ live_design!{
         
         animator: {
             disabled = {
-                deault: off,
+                default: off,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {
@@ -758,8 +758,10 @@ impl Widget for DropDown {
                 _ => ()
             }
             Hit::FingerDown(fe) if fe.is_primary_hit() => {
-                cx.set_key_focus(self.draw_bg.area());
-                self.set_active(cx);
+                if self.animator.animator_in_state(cx, id!(disabled.off)) {
+                    cx.set_key_focus(self.draw_bg.area());
+                    self.set_active(cx);
+                }
                 // self.animator_play(cx, id!(hover.down));
             },
             Hit::FingerHoverIn(_) => {

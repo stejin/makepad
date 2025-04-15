@@ -362,7 +362,6 @@ live_design!{
                     }
                 }
                 on = {
-                    cursor: Arrow,
                     from: {all: Forward {duration: 0.0}}
                     apply: {
                         draw_bg: {active: 1.0}
@@ -382,7 +381,6 @@ live_design!{
                     }
                 }
                 on = {
-                    cursor: Arrow,
                     from: {all: Forward {duration: 0.0}}
                     apply: {
                         draw_bg: {focus: 1.0}
