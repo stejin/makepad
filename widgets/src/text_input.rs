@@ -96,19 +96,20 @@ live_design! {
                 );
 
                 sdf.fill_keep(
-                    mix(
-                        mix(
-                            mix(
-                                self.color,
-                                self.color_hover,
-                                self.hover
-                            ),
-                            self.color_focus,
-                            self.focus
-                        ),
-                        self.color_disabled,
-                        self.disabled
-                    )
+                    mix(#f00, #0, self.empty)
+                    // mix(
+                    //     mix(
+                    //         mix(
+                    //             self.color,
+                    //             self.color_hover,
+                    //             self.hover
+                    //         ),
+                    //         self.color_focus,
+                    //         self.focus
+                    //     ),
+                    //     self.color_disabled,
+                    //     self.disabled
+                    // )
                 );
                 
                 return sdf.result;
@@ -118,6 +119,7 @@ live_design! {
         draw_text: {
             instance hover: 0.0
             instance focus: 0.0
+            instance empty: 0.0
             instance disabled: 0.0
 
             color: (THEME_COLOR_TEXT)
@@ -153,6 +155,7 @@ live_design! {
         draw_selection: {
             instance hover: 0.0
             instance focus: 0.0
+            instance empty: 0.0
             instance disabled: 0.0
 
             uniform border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
@@ -189,6 +192,7 @@ live_design! {
         draw_cursor: {
             instance hover: 0.0
             instance focus: 0.0
+            instance empty: 0.0
             instance disabled: 0.0
 
             uniform border_radius: 0.5
@@ -218,6 +222,27 @@ live_design! {
         }
 
         animator: {
+            empty = {
+                default: off,
+                off = {
+                    from: {all: Forward {duration: 0.}}
+                    apply: {
+                        draw_bg: {empty: 0.0}
+                        draw_text: {empty: 0.0}
+                        draw_selection: {empty: 0.0}
+                        draw_cursor: {empty: 0.0}
+                    }
+                }
+                on = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {empty: 1.0}
+                        draw_text: {empty: 1.0}
+                        draw_selection: {empty: 1.0}
+                        draw_cursor: {empty: 1.0}
+                    }
+                }
+            }
             disabled = {
                 default: off,
                 off = {
@@ -327,6 +352,7 @@ live_design! {
             instance hover: 0.0
             instance focus: 0.0
             instance disabled: 0.0
+            instance empty: 0.0
 
             uniform border_radius: (THEME_CORNER_RADIUS)
             uniform border_size: (THEME_BEVELING)
@@ -406,6 +432,7 @@ live_design! {
             instance hover: 0.0
             instance focus: 0.0
             instance disabled: 0.0
+            instance empty: 0.0
 
             uniform border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
 
@@ -459,6 +486,7 @@ live_design! {
         draw_bg: {
             instance hover: 0.0
             instance focus: 0.0
+            instance empty: 0.0
 
             uniform border_radius: (THEME_CORNER_RADIUS)
             uniform border_size: (THEME_BEVELING)
@@ -537,6 +565,7 @@ live_design! {
         draw_selection: {
             instance hover: 0.0
             instance focus: 0.0
+            instance empty: 0.0
 
             uniform border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
 
@@ -586,7 +615,7 @@ live_design! {
     }
 }
 
-#[derive(Live, LiveHook, Widget)]
+#[derive(Live, Widget)]
 pub struct TextInput {
     #[animator] animator: Animator,
 
@@ -835,6 +864,7 @@ impl TextInput {
     fn draw_text(&mut self, cx: &mut Cx2d) -> Rect {
         let inner_walk = self.inner_walk();
         let text_rect = if self.text.is_empty() {
+            self.animator_play(cx, id!(empty.on));
             self.draw_text.is_empty = 1.0;
             self.draw_text.draw_walk(
                 cx,
@@ -1078,6 +1108,12 @@ impl TextInput {
         } else {
             false
         }
+    }
+}
+
+impl LiveHook for TextInput {
+    fn after_new_from_doc(&mut self, cx:&mut Cx){
+        self.animator_play(cx, id!(empty.on));
     }
 }
 
@@ -1338,6 +1374,7 @@ impl Widget for TextInput {
                     end: self.selection.end().index,
                     replace_with: input
                 });
+                self.animator_play(cx, id!(empty.off));
                 self.draw_bg.redraw(cx);
                 cx.widget_action(uid, &scope.path, TextInputAction::Changed(self.text.clone()));
             }
