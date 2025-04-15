@@ -26,6 +26,10 @@ live_design!{
             <TextInput> { empty_text: "Inline Label" }
 
             <Hr> {}
+            <H4> { text: "TextInput with content" }
+            <TextInput> { text: "Some text" }
+
+            <Hr> {}
             <H4> { text: "TextInputFlat" }
             <TextInputFlat> { empty_text: "Inline Label" }
 

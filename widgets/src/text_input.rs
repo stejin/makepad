@@ -53,20 +53,20 @@ live_design! {
 
             color: (THEME_COLOR_INSET)
             uniform color_hover: (THEME_COLOR_INSET)
-            uniform color_focus: (THEME_COLOR_OUTSET_ACTIVE)
-            uniform color_empty: (#0f0)
+            uniform color_focus: (THEME_COLOR_INSET_FOCUS)
+            uniform color_empty: (THEME_COLOR_INSET)
             uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_empty: (#f00)
+            uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW_HOVER)
+            uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
+            uniform border_color_1_empty: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_empty: (#0ff)
+            uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT_HOVER)
+            uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
+            uniform border_color_2_empty: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             fn pixel(self) -> vec4 {
@@ -132,7 +132,7 @@ live_design! {
             uniform color_hover: (THEME_COLOR_TEXT)
             uniform color_focus: (THEME_COLOR_TEXT)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
-            uniform color_empty: (#0)
+            uniform color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
             uniform color_empty_focus: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)
 
             text_style: <THEME_FONT_REGULAR> {
@@ -381,22 +381,26 @@ live_design! {
 
             uniform color_1: (THEME_COLOR_INSET)
             uniform color_1_hover: (THEME_COLOR_INSET)
-            uniform color_1_focus: (THEME_COLOR_OUTSET_ACTIVE)
-            uniform color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
+            uniform color_1_focus: (THEME_COLOR_INSET_FOCUS)
+            uniform color_1_empty: (THEME_COLOR_INSET)
+            uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET * 2.5)
             uniform color_2_hover: (THEME_COLOR_INSET * 3.0)
             uniform color_2_focus: (THEME_COLOR_INSET * 4.0)
+            uniform color_2_empty: (THEME_COLOR_INSET)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1_empty: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT_HOVER)
+            uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
+            uniform border_color_2_empty: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             fn pixel(self) -> vec4 {
@@ -415,7 +419,11 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                mix(
+                                    mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                    mix(self.border_color_1_empty, self.border_color_2_empty, self.pos.y + dither),
+                                    self.empty
+                                ),
                                 mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
                                 self.hover
                             ),
@@ -432,7 +440,11 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.color_1, self.color_2, self.pos.x + dither),
+                                mix(
+                                    mix(self.color_1, self.color_2, self.pos.x + dither),
+                                    mix(self.color_1_empty, self.color_2_empty, self.pos.x + dither),
+                                    self.empty
+                                ),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.x + dither),
                                 self.hover
                             ),
@@ -459,11 +471,13 @@ live_design! {
             uniform color_1: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
+            uniform color_1_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
 
             uniform color_2: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
             uniform color_2_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
+            uniform color_2_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
 
             fn pixel(self) -> vec4 {
@@ -481,7 +495,11 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.color_1, self.color_2, self.pos.x),
+                                mix(
+                                    mix(self.color_1, self.color_2, self.pos.x),
+                                    mix(self.color_1_empty, self.color_2_empty, self.pos.x),
+                                    self.empty
+                                ),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.x),
                                 self.hover
                             ),
@@ -516,21 +534,25 @@ live_design! {
             uniform color_1: #3
             uniform color_1_hover: #3
             uniform color_1_focus: #2
+            uniform color_1_empty: #3
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET)
             uniform color_2_hover: #4
-            uniform color_2_focus: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_2_focus: (THEME_COLOR_INSET_FOCUS)
+            uniform color_2_empty: (THEME_COLOR_INSET)
             uniform color_2_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1_empty: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_2_empty: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             fn pixel(self) -> vec4 {
@@ -566,7 +588,11 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.color_1, self.color_2, self.pos.y + dither),
+                                mix(
+                                    mix(self.color_1, self.color_2, self.pos.y + dither),
+                                    mix(self.color_1_empty, self.color_2_empty, self.pos.y + dither),
+                                    self.empty
+                                ),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
                                 self.hover
                             ),
@@ -592,11 +618,13 @@ live_design! {
             uniform color_1: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
             uniform color_1_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
+            uniform color_1_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
 
             uniform color_2: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
+            uniform color_2_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
 
             fn pixel(self) -> vec4 {
@@ -614,7 +642,11 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.color_1, self.color_2, self.pos.y),
+                                mix(
+                                    mix(self.color_1, self.color_2, self.pos.y),
+                                    mix(self.color_1_empty, self.color_2_empty, self.pos.y),
+                                    self.empty
+                                ),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.y),
                                 self.hover
                             ),
@@ -1133,7 +1165,9 @@ impl TextInput {
 
 impl LiveHook for TextInput {
     fn after_new_from_doc(&mut self, cx:&mut Cx){
+        if self.text().is_empty() {
         self.animator_play(cx, id!(empty.on));
+        }
     }
 }
 
