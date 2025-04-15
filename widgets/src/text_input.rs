@@ -54,16 +54,19 @@ live_design! {
             color: (THEME_COLOR_INSET)
             uniform color_hover: (THEME_COLOR_INSET)
             uniform color_focus: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color_empty: (#0f0)
             uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1_empty: (#f00)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_2_empty: (#0ff)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             fn pixel(self) -> vec4 {
@@ -82,7 +85,11 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                mix(
+                                    mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                    mix(self.border_color_1_empty, self.border_color_2_empty, self.pos.y + dither),
+                                    self.empty
+                                ),
                                 mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
                                 self.hover
                             ),
@@ -96,20 +103,19 @@ live_design! {
                 );
 
                 sdf.fill_keep(
-                    mix(#f00, #0, self.empty)
-                    // mix(
-                    //     mix(
-                    //         mix(
-                    //             self.color,
-                    //             self.color_hover,
-                    //             self.hover
-                    //         ),
-                    //         self.color_focus,
-                    //         self.focus
-                    //     ),
-                    //     self.color_disabled,
-                    //     self.disabled
-                    // )
+                    mix(
+                        mix(
+                            mix(
+                                mix(self.color, self.color_empty, self.empty),
+                                self.color_hover,
+                                self.hover
+                            ),
+                            self.color_focus,
+                            self.focus
+                        ),
+                        self.color_disabled,
+                        self.disabled
+                    )
                 );
                 
                 return sdf.result;
@@ -126,7 +132,7 @@ live_design! {
             uniform color_hover: (THEME_COLOR_TEXT)
             uniform color_focus: (THEME_COLOR_TEXT)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
-            uniform color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
+            uniform color_empty: (#0)
             uniform color_empty_focus: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)
 
             text_style: <THEME_FONT_REGULAR> {
@@ -144,7 +150,7 @@ live_design! {
                             self.focus
                         ),
                         mix(self.color_empty, self.color_empty_focus, self.hover),
-                        self.is_empty
+                        self.empty
                     ),
                     self.color_disabled,
                     self.disabled
@@ -163,7 +169,8 @@ live_design! {
             uniform color: (THEME_COLOR_D_HIDDEN)
             uniform color_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
             uniform color_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
-            uniform color_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
+            uniform color_empty: (THEME_COLOR_U_HIDDEN)
+            uniform color_disabled: (THEME_COLOR_U_HIDDEN)
 
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
@@ -177,12 +184,16 @@ live_design! {
                 sdf.fill(
                     mix(
                         mix(
-                            mix(self.color, self.color_hover, self.hover),
-                            mix(self.color_focus, self.color_hover, self.hover),
-                            self.focus
+                            mix(
+                                mix(self.color, self.color_hover, self.hover),
+                                mix(self.color_focus, self.color_hover, self.hover),
+                                self.focus
+                            ),
+                            self.color_disabled,
+                            self.disabled
                         ),
-                        self.color_disabled,
-                        self.disabled
+                        self.color_empty,
+                        self.empty
                     )
                 );
                 return sdf.result;
@@ -199,6 +210,7 @@ live_design! {
 
             uniform color: (THEME_COLOR_TEXT_CURSOR)
             uniform color_focus: (THEME_COLOR_TEXT_CURSOR)
+            uniform color_empty: (THEME_COLOR_TEXT_CURSOR)
             uniform color_disabled: (THEME_COLOR_U_HIDDEN)
 
             fn pixel(self) -> vec4 {
@@ -212,7 +224,15 @@ live_design! {
                 );
                 sdf.fill(
                     mix(
-                        mix(THEME_COLOR_U_HIDDEN, self.color, self.focus),
+                        mix(
+                            THEME_COLOR_U_HIDDEN,
+                            mix(
+                                self.color,
+                                self.color_empty,
+                                self.empty
+                            ),
+                            self.focus
+                        ),
                         self.color_disabled,
                         self.disabled
                     )
