@@ -17,7 +17,6 @@ live_design!{
     pub RadioButtonGroupBase = {{RadioButtonGroup }} {}
     
     pub RadioButton = <RadioButtonBase> {
-        // TODO: adda  focus states
         width: Fit, height: 16.,
         align: { x: 0.0, y: 0.5 }
         
@@ -314,7 +313,7 @@ live_design!{
             
         animator: {
             disabled = {
-                default: off,
+                default: on,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {

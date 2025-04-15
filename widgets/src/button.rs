@@ -161,7 +161,7 @@ live_design! {
         
         animator: {
             disabled = {
-                default: off,
+                default: on,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {
@@ -612,6 +612,8 @@ impl Widget for Button {
                     self.set_key_focus(cx);
                 }
                 Hit::FingerHoverIn(_) => {
+                    if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
+
                     if self.enabled {
                         cx.set_cursor(MouseCursor::Hand);
                         self.animator_play(cx, id!(hover.on));

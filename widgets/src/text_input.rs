@@ -219,7 +219,7 @@ live_design! {
 
         animator: {
             disabled = {
-                default: off,
+                default: on,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {

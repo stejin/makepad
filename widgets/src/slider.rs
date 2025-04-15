@@ -269,7 +269,7 @@ live_design!{
             
         animator: {
             disabled = {
-                default: off,
+                default: on,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {
@@ -2149,6 +2149,7 @@ impl Widget for Slider {
 
         match event.hits(cx, self.draw_bg.area()) {
             Hit::FingerHoverIn(_) => {
+                if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
                 self.animator_play(cx, id!(hover.on));
             },
             Hit::FingerHoverOut(_) => {
@@ -2163,6 +2164,7 @@ impl Widget for Slider {
                 device,
                 ..
             }) if device.is_primary_hit() => {
+                if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
                 // cx.set_key_focus(self.slider.area());
                 // self.relative_value = ((abs.x - rect.pos.x) / rect.size.x ).max(0.0).min(1.0);
                 self.update_text_input(cx);
@@ -2178,6 +2180,8 @@ impl Widget for Slider {
                 cx.set_cursor(MouseCursor::Grabbing);
             },
             Hit::FingerUp(fe) if fe.is_primary_hit() => {
+                if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
+
                 self.text_input.set_is_read_only(cx, false);
                 // if the finger hasn't moved further than X we jump to edit-all on the text thing
                 self.text_input.force_new_edit_group();
@@ -2193,6 +2197,8 @@ impl Widget for Slider {
                 cx.set_cursor(MouseCursor::Grab);
             }
             Hit::FingerMove(fe) => {
+                if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
+
                 let rel = fe.abs - fe.abs_start;
                 if let Some(start_pos) = self.dragging {
                     if let DragAxis::Horizontal = self.axis {
