@@ -203,6 +203,20 @@ live_design!{
         text: "Paragraph"
     }
 
+    pub IconSet = <Label> {
+        width: Fit,
+        margin: 0.
+        padding: 0.
+        draw_text: {
+            text_style: <THEME_FONT_ICONS> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: 100.
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        text: "Car"
+    }
+
     
 }
 

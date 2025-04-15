@@ -321,4 +321,10 @@ live_design! {
         },
         line_spacing: 1.35
     }
+    pub THEME_FONT_ICONS = {
+        font_family:{
+            latin = font("crate://self/resources/fa-solid-900.ttf", 0.0, 0.0)
+        },
+        line_spacing: 1.2,
+    }
 }
