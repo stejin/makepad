@@ -161,7 +161,7 @@ live_design! {
         
         animator: {
             disabled = {
-                default: on,
+                default: off,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {
@@ -628,9 +628,8 @@ impl Widget for Button {
                     }
                 }
                 Hit::FingerUp(fe) if self.enabled && fe.is_primary_hit() => {
-                    if self.animator.animator_in_state(cx, id!(disabled.on)) {
-                        return ();
-                    }
+                    if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
+
                     if fe.is_over && fe.was_tap() {
                         cx.widget_action_with_data(&self.action_data, uid, &scope.path, ButtonAction::Clicked(fe.modifiers));
                         if self.reset_hover_on_click {

@@ -1130,6 +1130,8 @@ impl Widget for CheckBox {
                     self.animator_play(cx, id!(hover.off));
                 },
                 Hit::FingerDown(fe) if fe.is_primary_hit() => {
+                    if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
+
                     self.set_key_focus(cx);
                     if self.animator_in_state(cx, id!(active.on)) {
                         self.animator_play(cx, id!(active.off));
