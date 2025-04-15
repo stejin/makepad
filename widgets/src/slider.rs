@@ -210,7 +210,7 @@ live_design!{
             
         label_walk: {
             width: Fill, height: Fit,
-            margin: {bottom: (THEME_SPACE_1)},
+            margin: { bottom: (THEME_SPACE_1) },
         }
             
         text_input: <TextInput> {
@@ -224,7 +224,7 @@ live_design!{
             margin: { bottom: (THEME_SPACE_2), left: (THEME_SPACE_2) }
             
             draw_bg: {
-                border_radius: 1.
+                border_radius: 0.
                 border_size: (THEME_BEVELING)
 
                 color_dither: 1.0
@@ -240,7 +240,7 @@ live_design!{
                 border_color_2: (THEME_COLOR_U_HIDDEN)
                 border_color_2_hover: (THEME_COLOR_U_HIDDEN)
                 border_color_2_focus: (THEME_COLOR_U_HIDDEN)
-                }
+            }
 
             draw_text: {
                 instance disabled: 0.0,
@@ -738,6 +738,34 @@ live_design!{
                     font_size: (SLIDER_ALT1_DATA_FONTSIZE)
                 }
             }
+
+            draw_bg: {
+                border_radius: 0.
+                border_size: (THEME_BEVELING)
+
+                color_dither: 1.0
+
+                color: (THEME_COLOR_U_HIDDEN)
+                color_hover: (THEME_COLOR_U_HIDDEN)
+                color_focus: (THEME_COLOR_U_HIDDEN)
+
+                border_color_1: (THEME_COLOR_U_HIDDEN)
+                border_color_1_hover: (THEME_COLOR_U_HIDDEN)
+                border_color_1_focus: (THEME_COLOR_U_HIDDEN)
+
+                border_color_2: (THEME_COLOR_U_HIDDEN)
+                border_color_2_hover: (THEME_COLOR_U_HIDDEN)
+                border_color_2_focus: (THEME_COLOR_U_HIDDEN)
+            }
+
+            draw_selection: {
+                border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
+
+                color: (THEME_COLOR_D_HIDDEN)
+                color_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
+                color_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
+            }
+
         }
 
         draw_bg: {
