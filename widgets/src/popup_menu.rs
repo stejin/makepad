@@ -484,26 +484,6 @@ live_design!{
             color: (THEME_COLOR_FG_APP)
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_2: (THEME_COLOR_BEVEL)
-
-            // fn pixel(self) -> vec4 {
-            //     let sdf = Sdf2d::viewport(self.pos * self.rect_size)
-            //     let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
-
-            //     sdf.box(
-            //         self.inset.x + self.border_size,
-            //         self.inset.y + self.border_size,
-            //         self.rect_size.x - (self.inset.x + self.inset.z + self.border_size * 2.0),
-            //         self.rect_size.y - (self.inset.y + self.inset.w + self.border_size * 2.0),
-            //         max(1.0, self.border_radius)
-            //     )
-
-            //     sdf.fill_keep(mix(self.color_1, self.color_2, self.pos.x));
-
-            //     if self.border_size > 0.0 {
-            //         sdf.stroke(mix(self.border_color_1, self.border_color_2, self.pos.y + dither), self.border_size);
-            //     }
-            //     return sdf.result;
-            // }
         }
     }
 

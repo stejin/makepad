@@ -161,7 +161,7 @@ live_design! {
         
         animator: {
             disabled = {
-                default: off,
+                default: on,
                 off = {
                     from: {all: Forward {duration: 0.}}
                     apply: {
@@ -605,9 +605,11 @@ impl Widget for Button {
                     if self.grab_key_focus {
                         cx.set_key_focus(self.draw_bg.area());
                     }
-                    cx.widget_action_with_data(&self.action_data, uid, &scope.path, ButtonAction::Pressed(fe.modifiers));
-                        self.animator_play(cx, id!(hover.down));
-                        self.set_key_focus(cx);
+                    if self.animator.animator_in_state(cx, id!(disabled.off)) {
+                        cx.widget_action_with_data(&self.action_data, uid, &scope.path, ButtonAction::Pressed(fe.modifiers));
+                            self.animator_play(cx, id!(hover.down));
+                    }
+                    self.set_key_focus(cx);
                 }
                 Hit::FingerHoverIn(_) => {
                     if self.enabled {
@@ -621,9 +623,14 @@ impl Widget for Button {
                     self.animator_play(cx, id!(hover.off));
                 }
                 Hit::FingerLongPress(_lp) if self.enabled => {
-                    cx.widget_action_with_data(&self.action_data, uid, &scope.path, ButtonAction::LongPressed);
+                    if self.animator.animator_in_state(cx, id!(disabled.off)) {
+                        cx.widget_action_with_data(&self.action_data, uid, &scope.path, ButtonAction::LongPressed);
+                    }
                 }
                 Hit::FingerUp(fe) if self.enabled && fe.is_primary_hit() => {
+                    if self.animator.animator_in_state(cx, id!(disabled.on)) {
+                        return ();
+                    }
                     if fe.is_over && fe.was_tap() {
                         cx.widget_action_with_data(&self.action_data, uid, &scope.path, ButtonAction::Clicked(fe.modifiers));
                         if self.reset_hover_on_click {
