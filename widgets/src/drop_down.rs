@@ -35,6 +35,7 @@ live_design!{
             uniform color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
             uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
+            uniform color_down: (THEME_COLOR_TEXT_DOWN)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
 
             text_style: <THEME_FONT_REGULAR> {
@@ -69,24 +70,26 @@ live_design!{
 
             uniform color: (THEME_COLOR_OUTSET)
             uniform color_hover: (THEME_COLOR_OUTSET_HOVER)
-            uniform color_down: (#f00)
+            uniform color_down: (THEME_COLOR_OUTSET_DOWN)
             uniform color_focus: (THEME_COLOR_OUTSET_FOCUS)
             uniform color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT * 1.3)
-            uniform border_color_1_or_1_disabled: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW * 1.3)
+            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW)
 
             uniform arrow_color: (THEME_COLOR_TEXT)
             uniform arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
             uniform arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
-            uniform arrow_color_down: (THEME_COLOR_TEXT_FOCUS)
+            uniform arrow_color_down: (THEME_COLOR_TEXT_DOWN)
             uniform arrow_color_disabled: (THEME_COLOR_TEXT_DISABLED)
             
             fn pixel(self) -> vec4 {
@@ -256,17 +259,20 @@ live_design!{
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
             color_focus: (THEME_COLOR_OUTSET_FOCUS)
-            color_olor_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            color_down: (THEME_COLOR_OUTSET_DOWN)
+            color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_1_focus: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_1_or_1_disabled: (THEME_COLOR_BEVEL_DISABLED)
+            border_color_1_down: (THEME_COLOR_BEVEL)
+            border_color_1_disabled: (THEME_COLOR_BEVEL_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_2_focus: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_2_or_2_disabled: (THEME_COLOR_BEVEL_DISABLED)
+            border_color_2_down: (THEME_COLOR_BEVEL)
+            border_color_2_disabled: (THEME_COLOR_BEVEL_DISABLED)
         }
 
         popup_menu: <PopupMenuFlat> {}
@@ -279,17 +285,20 @@ live_design!{
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
             color_focus: (THEME_COLOR_OUTSET_FOCUS)
-            color_olor_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            color_down: (THEME_COLOR_OUTSET_DOWN)
+            color_disabled: (THEME_COLOR_OUTSET_DISABLED)
 
             border_color_1: (THEME_COLOR_U_HIDDEN)
             border_color_1_hover: (THEME_COLOR_U_HIDDEN)
             border_color_1_focus: (THEME_COLOR_U_HIDDEN)
-            border_color_1_or_1_disabled: (THEME_COLOR_U_HIDDEN)
+            border_color_1_down: (THEME_COLOR_U_HIDDEN)
+            border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
             border_color_2: (THEME_COLOR_U_HIDDEN)
             border_color_2_hover: (THEME_COLOR_U_HIDDEN)
             border_color_2_focus: (THEME_COLOR_U_HIDDEN)
-            border_color_2_or_2_disabled: (THEME_COLOR_U_HIDDEN)
+            border_color_2_down: (THEME_COLOR_U_HIDDEN)
+            border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
         }
 
         popup_menu: <PopupMenuFlatter> {}
@@ -311,31 +320,31 @@ live_design!{
             uniform color_1: (THEME_COLOR_OUTSET_1)
             uniform color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
             uniform color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
-            uniform color_1_down: (#f00)
+            uniform color_1_down: (THEME_COLOR_OUTSET_1_DOWN)
             uniform color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_OUTSET_2)
             uniform color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
             uniform color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
-            uniform color_2_down: (#0ff)
+            uniform color_2_down: (THEME_COLOR_OUTSET_2_DOWN)
             uniform color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT * 1.3)
-            uniform border_color_1_down: (#0f0)
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT * 1.3)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW * 1.3)
-            uniform border_color_2_down: (#0ff)
+            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW * 1.3)
 
             uniform arrow_color: (THEME_COLOR_TEXT)
             uniform arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
-            uniform arrow_color_down: (#ff0)
+            uniform arrow_color_down: (THEME_COLOR_TEXT_DOWN)
             uniform arrow_color_disabled: (THEME_COLOR_TEXT_DISABLED)
             
             fn pixel(self) -> vec4 {
@@ -444,27 +453,32 @@ live_design!{
             color_1: (THEME_COLOR_OUTSET_1)
             color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
             color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
-            color_1_or_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
+            color_1_down: (THEME_COLOR_OUTSET_1_DOWN)
+            color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
 
             color_2: (THEME_COLOR_OUTSET_2)
             color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
             color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
-            color_2_or_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
+            color_2_down: (THEME_COLOR_OUTSET_2_DOWN)
+            color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL_LIGHT)
             border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
             border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT * 1.3)
-            border_color_1_or_1_disabled: (THEME_COLOR_BEVEL_LIGHT * 1.3)
+            border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
+            border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT * 1.3)
 
             border_color_2: (THEME_COLOR_BEVEL_SHADOW)
             border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
             border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW * 1.3)
-            border_color_2_or_2_disabled: (THEME_COLOR_BEVEL_SHADOW * 1.3)
+            border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW * 1.3)
             
             arrow_color: (THEME_COLOR_TEXT)
             arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
             arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
-            arrow_color_olor_disabled: (THEME_COLOR_TEXT_DISABLED)
+            arrow_color_down: (THEME_COLOR_TEXT_DOWN)
+            arrow_color_disabled: (THEME_COLOR_TEXT_DISABLED)
 
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
