@@ -71,13 +71,13 @@
                     margin: 0.,
 
                     <View> {
-                        width: Fill,
-                        height: 40.
-                        spacing: (THEME_SPACE_2)
+                        width: Fill, height: Fit,
                         flow: Right,
-
-                        padding: <THEME_MSPACE_2> {}
+                        spacing: (THEME_SPACE_2)
+                        align: { x: 0.0, y: 0.5 }
+                        padding: <THEME_MSPACE_1> {}
                         margin: 0.
+
                         show_bg: true,
                         draw_bg: { color: (THEME_COLOR_U_1) }
 
