@@ -102,7 +102,11 @@ live_design!{
                                             ),
                                             self.active
                                         ),
-                                        mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
+                                        mix(
+                                            mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
+                                            mix(self.color_1_down, self.color_2_down, self.pos.y + dither),
+                                            self.down
+                                        ),
                                         self.hover
                                     ),
                                     mix(self.color_1_disabled, self.color_2_disabled, self.pos.y + dither),
@@ -401,17 +405,25 @@ live_design!{
                 off = {
                     from: {all: Forward {duration: 0.15}}
                     apply: {
-                        draw_bg: {hover: 0.0}
-                        draw_text: {hover: 0.0}
-                        draw_icon: {hover: 0.0}
+                        draw_bg: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
+                        draw_text: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
+                        draw_icon: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
                     }
                 }
                 on = {
                     from: {all: Snap}
                     apply: {
-                        draw_bg: {hover: 1.0}
-                        draw_text: {hover: 1.0}
-                        draw_icon: {hover: 1.0}
+                        draw_bg: {down: [{time: 0.0, value: 0.0}], hover: 1.0}
+                        draw_text: {down: [{time: 0.0, value: 0.0}], hover: 1.0}
+                        draw_icon: {down: [{time: 0.0, value: 0.0}], hover: 1.0}
+                    }
+                }
+                down = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
+                        draw_icon: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
+                        draw_text: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
                     }
                 }
             }
@@ -728,22 +740,49 @@ live_design!{
         }
             
         animator: {
+            disabled = {
+                default: off,
+                off = {
+                    from: {all: Forward {duration: 0.}}
+                    apply: {
+                        draw_bg: {disabled: 0.0}
+                        draw_text: {disabled: 0.0}
+                        draw_icon: {disabled: 0.0}
+                    }
+                }
+                on = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {disabled: 1.0}
+                        draw_text: {disabled: 1.0}
+                        draw_icon: {disabled: 1.0}
+                    }
+                }
+            }
             hover = {
                 default: off
                 off = {
-                    from: {all: Forward {duration: 0.25}}
+                    from: {all: Forward {duration: 0.15}}
                     apply: {
-                        draw_bg: {hover: 0.0}
-                        draw_text: {hover: 0.0}
-                        draw_icon: {hover: 0.0}
+                        draw_bg: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
+                        draw_text: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
+                        draw_icon: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
                     }
                 }
                 on = {
                     from: {all: Snap}
                     apply: {
-                        draw_bg: {hover: 1.0}
-                        draw_text: {hover: 1.0}
-                        draw_icon: {hover: 1.0}
+                        draw_bg: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
+                        draw_text: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
+                        draw_icon: {down: [{time: 0.0, value: 0.0}], hover: 0.0}
+                    }
+                }
+                down = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
+                        draw_icon: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
+                        draw_text: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
                     }
                 }
             }
@@ -1181,17 +1220,19 @@ impl Widget for CheckBox {
                     if self.animator.animator_in_state(cx, id!(disabled.on)) { return (); }
 
                     self.set_key_focus(cx);
-                    if self.animator_in_state(cx, id!(active.on)) {
-                        self.animator_play(cx, id!(active.off));
-                        cx.widget_action_with_data(&self.action_data, uid, &scope.path, CheckBoxAction::Change(false));
-                    }
-                    else {
-                        self.animator_play(cx, id!(active.on));
-                        cx.widget_action_with_data(&self.action_data, uid, &scope.path, CheckBoxAction::Change(true));
-                    }
+                    self.animator_play(cx, id!(hover.down));
+
+                    cx.widget_action_with_data(&self.action_data, uid, &scope.path, CheckBoxAction::Change(true));
                 },
                 Hit::FingerUp(_fe) => {
-                                    
+                    self.animator_play(cx, id!(hover.on));
+                    if self.animator_in_state(cx, id!(active.off)) {
+                        self.animator_play(cx, id!(active.on));
+                        cx.widget_action_with_data(&self.action_data, uid, &scope.path, CheckBoxAction::Change(false));
+                    } else {
+                        self.animator_play(cx, id!(active.off));
+                        cx.widget_action_with_data(&self.action_data, uid, &scope.path, CheckBoxAction::Change(true));
+                    }
                 }
                 Hit::FingerMove(_fe) => {
                                     
