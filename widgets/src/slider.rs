@@ -171,41 +171,45 @@ live_design!{
         }
 
         draw_text: {
-            instance hover: 0.0,
-            instance focus: 0.0,
-            instance drag: 0.0,
-            instance disabled: 0.0,
+            instance hover: 0.0
+            instance focus: 0.0
+            instance empty: 0.0
+            instance drag: 0.0
+            instance disabled: 0.0
 
-            uniform color: (THEME_COLOR_TEXT)
+            color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
-            uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_drag: (THEME_COLOR_TEXT_DRAG)
+            uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
+            uniform color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
+            uniform color_empty_focus: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)
+
+            text_style: <THEME_FONT_REGULAR> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_P)
+            }
 
             fn get_color(self) -> vec4 {
-                return mix(
+                return
+                mix(
                     mix(
                         mix(
-                            self.color,
-                            self.color_focus,
-                            self.focus
+                            mix(
+                                self.color,
+                                self.color_empty,
+                                self.empty
+                            ),
+                            mix(self.color_hover, self.color_drag, self.drag),
+                            self.hover
                         ),
-                        mix(
-                            self.color_hover,
-                            self.color_drag,
-                            self.drag
-                        ),
-                        self.hover
+                        mix(self.color_focus, self.color_hover, self.hover),
+                        self.focus
                     ),
                     self.color_disabled,
                     self.disabled
                 )
             }
-
-            text_style: <THEME_FONT_REGULAR> {
-                font_size: (THEME_FONT_SIZE_P)
-            }
-
         }
             
         label_walk: {
@@ -246,19 +250,19 @@ live_design!{
                 border_color_2_focus: (THEME_COLOR_U_HIDDEN)
             }
 
-            draw_text: {
-                instance disabled: 0.0,
+            // draw_text: {
+            //     instance disabled: 0.0,
 
-                color: (THEME_COLOR_TEXT)
-                color_hover: (THEME_COLOR_TEXT_HOVER)
-                color_focus: (THEME_COLOR_TEXT_FOCUS)
-                color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
-                color_empty_focus: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)
+            //     color: (THEME_COLOR_TEXT)
+            //     color_hover: (THEME_COLOR_TEXT_HOVER)
+            //     color_focus: (THEME_COLOR_TEXT_FOCUS)
+            //     color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
+            //     color_empty_focus: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)
 
-                text_style: <THEME_FONT_REGULAR> {
-                    font_size: (THEME_FONT_SIZE_P)
-                }
-            }
+            //     text_style: <THEME_FONT_REGULAR> {
+            //         font_size: (THEME_FONT_SIZE_P)
+            //     }
+            // }
 
             draw_cursor: { color: (THEME_COLOR_TEXT_CURSOR) }
 
@@ -739,9 +743,43 @@ live_design!{
             margin: { right: 7.5, top: (SLIDER_ALT1_DATA_FONT_TOPMARGIN) } 
 
             draw_text: {
-                instance disabled: 0.0,
+                instance hover: 0.0
+                instance focus: 0.0
+                instance empty: 0.0
+                instance drag: 0.0
+                instance disabled: 0.0
+
+                color: (THEME_COLOR_TEXT)
+                uniform color_hover: (THEME_COLOR_TEXT_HOVER)
+                uniform color_drag: (THEME_COLOR_TEXT_DRAG)
+                uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
+                uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
+                uniform color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
+                uniform color_empty_focus: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)
+
                 text_style: <THEME_FONT_REGULAR> {
                     font_size: (SLIDER_ALT1_DATA_FONTSIZE)
+                }
+
+                fn get_color(self) -> vec4 {
+                    return
+                    mix(
+                        mix(
+                            mix(
+                                mix(
+                                    self.color,
+                                    self.color_empty,
+                                    self.empty
+                                ),
+                                mix(self.color_hover, self.color_drag, self.drag),
+                                self.hover
+                            ),
+                            mix(self.color_focus, self.color_hover, self.hover),
+                            self.focus
+                        ),
+                        self.color_disabled,
+                        self.disabled
+                    )
                 }
             }
 
