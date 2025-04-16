@@ -43,6 +43,7 @@ live_design! {
         draw_bg: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance empty: 0.0
             instance disabled: 0.0
 
@@ -51,24 +52,30 @@ live_design! {
 
             uniform color_dither: 1.0
 
-            color: (THEME_COLOR_INSET)
-            uniform color_hover: (THEME_COLOR_INSET)
-            uniform color_focus: (THEME_COLOR_INSET_FOCUS)
-            uniform color_down: (THEME_COLOR_INSET_DOWN)
-            uniform color_empty: (THEME_COLOR_INSET)
-            uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
+            color: (#3)
+            uniform color_hover: (#4)
+            uniform color_focus: (#2)
+            uniform color_down: (#f00)
+            uniform color_empty: (#1)
+            uniform color_disabled: (#f)
+            // color: (THEME_COLOR_INSET)
+            // uniform color_hover: (THEME_COLOR_INSET)
+            // uniform color_focus: (THEME_COLOR_INSET_FOCUS)
+            // uniform color_down: (THEME_COLOR_INSET_DOWN)
+            // uniform color_empty: (THEME_COLOR_INSET)
+            // uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW_HOVER)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW_DOWN)
+            uniform border_color_1_down: (#f00)
             uniform border_color_1_empty: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT_HOVER)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT_DOWN)
+            uniform border_color_2_down: (#0ff)
             uniform border_color_2_empty: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
@@ -93,7 +100,11 @@ live_design! {
                                     mix(self.border_color_1_empty, self.border_color_2_empty, self.pos.y + dither),
                                     self.empty
                                 ),
-                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                mix(
+                                    mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                    mix(self.border_color_1_down, self.border_color_2_down, self.pos.y + dither),
+                                    self.down
+                                ),
                                 self.hover
                             ),
                             mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
@@ -110,11 +121,11 @@ live_design! {
                         mix(
                             mix(
                                 mix(self.color, self.color_empty, self.empty),
-                                self.color_hover,
-                                self.hover
+                                self.color_focus,
+                                self.focus
                             ),
-                            self.color_focus,
-                            self.focus
+                            mix(self.color_hover, self.color_down, self.down),
+                            self.hover
                         ),
                         self.color_disabled,
                         self.disabled
@@ -128,6 +139,7 @@ live_design! {
         draw_text: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance empty: 0.0
             instance disabled: 0.0
 
@@ -169,6 +181,7 @@ live_design! {
         draw_selection: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance empty: 0.0
             instance disabled: 0.0
 
@@ -212,6 +225,7 @@ live_design! {
         draw_cursor: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance empty: 0.0
             instance disabled: 0.0
 
@@ -294,23 +308,31 @@ live_design! {
                 }
             }
             hover = {
-                default: off
+                default: off,
                 off = {
-                    from: {
-                        all: Forward { duration: 0.1 }
-                    }
+                    from: {all: Forward {duration: 0.1}}
                     apply: {
-                        draw_bg: { hover: 0.0 }
-                        draw_text: { hover: 0.0 },
-                        draw_selection: { hover: 0.0 }
+                        draw_bg: {down: 0.0, hover: 0.0}
+                        draw_text: {down: 0.0, hover: 0.0}
                     }
                 }
+                
                 on = {
-                    from: { all: Snap }
+                    from: {
+                        all: Forward {duration: 0.1}
+                        down: Forward {duration: 0.01}
+                    }
                     apply: {
-                        draw_bg: { hover: 0.0 }
-                        draw_text: { hover: 1.0 },
-                        draw_selection: { hover: 1.0 }
+                        draw_bg: {down: 0.0, hover: [{time: 0.0, value: 1.0}],}
+                        draw_text: {down: 0.0, hover: [{time: 0.0, value: 1.0}],}
+                    }
+                }
+                
+                down = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
+                        draw_text: {down: [{time: 0.0, value: 1.0}], hover: 1.0,}
                     }
                 }
             }
@@ -386,6 +408,7 @@ live_design! {
         draw_bg: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance disabled: 0.0
             instance empty: 0.0
 
@@ -482,6 +505,7 @@ live_design! {
         draw_selection: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance disabled: 0.0
             instance empty: 0.0
 
@@ -546,6 +570,7 @@ live_design! {
         draw_bg: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance empty: 0.0
 
             uniform border_radius: (THEME_CORNER_RADIUS)
@@ -637,6 +662,7 @@ live_design! {
         draw_selection: {
             instance hover: 0.0
             instance focus: 0.0
+            instance down: 0.0
             instance empty: 0.0
 
             uniform border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
@@ -1312,6 +1338,19 @@ impl Widget for TextInput {
                     2 => self.select_word(cx),
                     3 => self.select_all(cx),
                     _ => {}
+                }
+
+                self.animator_play(cx, id!(hover.down));
+            }
+            Hit::FingerUp(fe) => {
+                if fe.is_over && fe.was_tap() {
+                    if fe.has_hovers() {
+                        self.animator_play(cx, id!(hover.on));
+                    } else {
+                        self.animator_play(cx, id!(hover.off));
+                    }
+                } else {
+                    self.animator_play(cx, id!(hover.off));
                 }
             }
             Hit::FingerMove(FingerMoveEvent {
