@@ -129,8 +129,8 @@ live_design! {
             instance disabled: 0.0
 
             color: (THEME_COLOR_TEXT)
-            uniform color_hover: (THEME_COLOR_TEXT)
-            uniform color_focus: (THEME_COLOR_TEXT)
+            uniform color_hover: (THEME_COLOR_TEXT_HOVER)
+            uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
             uniform color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
             uniform color_empty_focus: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)
@@ -145,16 +145,17 @@ live_design! {
                 mix(
                     mix(
                         mix(
-                            mix(self.color, self.color_hover, self.hover),
-                            self.color_focus,
-                            self.focus
+                            self.color,
+                            self.color_empty,
+                            self.empty
                         ),
-                        mix(self.color_empty, self.color_empty_focus, self.hover),
-                        self.empty
+                        self.color_hover,
+                        self.hover
                     ),
-                    self.color_disabled,
-                    self.disabled
-                );
+                    mix(self.color_focus, self.color_hover, self.hover),
+                    self.focus
+                )
+
             }
         }
 
