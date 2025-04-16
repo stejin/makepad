@@ -26,6 +26,7 @@ live_design!{
         
         draw_bg: {
             instance disabled: 0.0,
+            instance down: 0.0,
             uniform size: 7.5;
 
             uniform border_size: (THEME_BEVELING)
@@ -35,24 +36,28 @@ live_design!{
 
             uniform color_1: (THEME_COLOR_INSET_1)
             uniform color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            uniform color_1_down: (#f00)
             uniform color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET_2)
             uniform color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            uniform color_2_down: (#0f0)
             uniform color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1_down: (#00f)
             uniform border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_2_down: (#ff0)
             uniform border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
@@ -60,6 +65,7 @@ live_design!{
             uniform mark_size: 0.65
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
             uniform mark_color_hover: (THEME_COLOR_U_HIDDEN)
+            uniform mark_color_down: (#0ff)
             uniform mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform mark_color_active_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             uniform mark_color_focus: (THEME_COLOR_MARK_FOCUS)
@@ -306,11 +312,13 @@ live_design!{
         draw_text: {
             instance focus: 0.0
             instance hover: 0.0
+            instance down: 0.0
             instance active: 0.0
             instance disabled: 0.0
 
             uniform color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
+            uniform color_down: (#f00)
             uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
@@ -338,11 +346,13 @@ live_design!{
         draw_icon: {
             instance focus: 0.0
             instance hover: 0.0
+            instance down: 0.0
             instance active: 0.0
             instance disabled: 0.0
 
             uniform color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
+            uniform color_down: (#f00)
             uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
@@ -453,30 +463,35 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_1_down: (#00f)
             border_color_1_active: (THEME_COLOR_BEVEL_FOCUS)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_2_down: (#ff0)
             border_color_2_active: (THEME_COLOR_BEVEL_FOCUS)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             mark_color: (THEME_COLOR_U_HIDDEN)
             mark_color_hover: (THEME_COLOR_U_HIDDEN)
+            mark_color_down: (#0ff)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
@@ -493,30 +508,35 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_1_down: (#00f)
             border_color_1_active: (THEME_COLOR_BEVEL_FOCUS)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_2_down: (#ff0)
             border_color_2_active: (THEME_COLOR_BEVEL_FOCUS)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             mark_color: (THEME_COLOR_U_HIDDEN)
             mark_color_hover: (THEME_COLOR_U_HIDDEN)
+            mark_color_down: (#0ff)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
             mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
@@ -536,30 +556,35 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
+            border_color_1_down: (#00f)
             border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_2_down: (#ff0)
             border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             mark_color: (THEME_COLOR_U_HIDDEN)
             mark_color_hover: (THEME_COLOR_U_HIDDEN)
+            mark_color_down: (#0ff)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
@@ -664,30 +689,35 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
+            border_color_1_down: (#00f)
             border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_2_down: (#ff0)
             border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
+            mark_color_down: (#0ff)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_active_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
@@ -769,24 +799,28 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL)
+            border_color_1_down: (#00f)
             border_color_1_active: (THEME_COLOR_BEVEL)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_2_down: (#ff0)
             border_color_2_active: (THEME_COLOR_BEVEL_ACTIVE)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
@@ -795,6 +829,7 @@ live_design!{
 
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
+            mark_color_down: (#0ff)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
@@ -809,24 +844,28 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL)
+            border_color_1_down: (#00f)
             border_color_1_active: (THEME_COLOR_BEVEL)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_2_down: (#ff0)
             border_color_2_active: (THEME_COLOR_BEVEL_ACTIVE)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
@@ -835,6 +874,7 @@ live_design!{
 
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
+            mark_color_down: (#0ff)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
@@ -849,12 +889,14 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
@@ -863,6 +905,7 @@ live_design!{
 
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
+            mark_color_down: (#00f)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
@@ -881,30 +924,35 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET_1)
             color_1_hover: (THEME_COLOR_INSET_1_HOVER)
+            color_1_down: (#f00)
             color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET_2)
             color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            color_2_down: (#0f0)
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
+            border_color_1_down: (#00f)
             border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_2_down: (#ff0)
             border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
+            mark_color_down: (#0ff)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_focus: (THEME_COLOR_MARK_FOCUS)
