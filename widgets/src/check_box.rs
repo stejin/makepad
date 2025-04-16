@@ -361,10 +361,31 @@ live_design!{
             uniform color_down: (THEME_COLOR_TEXT_DOWN)
             uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_active: (THEME_COLOR_TEXT_ACTIVE)
+            uniform color_active_focus: (THEME_COLOR_TEXT_ACTIVE_FOCUS)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
 
             fn get_color(self) -> vec4 {
-                return mix(
+                return
+                    mix(
+                        mix(
+                            mix(
+                                mix(self.color, self.color_active, self.active),
+                                self.color_focus,
+                                self.focus
+                            ),
+                            mix(
+                                self.color_hover,
+                                self.color_down,
+                                self.down
+                            ),
+                            self.hover
+                        ),
+                        self.color_disabled,
+                        self.disabled
+                    )
+
+
+                mix(
                     mix(
                         mix(
                             mix(self.color, self.color_focus, self.focus),
