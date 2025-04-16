@@ -100,15 +100,15 @@ live_design! {
                                     mix(self.border_color_1_empty, self.border_color_2_empty, self.pos.y + dither),
                                     self.empty
                                 ),
-                                mix(
-                                    mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
-                                    mix(self.border_color_1_down, self.border_color_2_down, self.pos.y + dither),
-                                    self.down
-                                ),
-                                self.hover
+                                mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                                self.focus
                             ),
-                            mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
-                            self.focus
+                            mix(
+                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                mix(self.border_color_1_down, self.border_color_2_down, self.pos.y + dither),
+                                self.down
+                            ),
+                            self.hover
                         ),
                         mix(self.border_color_1_disabled, self.border_color_2_disabled, self.pos.y + dither),
                         self.disabled
@@ -120,11 +120,19 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.color, self.color_empty, self.empty),
+                                mix(
+                                    self.color,
+                                    self.color_empty,
+                                    self.empty
+                                ),
                                 self.color_focus,
                                 self.focus
                             ),
-                            mix(self.color_hover, self.color_down, self.down),
+                            mix(
+                                self.color_hover,
+                                self.color_down,
+                                self.down
+                            ),
                             self.hover
                         ),
                         self.color_disabled,
@@ -372,7 +380,7 @@ live_design! {
             color: (THEME_COLOR_INSET)
             color_hover: (THEME_COLOR_INSET_HOVER)
             color_focus: (THEME_COLOR_INSET_FOCUS)
-            color_down: (THEME_COLOR_INSET_DOWN)
+            color_down: (#f00)
             color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
@@ -399,7 +407,7 @@ live_design! {
             color: (THEME_COLOR_INSET)
             color_hover: (THEME_COLOR_INSET_HOVER)
             color_focus: (THEME_COLOR_INSET_FOCUS)
-            color_down: (THEME_COLOR_INSET_DOWN)
+            color_down: (#f00)
             color_disabled: (THEME_COLOR_INSET_DISABLED)
         }
     }
@@ -466,11 +474,15 @@ live_design! {
                                     mix(self.border_color_1_empty, self.border_color_2_empty, self.pos.y + dither),
                                     self.empty
                                 ),
-                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
-                                self.hover
+                                mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                                self.focus
                             ),
-                            mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
-                            self.focus
+                            mix(
+                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                mix(self.border_color_1_down, self.border_color_2_down, self.pos.y + dither),
+                                self.down
+                            ),
+                            self.hover
                         ),
                         mix(self.border_color_1_disabled, self.border_color_2_disabled, self.pos.y + dither),
                         self.disabled
@@ -487,11 +499,15 @@ live_design! {
                                     mix(self.color_1_empty, self.color_2_empty, self.pos.x + dither),
                                     self.empty
                                 ),
-                                mix(self.color_1_hover, self.color_2_hover, self.pos.x + dither),
-                                self.hover
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.x + dither),
+                                self.focus
                             ),
-                            mix(self.color_1_focus, self.color_2_focus, self.pos.x + dither),
-                            self.focus
+                            mix(
+                                mix(self.color_1_hover, self.color_2_hover, self.pos.x + dither),
+                                mix(self.color_1_down, self.color_2_down, self.pos.x + dither),
+                                self.down
+                            ),
+                            self.hover
                         ),
                         mix(self.color_1_disabled, self.color_2_disabled, self.pos.x + dither),
                         self.disabled
@@ -622,12 +638,20 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
-                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
-                                self.hover
+                                mix(
+                                    mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                                    mix(self.border_color_1_empty, self.border_color_2_empty, self.pos.y + dither),
+                                    self.empty
+                                ),
+                                mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                                self.focus
                             ),
-                            mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
-                            self.focus
+                            mix(
+                                mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                                mix(self.border_color_1_down, self.border_color_2_down, self.pos.y + dither),
+                                self.down
+                            ),
+                            self.hover
                         ),
                         mix(self.border_color_1_disabled, self.border_color_2_disabled, self.pos.y + dither),
                         self.disabled
@@ -644,11 +668,15 @@ live_design! {
                                     mix(self.color_1_empty, self.color_2_empty, self.pos.y + dither),
                                     self.empty
                                 ),
-                                mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
-                                self.hover
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
+                                self.focus
                             ),
-                            mix(self.color_1_focus, self.color_2_focus, self.pos.y + dither),
-                            self.focus
+                            mix(
+                                mix(self.color_1_hover, self.color_2_hover, self.pos.y + dither),
+                                mix(self.color_1_down, self.color_2_down, self.pos.y + dither),
+                                self.down
+                            ),
+                            self.hover
                         ),
                         mix(self.color_1_disabled, self.color_2_disabled, self.pos.y + dither),
                         self.disabled
