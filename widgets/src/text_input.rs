@@ -145,17 +145,20 @@ live_design! {
                 mix(
                     mix(
                         mix(
-                            self.color,
-                            self.color_empty,
-                            self.empty
+                            mix(
+                                self.color,
+                                self.color_empty,
+                                self.empty
+                            ),
+                            self.color_hover,
+                            self.hover
                         ),
-                        self.color_hover,
-                        self.hover
+                        mix(self.color_focus, self.color_hover, self.hover),
+                        self.focus
                     ),
-                    mix(self.color_focus, self.color_hover, self.hover),
-                    self.focus
+                    self.color_disabled,
+                    self.disabled
                 )
-
             }
         }
 
