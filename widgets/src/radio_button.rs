@@ -39,44 +39,44 @@ live_design!{
 
             uniform color_dither: 1.0
 
-            uniform color: (THEME_COLOR_OUTSET)
+            uniform color: (THEME_COLOR_INSET)
             uniform color_hover: (THEME_COLOR_INSET_HOVER)
-            uniform color_down: #f00
+            uniform color_down: (THEME_COLOR_INSET_DOWN)
             uniform color_active: (THEME_COLOR_INSET_ACTIVE)
             uniform color_focus: (THEME_COLOR_INSET_FOCUS)
             uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             uniform color_1: (THEME_COLOR_INSET_1)
             uniform color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            uniform color_1_down: #0f0
+            uniform color_1_down: (THEME_COLOR_INSET_1_DOWN)
             uniform color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
             uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET_2)
             uniform color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            uniform color_2_down: #00f
+            uniform color_2_down: (THEME_COLOR_INSET_2_DOWN)
             uniform color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_down: #ff0
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_down: #0ff
+            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
-            uniform mark_color_hover: (THEME_COLOR_OUTSET_HOVER)
-            uniform mark_color_down: #f0f
+            uniform mark_color_hover: (THEME_COLOR_INSET_HOVER)
+            uniform mark_color_down: (THEME_COLOR_INSET_DOWN)
             uniform mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform mark_color_focus: (THEME_COLOR_MARK_FOCUS)
             uniform mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
@@ -263,7 +263,7 @@ live_design!{
                 
             uniform color: (THEME_COLOR_TEXT)
             uniform color_hover: (THEME_COLOR_TEXT_HOVER)
-            uniform color_down: #f00
+            uniform color_down: (THEME_COLOR_TEXT_DOWN)
             uniform color_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
             uniform color_disabled: (THEME_COLOR_TEXT_DISABLED)
@@ -303,14 +303,14 @@ live_design!{
             uniform color_dither: 1.0
             uniform color_1: (THEME_COLOR_INSET_1)
             uniform color_1_hover: (THEME_COLOR_TEXT_HOVER)
-            uniform color_1_down: #0f0
+            uniform color_1_down: (THEME_COLOR_TEXT_DOWN)
             uniform color_1_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET_2)
             uniform color_2_hover: (THEME_COLOR_TEXT_HOVER)
-            uniform color_2_down: #00f
+            uniform color_2_down: (THEME_COLOR_TEXT_DOWN)
             uniform color_2_active: (THEME_COLOR_TEXT_ACTIVE)
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
@@ -440,28 +440,28 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET)
             color_1_hover: (THEME_COLOR_INSET_HOVER)
-            color_1_down: #f00
+            color_1_down: (THEME_COLOR_INSET_DOWN)
             color_1_active: (THEME_COLOR_INSET_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET)
             color_2_hover: (THEME_COLOR_INSET_HOVER)
-            color_2_down: #0f0
+            color_2_down: (THEME_COLOR_INSET_DOWN)
             color_2_active: (THEME_COLOR_INSET_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL)
-            border_color_1_down: #00f
+            border_color_1_down: (THEME_COLOR_INSET_DOWN)
             border_color_1_active: (THEME_COLOR_BEVEL)
             border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL)
-            border_color_2_down: #ff0
+            border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_2_active: (THEME_COLOR_BEVEL)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
@@ -478,14 +478,14 @@ live_design!{
 
             color_1: (THEME_COLOR_INSET)
             color_1_hover: (THEME_COLOR_INSET_HOVER)
-            color_1_down: #f00
+            color_1_down: (THEME_COLOR_INSET_DOWN)
             color_1_active: (THEME_COLOR_INSET_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             color_2: (THEME_COLOR_INSET)
             color_2_hover: (THEME_COLOR_INSET_HOVER)
-            color_2_down: #0f0
+            color_2_down: (THEME_COLOR_INSET_DOWN)
             color_2_active: (THEME_COLOR_INSET_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
@@ -505,43 +505,43 @@ live_design!{
 
             uniform color_dither: 1.0
 
-            uniform color: (THEME_COLOR_OUTSET)
-            uniform color_hover: (THEME_COLOR_OUTSET_HOVER)
-            uniform color_down: #f00
-            uniform color_active: (THEME_COLOR_OUTSET_ACTIVE)
+            uniform color: (THEME_COLOR_INSET)
+            uniform color_hover: (THEME_COLOR_INSET_HOVER)
+            uniform color_down: (THEME_COLOR_INSET_DOWN)
+            uniform color_active: (THEME_COLOR_INSET_ACTIVE)
             uniform color_focus: (THEME_COLOR_INSET_FOCUS)
             uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             uniform color_1: (THEME_COLOR_INSET_1)
             uniform color_1_hover: (THEME_COLOR_INSET_1)
-            uniform color_1_down: #0f0
+            uniform color_1_down: (THEME_COLOR_INSET_1_DOWN)
             uniform color_1_active: (THEME_COLOR_INSET_1)
             uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
             uniform color_2: (THEME_COLOR_INSET_2)
             uniform color_2_hover: (THEME_COLOR_INSET_2)
-            uniform color_2_down: #00f
+            uniform color_2_down: (THEME_COLOR_INSET_2_DOWN)
             uniform color_2_active: (THEME_COLOR_INSET_2)
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_down: #ff0
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_down: #0ff
+            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
-            uniform mark_color_hover: (THEME_COLOR_OUTSET_HOVER)
-            uniform mark_color_down: #f0f
+            uniform mark_color_hover: (THEME_COLOR_INSET_HOVER)
+            uniform mark_color_down: (THEME_COLOR_INSET_DOWN)
             uniform mark_color_focus: (THEME_COLOR_MARK_HOVER)
             uniform mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
             uniform mark_color_active_focus: (THEME_COLOR_MARK_ACTIVE_FOCUS)
@@ -682,7 +682,7 @@ live_design!{
         draw_text: {
             color: (THEME_COLOR_U_3)
             color_hover: (THEME_COLOR_TEXT_HOVER)
-            color_down: #f00
+            color_down: (THEME_COLOR_TEXT_DOWN)
             color_active: (THEME_COLOR_TEXT_ACTIVE)
             color_disabled: (THEME_COLOR_TEXT_DISABLED)
                 
@@ -703,30 +703,30 @@ live_design!{
 
             border_size: (THEME_BEVELING)
 
-            color_1: (THEME_COLOR_OUTSET)
-            color_1_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_1_down: #f00
-            color_1_active: (THEME_COLOR_OUTSET_ACTIVE)
+            color_1: (THEME_COLOR_INSET)
+            color_1_hover: (THEME_COLOR_INSET_HOVER)
+            color_1_down: (THEME_COLOR_INSET_DOWN)
+            color_1_active: (THEME_COLOR_INSET_ACTIVE)
             color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
             color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            color_2: (THEME_COLOR_OUTSET)
-            color_2_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_2_down: #0f0
-            color_2_active: (THEME_COLOR_OUTSET_ACTIVE)
+            color_2: (THEME_COLOR_INSET)
+            color_2_hover: (THEME_COLOR_INSET_HOVER)
+            color_2_down: (THEME_COLOR_INSET_DOWN)
+            color_2_active: (THEME_COLOR_INSET_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL_LIGHT)
             border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_1_down: #00f
+            border_color_1_down: (THEME_COLOR_BEVEL_LIGHT)
             border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
             border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL_SHADOW)
             border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_2_down: #f0f
+            border_color_2_down: (THEME_COLOR_BEVEL_SHADOW)
             border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
@@ -737,7 +737,7 @@ live_design!{
         draw_text: {
             color: (THEME_COLOR_TEXT)
             color_hover: (THEME_COLOR_TEXT_HOVER)
-            color_down: #f00
+            color_down: (THEME_COLOR_TEXT_DOWN)
             color_active: (THEME_COLOR_TEXT_ACTIVE)
             color_disabled: (THEME_COLOR_TEXT_DISABLED)
         }
@@ -748,29 +748,29 @@ live_design!{
             radio_type: Tab
             border_size: (THEME_BEVELING)
 
-            color_1: (THEME_COLOR_OUTSET)
-            color_1_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_1_down: #f00
-            color_1_active: (THEME_COLOR_OUTSET_ACTIVE)
-            color_1_focus: (THEME_COLOR_OUTSET_ACTIVE)
-            color_1_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            color_1: (THEME_COLOR_INSET)
+            color_1_hover: (THEME_COLOR_INSET_HOVER)
+            color_1_down: (THEME_COLOR_INSET_DOWN)
+            color_1_active: (THEME_COLOR_INSET_ACTIVE)
+            color_1_focus: (THEME_COLOR_INSET_ACTIVE)
+            color_1_disabled: (THEME_COLOR_INSET_DISABLED)
 
-            color_2: (THEME_COLOR_OUTSET)
-            color_2_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_2_down: #0f0
-            color_2_active: (THEME_COLOR_OUTSET_ACTIVE)
-            color_2_focus: (THEME_COLOR_OUTSET_ACTIVE)
-            color_2_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            color_2: (THEME_COLOR_INSET)
+            color_2_hover: (THEME_COLOR_INSET_HOVER)
+            color_2_down: (THEME_COLOR_INSET_DOWN)
+            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2_focus: (THEME_COLOR_INSET_ACTIVE)
+            color_2_disabled: (THEME_COLOR_INSET_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
-            border_color_1_down: #00f
+            border_color_1_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_1_active: (THEME_COLOR_BEVEL_ACTIVE)
             border_color_1_disabled: (THEME_COLOR_BEVEL_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
-            border_color_2_down: #f0f
+            border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_2_active: (THEME_COLOR_BEVEL_ACTIVE)
             border_color_2_disabled: (THEME_COLOR_BEVEL_DISABLED)
         }
@@ -792,7 +792,7 @@ live_design!{
         draw_text: {
             color: (THEME_COLOR_TEXT)
             color_hover: (THEME_COLOR_TEXT_HOVER)
-            color_down: #f00
+            color_down: (THEME_COLOR_TEXT_DOWN)
             color_active: (THEME_COLOR_TEXT_ACTIVE)
             color_disabled: (THEME_COLOR_TEXT_DISABLED)
         }
@@ -803,30 +803,30 @@ live_design!{
 
             uniform color_dither: 1.0
 
-            uniform color_1: (THEME_COLOR_OUTSET * 1.5)
-            uniform color_1_hover: (THEME_COLOR_OUTSET_HOVER * 1.2)
-            uniform color_1_down: #f00
-            uniform color_1_active: (THEME_COLOR_OUTSET_1_ACTIVE * 2.0)
-            uniform color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
+            uniform color_1: (THEME_COLOR_INSET * 1.5)
+            uniform color_1_hover: (THEME_COLOR_INSET_HOVER * 1.2)
+            uniform color_1_down: (THEME_COLOR_INSET_DOWN)
+            uniform color_1_active: (THEME_COLOR_INSET_1_ACTIVE * 2.0)
+            uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
             uniform color_1_active_focus: (THEME_COLOR_INSET_1_FOCUS)
 
-            uniform color_2: (THEME_COLOR_OUTSET)
-            uniform color_2_hover: (THEME_COLOR_OUTSET_HOVER * 0.5)
-            uniform color_2_down: #0f0
-            uniform color_2_active: (THEME_COLOR_OUTSET_2_ACTIVE * 0.5)
-            uniform color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
+            uniform color_2: (THEME_COLOR_INSET)
+            uniform color_2_hover: (THEME_COLOR_INSET_HOVER * 0.5)
+            uniform color_2_down: (THEME_COLOR_INSET_DOWN)
+            uniform color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
+            uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
             uniform color_2_active_focus: (THEME_COLOR_INSET_2_FOCUS)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW_HOVER)
-            uniform border_color_1_down: #00f
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
             uniform border_color_1_active_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_down: #f0f
+            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_active_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
@@ -924,30 +924,30 @@ live_design!{
 
             uniform color_dither: 1.0
 
-            uniform color_1: (THEME_COLOR_OUTSET * 1.5)
-            uniform color_1_hover: (THEME_COLOR_OUTSET_HOVER * 1.2)
-            uniform color_1_down: #f00
-            uniform color_1_active: (THEME_COLOR_OUTSET_ACTIVE * 2.0)
-            uniform color_1_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            uniform color_1: (THEME_COLOR_INSET * 1.5)
+            uniform color_1_hover: (THEME_COLOR_INSET_HOVER * 1.2)
+            uniform color_1_down: (THEME_COLOR_INSET_DOWN)
+            uniform color_1_active: (THEME_COLOR_INSET_ACTIVE * 2.0)
+            uniform color_1_disabled: (THEME_COLOR_INSET_DISABLED)
             uniform color_1_active_focus: (THEME_COLOR_INSET_1_ACTIVE_FOCUS)
 
-            uniform color_2: (THEME_COLOR_OUTSET)
-            uniform color_2_hover: (THEME_COLOR_OUTSET_HOVER * 0.5)
-            uniform color_2_down: #0f0
-            uniform color_2_active: (THEME_COLOR_OUTSET_ACTIVE * 0.5)
-            uniform color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
-            uniform color_2_active_focus: (THEME_COLOR_OUTSET_2_ACTIVE_FOCUS)
+            uniform color_2: (THEME_COLOR_INSET)
+            uniform color_2_hover: (THEME_COLOR_INSET_HOVER * 0.5)
+            uniform color_2_down: (THEME_COLOR_INSET_DOWN)
+            uniform color_2_active: (THEME_COLOR_INSET_ACTIVE * 0.5)
+            uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
+            uniform color_2_active_focus: (THEME_COLOR_INSET_2_ACTIVE_FOCUS)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_1_down: #00f
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
             uniform border_color_1_active_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_2_down: #ff0
+            uniform border_color_2_down: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_active_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
