@@ -235,9 +235,13 @@
         #[live] dropdown: DropDownEnum,
         #[live] dropdown_below: DropDownEnum,
         #[live] dropdown_flat: DropDownEnum,
+        #[live] dropdown_flat_below: DropDownEnum,
         #[live] dropdown_flatter: DropDownEnum,
+        #[live] dropdown_flatter_below: DropDownEnum,
         #[live] dropdown_gradient_x: DropDownEnum,
+        #[live] dropdown_gradient_x_below: DropDownEnum,
         #[live] dropdown_gradient_y: DropDownEnum,
+        #[live] dropdown_gradient_y_below: DropDownEnum,
         #[live] dropdown_custom: DropDownEnum,
     }
     #[derive(Live, LiveHook)]
