@@ -52,30 +52,24 @@ live_design! {
 
             uniform color_dither: 1.0
 
-            color: (#3)
-            uniform color_hover: (#4)
-            uniform color_focus: (#2)
-            uniform color_down: (#f00)
-            uniform color_empty: (#1)
-            uniform color_disabled: (#f)
-            // color: (THEME_COLOR_INSET)
-            // uniform color_hover: (THEME_COLOR_INSET)
-            // uniform color_focus: (THEME_COLOR_INSET_FOCUS)
-            // uniform color_down: (THEME_COLOR_INSET_DOWN)
-            // uniform color_empty: (THEME_COLOR_INSET)
-            // uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
+            color: (THEME_COLOR_INSET)
+            uniform color_hover: (THEME_COLOR_INSET)
+            uniform color_focus: (THEME_COLOR_INSET_FOCUS)
+            uniform color_down: (THEME_COLOR_INSET_DOWN)
+            uniform color_empty: (THEME_COLOR_INSET)
+            uniform color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW_HOVER)
             uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            uniform border_color_1_down: (#f00)
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW_DOWN)
             uniform border_color_1_empty: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
 
             uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT_HOVER)
             uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            uniform border_color_2_down: (#0ff)
+            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT_DOWN)
             uniform border_color_2_empty: (THEME_COLOR_BEVEL_LIGHT)
             uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
@@ -166,23 +160,27 @@ live_design! {
 
             fn get_color(self) -> vec4 {
                 return
-                mix(
                     mix(
                         mix(
                             mix(
-                                self.color,
-                                self.color_empty,
-                                self.empty
+                                mix(
+                                    self.color,
+                                    self.color_empty,
+                                    self.empty
+                                ),
+                                self.color_focus,
+                                self.focus
                             ),
-                            self.color_hover,
+                            mix(
+                                self.color_hover,
+                                self.color_down,
+                                self.down
+                            ),
                             self.hover
                         ),
-                        mix(self.color_focus, self.color_hover, self.hover),
-                        self.focus
-                    ),
-                    self.color_disabled,
-                    self.disabled
-                )
+                        self.color_disabled,
+                        self.disabled
+                    )
             }
         }
 
@@ -198,7 +196,7 @@ live_design! {
             uniform color: (THEME_COLOR_D_HIDDEN)
             uniform color_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
             uniform color_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
-            uniform color_down: (#f00)
+            uniform color_down: (THEME_COLOR_D_HIDDEN)
             uniform color_empty: (THEME_COLOR_U_HIDDEN)
             uniform color_disabled: (THEME_COLOR_U_HIDDEN)
 
@@ -215,15 +213,23 @@ live_design! {
                     mix(
                         mix(
                             mix(
-                                mix(self.color, self.color_hover, self.hover),
-                                mix(self.color_focus, self.color_hover, self.hover),
+                                mix(
+                                    self.color,
+                                    self.color_empty,
+                                    self.empty
+                                ),
+                                self.color_focus,
                                 self.focus
                             ),
-                            self.color_disabled,
-                            self.disabled
+                            mix(
+                                self.color_hover,
+                                self.color_down,
+                                self.down
+                            ),
+                            self.hover
                         ),
-                        self.color_empty,
-                        self.empty
+                        self.color_disabled,
+                        self.disabled
                     )
                 );
                 return sdf.result;
@@ -380,7 +386,7 @@ live_design! {
             color: (THEME_COLOR_INSET)
             color_hover: (THEME_COLOR_INSET_HOVER)
             color_focus: (THEME_COLOR_INSET_FOCUS)
-            color_down: (#f00)
+            color_down: (THEME_COLOR_INSET_DOWN)
             color_disabled: (THEME_COLOR_INSET_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
@@ -407,7 +413,7 @@ live_design! {
             color: (THEME_COLOR_INSET)
             color_hover: (THEME_COLOR_INSET_HOVER)
             color_focus: (THEME_COLOR_INSET_FOCUS)
-            color_down: (#f00)
+            color_down: (THEME_COLOR_INSET_DOWN)
             color_disabled: (THEME_COLOR_INSET_DISABLED)
         }
     }
@@ -425,18 +431,18 @@ live_design! {
 
             uniform color_dither: 1.0
 
-            uniform color_1: (THEME_COLOR_INSET)
-            uniform color_1_hover: (THEME_COLOR_INSET)
-            uniform color_1_focus: (THEME_COLOR_INSET_FOCUS)
-            uniform color_1_down: (THEME_COLOR_INSET_DOWN)
-            uniform color_1_empty: (THEME_COLOR_INSET)
+            uniform color_1: (THEME_COLOR_INSET_1)
+            uniform color_1_hover: (THEME_COLOR_INSET_1)
+            uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
+            uniform color_1_down: (THEME_COLOR_INSET_1_DOWN)
+            uniform color_1_empty: (THEME_COLOR_INSET_1)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            uniform color_2: (THEME_COLOR_INSET * 2.5)
-            uniform color_2_hover: (THEME_COLOR_INSET * 3.0)
-            uniform color_2_focus: (THEME_COLOR_INSET * 4.0)
-            uniform color_2_down: (#f00)
-            uniform color_2_empty: (THEME_COLOR_INSET)
+            uniform color_2: (THEME_COLOR_INSET_2)
+            uniform color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
+            uniform color_2_down: (THEME_COLOR_INSET_2_DOWN)
+            uniform color_2_empty: (THEME_COLOR_INSET_2)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
@@ -530,14 +536,14 @@ live_design! {
             uniform color_1: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_down: (#f00)
+            uniform color_1_down: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
 
             uniform color_2: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
             uniform color_2_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
-            uniform color_2_down: (#00f)
+            uniform color_2_down: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
 
@@ -561,15 +567,15 @@ live_design! {
                                     mix(self.color_1_empty, self.color_2_empty, self.pos.x),
                                     self.empty
                                 ),
-                                mix(self.color_1_hover, self.color_2_hover, self.pos.x),
-                                self.hover
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.x),
+                                self.focus
                             ),
                             mix(
-                                mix(self.color_1_focus, self.color_2_focus, self.pos.x),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.x),
-                                self.hover
+                                mix(self.color_1_down, self.color_2_down, self.pos.x),
+                                self.down
                             ),
-                            self.focus
+                            self.hover
                         ),
                         mix(self.color_1_disabled, self.color_2_disabled, self.pos.x),
                         self.disabled
@@ -594,19 +600,19 @@ live_design! {
 
             uniform color_dither: 1.0
 
-            uniform color_1: #3
-            uniform color_1_hover: #3
-            uniform color_1_focus: #2
-            uniform color_1_down: #f00
-            uniform color_1_empty: #3
+            uniform color_1: (THEME_COLOR_INSET_1)
+            uniform color_1_hover: (THEME_COLOR_INSET_1)
+            uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
+            uniform color_1_down: (THEME_COLOR_INSET_1_DOWN)
+            uniform color_1_empty: (THEME_COLOR_INSET_1)
             uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
 
-            uniform color_2: (THEME_COLOR_INSET)
-            uniform color_2_hover: #4
-            uniform color_2_focus: (THEME_COLOR_INSET_FOCUS)
-            uniform color_2_down: (THEME_COLOR_INSET_DOWN)
-            uniform color_2_empty: (THEME_COLOR_INSET)
-            uniform color_2_disabled: (THEME_COLOR_INSET_1_DISABLED)
+            uniform color_2: (THEME_COLOR_INSET_2)
+            uniform color_2_hover: (THEME_COLOR_INSET_2_HOVER)
+            uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
+            uniform color_2_down: (THEME_COLOR_INSET_2_DOWN)
+            uniform color_2_empty: (THEME_COLOR_INSET_2)
+            uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
             uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
             uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
@@ -691,23 +697,24 @@ live_design! {
             instance hover: 0.0
             instance focus: 0.0
             instance down: 0.0
+            instance disabled: 0.0
             instance empty: 0.0
 
             uniform border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
 
             uniform color_1: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
-            uniform color_1_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
-            uniform color_1_down: (#f00)
+            uniform color_1_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
+            uniform color_1_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
+            uniform color_1_down: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_1_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
+            uniform color_1_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
 
             uniform color_2: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_2_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_2_down: (#00f)
+            uniform color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
+            uniform color_2_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
+            uniform color_2_down: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
             uniform color_2_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_2_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
+            uniform color_2_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
 
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
@@ -729,20 +736,21 @@ live_design! {
                                     mix(self.color_1_empty, self.color_2_empty, self.pos.y),
                                     self.empty
                                 ),
-                                mix(self.color_1_hover, self.color_2_hover, self.pos.y),
-                                self.hover
+                                mix(self.color_1_focus, self.color_2_focus, self.pos.y),
+                                self.focus
                             ),
                             mix(
-                                mix(self.color_1_focus, self.color_2_focus, self.pos.y),
                                 mix(self.color_1_hover, self.color_2_hover, self.pos.y),
-                                self.hover
+                                mix(self.color_1_down, self.color_2_down, self.pos.y),
+                                self.down
                             ),
-                            self.focus
+                            self.hover
                         ),
                         mix(self.color_1_disabled, self.color_2_disabled, self.pos.y),
                         self.disabled
                     )
                 );
+
                 return sdf.result
             }
         }
