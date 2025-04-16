@@ -383,21 +383,6 @@ live_design!{
                         self.color_disabled,
                         self.disabled
                     )
-
-
-                mix(
-                    mix(
-                        mix(
-                            mix(self.color, self.color_focus, self.focus),
-                            self.color_hover,
-                            self.hover
-                        ),
-                        mix(self.color_active, self.color_focus, self.focus),
-                        self.active
-                    ),
-                    self.color_disabled,
-                    self.disabled
-                )
             }
             text_style: <THEME_FONT_REGULAR> {
                 font_size: (THEME_FONT_SIZE_P)
