@@ -225,20 +225,24 @@ live_design!{
             
             draw_bg: {
                 border_radius: 0.
-                border_size: (THEME_BEVELING)
-
-                color_dither: 1.0
+                border_size: 0.
 
                 color: (THEME_COLOR_U_HIDDEN)
                 color_hover: (THEME_COLOR_U_HIDDEN)
-                color_focus: (THEME_COLOR_U_HIDDEN)
+                color_focus: (#f00)
+                color_disabled: (THEME_COLOR_U_HIDDEN)
+                color_empty: (THEME_COLOR_U_HIDDEN)
 
                 border_color_1: (THEME_COLOR_U_HIDDEN)
                 border_color_1_hover: (THEME_COLOR_U_HIDDEN)
+                border_color_1_empty: (THEME_COLOR_U_HIDDEN)
+                border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
                 border_color_1_focus: (THEME_COLOR_U_HIDDEN)
 
                 border_color_2: (THEME_COLOR_U_HIDDEN)
                 border_color_2_hover: (THEME_COLOR_U_HIDDEN)
+                border_color_2_empty: (THEME_COLOR_U_HIDDEN)
+                border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
                 border_color_2_focus: (THEME_COLOR_U_HIDDEN)
             }
 
@@ -262,8 +266,10 @@ live_design!{
                 border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
 
                 color: (THEME_COLOR_D_HIDDEN)
-                color_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
-                color_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
+                color_hover: (THEME_COLOR_D_HIDDEN)
+                color_focus: (#f00)
+                color_empty: (THEME_COLOR_U_HIDDEN)
+                color_disabled: (THEME_COLOR_U_HIDDEN)
             }
         }
             
@@ -747,14 +753,20 @@ live_design!{
 
                 color: (THEME_COLOR_U_HIDDEN)
                 color_hover: (THEME_COLOR_U_HIDDEN)
-                color_focus: (THEME_COLOR_U_HIDDEN)
+                color_focus: (#f00)
+                color_disabled: (THEME_COLOR_U_HIDDEN)
+                color_empty: (THEME_COLOR_U_HIDDEN)
 
                 border_color_1: (THEME_COLOR_U_HIDDEN)
                 border_color_1_hover: (THEME_COLOR_U_HIDDEN)
+                border_color_1_empty: (THEME_COLOR_U_HIDDEN)
+                border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
                 border_color_1_focus: (THEME_COLOR_U_HIDDEN)
 
                 border_color_2: (THEME_COLOR_U_HIDDEN)
                 border_color_2_hover: (THEME_COLOR_U_HIDDEN)
+                border_color_2_empty: (THEME_COLOR_U_HIDDEN)
+                border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
                 border_color_2_focus: (THEME_COLOR_U_HIDDEN)
             }
 
