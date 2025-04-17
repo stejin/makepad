@@ -29,7 +29,7 @@ live_design!{
         align: { y: 0.5 }
         padding: { left: (THEME_SPACE_1) },
         is_folder: false,
-        indent_width: 10.0
+        indent_width: (THEME_SPACE_2)
         min_drag_distance: 10.0
         
         draw_bg: {
@@ -224,7 +224,7 @@ live_design!{
             draw_text: {is_folder: 1.0}
         }
         
-        filler: { // TODO: Clarify what this is for. Appears not to do anything.
+        filler: {
             fn pixel(self) -> vec4 {
                 return mix(
                     mix(
