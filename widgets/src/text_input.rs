@@ -53,7 +53,7 @@ live_design! {
             uniform color_dither: 1.0
 
             color: (THEME_COLOR_INSET)
-            uniform color_hover: (THEME_COLOR_INSET)
+            uniform color_hover: (THEME_COLOR_INSET_HOVER)
             uniform color_focus: (THEME_COLOR_INSET_FOCUS)
             uniform color_down: (THEME_COLOR_INSET_DOWN)
             uniform color_empty: (THEME_COLOR_INSET)
@@ -378,17 +378,6 @@ live_design! {
 
     pub TextInputFlat = <TextInput> {
         draw_bg: {
-            border_radius: (THEME_CORNER_RADIUS)
-            border_size: (THEME_BEVELING)
-
-            color_dither: 1.0
-
-            color: (THEME_COLOR_INSET)
-            color_hover: (THEME_COLOR_INSET_HOVER)
-            color_focus: (THEME_COLOR_INSET_FOCUS)
-            color_down: (THEME_COLOR_INSET_DOWN)
-            color_disabled: (THEME_COLOR_INSET_DISABLED)
-
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_1_focus: (THEME_COLOR_BEVEL_FOCUS)
@@ -405,17 +394,7 @@ live_design! {
         }
     }
 
-    pub TextInputFlatter = <TextInput> {
-        draw_bg: {
-            border_radius: (THEME_CORNER_RADIUS)
-            border_size: 0.
-
-            color: (THEME_COLOR_INSET)
-            color_hover: (THEME_COLOR_INSET_HOVER)
-            color_focus: (THEME_COLOR_INSET_FOCUS)
-            color_down: (THEME_COLOR_INSET_DOWN)
-            color_disabled: (THEME_COLOR_INSET_DISABLED)
-        }
+    pub TextInputFlatter = <TextInputFlat> { draw_bg: { border_size: 0. }
     }
 
     pub TextInputGradientX = <TextInput> {
@@ -588,46 +567,8 @@ live_design! {
     }
         
 
-    pub TextInputGradientY = <TextInput> {
+    pub TextInputGradientY = <TextInputGradientX> {
         draw_bg: {
-            instance hover: 0.0
-            instance focus: 0.0
-            instance down: 0.0
-            instance empty: 0.0
-
-            uniform border_radius: (THEME_CORNER_RADIUS)
-            uniform border_size: (THEME_BEVELING)
-
-            uniform color_dither: 1.0
-
-            uniform color_1: (THEME_COLOR_INSET_1)
-            uniform color_1_hover: (THEME_COLOR_INSET_1)
-            uniform color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            uniform color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            uniform color_1_empty: (THEME_COLOR_INSET_1)
-            uniform color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            uniform color_2: (THEME_COLOR_INSET_2)
-            uniform color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            uniform color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            uniform color_2_empty: (THEME_COLOR_INSET_2)
-            uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
-
-            uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW_DOWN)
-            uniform border_color_1_empty: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
-
-            uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_down: (THEME_COLOR_BEVEL_LIGHT_DOWN)
-            uniform border_color_2_empty: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
-
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
                 let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
@@ -694,28 +635,6 @@ live_design! {
         }
 
         draw_selection: {
-            instance hover: 0.0
-            instance focus: 0.0
-            instance down: 0.0
-            instance disabled: 0.0
-            instance empty: 0.0
-
-            uniform border_radius: (THEME_TEXTSELECTION_CORNER_RADIUS)
-
-            uniform color_1: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_down: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_1_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-
-            uniform color_2: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_2_hover: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.4)
-            uniform color_2_focus: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
-            uniform color_2_down: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_2_empty: (THEME_COLOR_BG_HIGHLIGHT_INLINE)
-            uniform color_2_disabled: (THEME_COLOR_BG_HIGHLIGHT_INLINE * 1.2)
-
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
 
