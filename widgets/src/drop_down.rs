@@ -254,51 +254,31 @@ live_design!{
     
     pub DropDownFlat = <DropDown> {
         draw_bg: {
-            border_size: (THEME_BEVELING)
-
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
             color_focus: (THEME_COLOR_OUTSET_FOCUS)
             color_down: (THEME_COLOR_OUTSET_DOWN)
-            color_disabled: (THEME_COLOR_OUTSET_DISABLED)
+            color_disabled: (THEME_COLOR_U_HIDDEN)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_1_focus: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_1_down: (THEME_COLOR_BEVEL)
+            border_color_1_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_1_disabled: (THEME_COLOR_BEVEL_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_2_focus: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_2_down: (THEME_COLOR_BEVEL)
+            border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_2_disabled: (THEME_COLOR_BEVEL_DISABLED)
         }
 
         popup_menu: <PopupMenuFlat> {}
     }
 
-    pub DropDownFlatter = <DropDown> {
+    pub DropDownFlatter = <DropDownFlat> {
         draw_bg: {
             border_size: 0.,
-
-            color: (THEME_COLOR_U_HIDDEN)
-            color_hover: (THEME_COLOR_OUTSET_HOVER)
-            color_focus: (THEME_COLOR_OUTSET_FOCUS)
-            color_down: (THEME_COLOR_OUTSET_DOWN)
-            color_disabled: (THEME_COLOR_OUTSET_DISABLED)
-
-            border_color_1: (THEME_COLOR_U_HIDDEN)
-            border_color_1_hover: (THEME_COLOR_U_HIDDEN)
-            border_color_1_focus: (THEME_COLOR_U_HIDDEN)
-            border_color_1_down: (THEME_COLOR_U_HIDDEN)
-            border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
-
-            border_color_2: (THEME_COLOR_U_HIDDEN)
-            border_color_2_hover: (THEME_COLOR_U_HIDDEN)
-            border_color_2_focus: (THEME_COLOR_U_HIDDEN)
-            border_color_2_down: (THEME_COLOR_U_HIDDEN)
-            border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
         }
 
         popup_menu: <PopupMenuFlatter> {}
@@ -306,7 +286,8 @@ live_design!{
 
 
     pub DropDownGradientX = <DropDown> {
-        
+        popup_menu: <PopupMenuGradientX> {}
+
         draw_bg: {
             instance hover: 0.0
             instance focus: 0.0
@@ -432,54 +413,14 @@ live_design!{
                 
                 return sdf.result
             }
-        }
-        
-        popup_menu: <PopupMenuGradientX> {}
+        }    
     }
 
 
     pub DropDownGradientY = <DropDownGradientX> {
+        popup_menu: <PopupMenuGradientY> {}
         
         draw_bg: {
-            instance hover: 0.0
-            instance focus: 0.0
-            instance down: 0.0
-                        
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
-
-            color_dither: 1.0
-
-            color_1: (THEME_COLOR_OUTSET_1)
-            color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
-            color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
-            color_1_down: (THEME_COLOR_OUTSET_1_DOWN)
-            color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_OUTSET_2)
-            color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
-            color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
-            color_2_down: (THEME_COLOR_OUTSET_2_DOWN)
-            color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
-
-            border_color_1: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT * 1.3)
-            border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT * 1.3)
-
-            border_color_2: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW * 1.3)
-            border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW * 1.3)
-            
-            arrow_color: (THEME_COLOR_TEXT)
-            arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
-            arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
-            arrow_color_down: (THEME_COLOR_TEXT_DOWN)
-            arrow_color_disabled: (THEME_COLOR_TEXT_DISABLED)
-
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
                 let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
@@ -565,9 +506,7 @@ live_design!{
                 
                 return sdf.result
             }
-        }
-        
-        popup_menu: <PopupMenuGradientY> {}
+        }     
     }
 
 }
