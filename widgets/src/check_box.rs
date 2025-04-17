@@ -71,7 +71,6 @@ live_design!{
             uniform mark_color_focus: (THEME_COLOR_MARK_FOCUS)
             uniform mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
 
-
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
                 let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
@@ -512,22 +511,19 @@ live_design!{
 
     pub CheckBoxFlat = <CheckBox> {
         draw_bg: {
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
+            color_1: (THEME_COLOR_INSET)
+            color_1_hover: (THEME_COLOR_INSET_HOVER)
+            color_1_down: (THEME_COLOR_INSET_DOWN)
+            color_1_active: (THEME_COLOR_INSET_ACTIVE)
+            color_1_focus: (THEME_COLOR_INSET_FOCUS)
+            color_1_disabled: (THEME_COLOR_INSET_DISABLED)
 
-            color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
-            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
-            color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
+            color_2: (THEME_COLOR_INSET)
+            color_2_hover: (THEME_COLOR_INSET_HOVER)
+            color_2_down: (THEME_COLOR_INSET_DOWN)
+            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2_focus: (THEME_COLOR_INSET_FOCUS)
+            color_2_disabled: (THEME_COLOR_INSET_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
@@ -542,108 +538,31 @@ live_design!{
             border_color_2_active: (THEME_COLOR_BEVEL_FOCUS)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
-
-            mark_color: (THEME_COLOR_U_HIDDEN)
-            mark_color_hover: (THEME_COLOR_U_HIDDEN)
-            mark_color_down: (THEME_COLOR_U_HIDDEN)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_focus: (THEME_COLOR_MARK_FOCUS)
-            mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
-
         }
 
     }
 
-    pub CheckBoxFlatter = <CheckBox> {
+    pub CheckBoxFlatter = <CheckBoxFlat> {
         draw_bg: {
-            border_size: 0.0
-            border_radius: (THEME_CORNER_RADIUS)
+            border_color_1: (THEME_COLOR_U_HIDDEN)
+            border_color_1_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_1_down: (THEME_COLOR_U_HIDDEN)
+            border_color_1_active: (THEME_COLOR_U_HIDDEN)
+            border_color_1_focus: (THEME_COLOR_U_HIDDEN)
+            border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
-            color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
-            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
-            color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
-
-            border_color_1: (THEME_COLOR_BEVEL)
-            border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
-            border_color_1_down: (THEME_COLOR_BEVEL_DOWN)
-            border_color_1_active: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
-
-            border_color_2: (THEME_COLOR_BEVEL)
-            border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
-            border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
-            border_color_2_active: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
-
-            mark_color: (THEME_COLOR_U_HIDDEN)
-            mark_color_hover: (THEME_COLOR_U_HIDDEN)
-            mark_color_down: (THEME_COLOR_U_HIDDEN)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_focus: (THEME_COLOR_MARK_FOCUS)
-            mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
-
+            border_color_2: (THEME_COLOR_U_HIDDEN)
+            border_color_2_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_2_down: (THEME_COLOR_U_HIDDEN)
+            border_color_2_active: (THEME_COLOR_U_HIDDEN)
+            border_color_2_focus: (THEME_COLOR_U_HIDDEN)
+            border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
         }
 
     }
         
     pub CheckBoxGradientX = <CheckBox> {
         draw_bg: {
-            size: 7.5;
-
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
-
-            color_dither: 1.0
-
-            color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
-            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
-            color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
-
-            border_color_1: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
-
-            border_color_2: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
-
-            mark_color: (THEME_COLOR_U_HIDDEN)
-            mark_color_hover: (THEME_COLOR_U_HIDDEN)
-            mark_color_down: (THEME_COLOR_U_HIDDEN)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_focus: (THEME_COLOR_MARK_FOCUS)
-            mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
-
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
                 let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
@@ -738,57 +657,18 @@ live_design!{
     pub CheckBoxGradientY = <CheckBox> { }
 
     pub Toggle = <CheckBox> {
-        align: { x: 0., y: 0. }
+        label_walk: {
+            margin: <THEME_MSPACE_H_1> { left: (18.0 + THEME_SPACE_2) }
+        }
 
         draw_bg: {
-            size: 7.5;
             check_type: Toggle
-
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
-
-            color_dither: 1.0
-
-            color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
-            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
-            color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
-
-            border_color_1: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
-
-            border_color_2: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
             mark_color_down: (THEME_COLOR_TEXT_DOWN)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_active_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_focus: (THEME_COLOR_MARK_FOCUS)
-            mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
         }
-        label_walk: {
-            margin: <THEME_MSPACE_H_1> { left: 22.5 }
-        }
-            
+
         animator: {
             disabled = {
                 default: off,
@@ -881,76 +761,26 @@ live_design!{
 
     pub ToggleFlat = <Toggle> {
         draw_bg: {
-            size: 7.5;
+            color_1: (THEME_COLOR_INSET)
+            color_1_hover: (THEME_COLOR_INSET_HOVER)
+            color_1_down: (THEME_COLOR_INSET_DOWN)
+            color_1_active: (THEME_COLOR_INSET_ACTIVE)
+            color_1_focus: (THEME_COLOR_INSET_FOCUS)
+            color_1_disabled: (THEME_COLOR_INSET_DISABLED)
 
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
-
-            color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
-            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
-            color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
+            color_2: (THEME_COLOR_INSET)
+            color_2_hover: (THEME_COLOR_INSET_HOVER)
+            color_2_down: (THEME_COLOR_INSET_DOWN)
+            color_2_active: (THEME_COLOR_INSET_ACTIVE)
+            color_2_focus: (THEME_COLOR_INSET_FOCUS)
+            color_2_disabled: (THEME_COLOR_INSET_DISABLED)
 
             border_color_1: (THEME_COLOR_BEVEL)
-            border_color_1_hover: (THEME_COLOR_BEVEL_DOWN)
-            border_color_1_down: (THEME_COLOR_BEVEL)
-            border_color_1_active: (THEME_COLOR_BEVEL)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
-
-            border_color_2: (THEME_COLOR_BEVEL)
-            border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
-            border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
-            border_color_2_active: (THEME_COLOR_BEVEL_ACTIVE)
-            border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
-
-            uniform mark_size: 0.75
-
-            mark_color: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_down: (THEME_COLOR_TEXT_DOWN)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_focus: (THEME_COLOR_MARK_FOCUS)
-            mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
-        }
-    }
-        
-    pub ToggleFlatter = <Toggle> {
-        draw_bg: {
-            border_size: 0.
-            border_radius: (THEME_CORNER_RADIUS)
-
-            color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
-            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
-            color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
-
-            border_color_1: (THEME_COLOR_BEVEL)
-            border_color_1_hover: (THEME_COLOR_BEVEL)
+            border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_1_down: (THEME_COLOR_BEVEL_DOWN)
-            border_color_1_active: (THEME_COLOR_BEVEL)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
+            border_color_1_active: (THEME_COLOR_BEVEL_ACTIVE)
+            border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
+            border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
@@ -958,47 +788,24 @@ live_design!{
             border_color_2_active: (THEME_COLOR_BEVEL_ACTIVE)
             border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
             border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
-
-            uniform mark_size: 0.75
-
-            mark_color: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_down: (THEME_COLOR_TEXT_DOWN)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_focus: (THEME_COLOR_MARK_FOCUS)
-            mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
         }
     }
         
-    pub ToggleFlatter = <Toggle> {
+    pub ToggleFlatter = <ToggleFlat> {
         draw_bg: {
-            border_size: 0.
-            border_radius: (THEME_CORNER_RADIUS)
+            border_color_1: (THEME_COLOR_U_HIDDEN)
+            border_color_1_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_1_down: (THEME_COLOR_U_HIDDEN)
+            border_color_1_active: (THEME_COLOR_U_HIDDEN)
+            border_color_1_focus: (THEME_COLOR_U_HIDDEN)
+            border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
 
-            color_1: (THEME_COLOR_INSET_1)
-            color_1_hover: (THEME_COLOR_INSET_1_HOVER)
-            color_1_down: (THEME_COLOR_INSET_1_DOWN)
-            color_1_active: (THEME_COLOR_INSET_1_ACTIVE)
-            color_1_focus: (THEME_COLOR_INSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_INSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_INSET_2)
-            color_2_hover: (THEME_COLOR_INSET_2_HOVER)
-            color_2_down: (THEME_COLOR_INSET_2_DOWN)
-            color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
-            color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
-
-            uniform mark_size: 0.75
-
-            mark_color: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_down: (THEME_COLOR_TEXT_DOWN)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE)
-            mark_color_active: (THEME_COLOR_TEXT_ACTIVE * 1.5)
-            mark_color_focus: (THEME_COLOR_MARK_FOCUS)
-            mark_color_disabled: (THEME_COLOR_MARK_DISABLED)
+            border_color_2: (THEME_COLOR_U_HIDDEN)
+            border_color_2_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_2_down: (THEME_COLOR_U_HIDDEN)
+            border_color_2_active: (THEME_COLOR_U_HIDDEN)
+            border_color_2_focus: (THEME_COLOR_U_HIDDEN)
+            border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
         }
     }
 
@@ -1024,20 +831,6 @@ live_design!{
             color_2_active: (THEME_COLOR_INSET_2_ACTIVE)
             color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
-
-            border_color_1: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
-
-            border_color_2: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
 
             mark_color: (THEME_COLOR_TEXT_ACTIVE)
             mark_color_hover: (THEME_COLOR_TEXT_ACTIVE * 1.5)
