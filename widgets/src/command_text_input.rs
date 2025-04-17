@@ -25,7 +25,7 @@ live_design! {
 
             draw_bg: {
                 color: (THEME_COLOR_FLOATING_BG),
-                border_size: 2.0,
+                border_size: (THEME_BEVELING),
                 border_color: (THEME_COLOR_BEVEL),
                 border_radius: (THEME_CORNER_RADIUS)
 
