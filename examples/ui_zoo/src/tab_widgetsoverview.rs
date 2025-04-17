@@ -62,12 +62,12 @@ live_design!{
                 spacing: (THEME_SPACE_2)
                 height: Fit,
                 <Button> { text: "<Button>" }
-                <ButtonIcon> {
+                <Button> {
                     draw_icon: {
                         color: #f00,
                         svg_file: dep("crate://self/resources/Icon_Favorite.svg"),
                     }
-                    text: "<ButtonIcon>"
+                    text: "<Button>"
                 }
                 <ButtonFlat> { text: "<ButtonFlat>"}
                 <ButtonFlatter> { text: "<ButtonFlatter>"}

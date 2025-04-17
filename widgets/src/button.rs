@@ -8,7 +8,7 @@ live_design! {
     pub ButtonBase = {{Button}} {}
     pub Button = <ButtonBase> {
         width: Fit, height: Fit,
-        spacing: 7.5,
+        spacing: (THEME_SPACE_2),
         align: {x: 0.5, y: 0.5},
         padding: <THEME_MSPACE_2> {}
         label_walk: { width: Fit, height: Fit },
@@ -84,6 +84,7 @@ live_design! {
             instance enabled: 1.0
             instance disabled: 0.0
             instance focus: 0.0
+
             uniform color_dither: 1.0
 
             uniform border_size: (THEME_BEVELING)
@@ -343,39 +344,6 @@ live_design! {
 
     pub ButtonGradientY = <ButtonGradientX> {
         draw_bg: {
-            instance hover: 0.0
-            instance down: 0.0
-            instance enabled: 1.0
-
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
-
-            color_dither: 1.0
-
-            color_1: (THEME_COLOR_OUTSET_1)
-            color_1_hover: (THEME_COLOR_OUTSET_1_HOVER)
-            color_1_down: (THEME_COLOR_OUTSET_1_DOWN)
-            color_1_focus: (THEME_COLOR_OUTSET_1_FOCUS)
-            color_1_disabled: (THEME_COLOR_OUTSET_1_DISABLED)
-
-            color_2: (THEME_COLOR_OUTSET_2)
-            color_2_hover: (THEME_COLOR_OUTSET_2_HOVER)
-            color_2_down: (THEME_COLOR_OUTSET_2_DOWN)
-            color_2_focus: (THEME_COLOR_OUTSET_2_FOCUS)
-            color_2_disabled: (THEME_COLOR_OUTSET_2_DISABLED)
-
-            border_color_1: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT * 1.5)
-            border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
-
-            border_color_2: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
-            border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
-            border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
-
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size)
                 let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
@@ -432,24 +400,8 @@ live_design! {
         }
     }
 
-    pub ButtonIcon = <Button> {
-        icon_walk: {
-            width: 12.
-            margin: { left: 0. }
-        }
-    }
-    
     pub ButtonFlat = <Button> {
-        height: Fit, width: Fit,
-        padding: <THEME_MSPACE_2> {}
-        margin: 0.
-        align: { x: 0.5, y: 0.5 }
-        icon_walk: { width: 12. }
-        
         draw_bg: {
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
-
             color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_OUTSET_HOVER)
             color_down: (THEME_COLOR_OUTSET_DOWN)
@@ -471,28 +423,12 @@ live_design! {
         
     }
     
-    pub ButtonFlatter = <Button> {
+    pub ButtonFlatter = <ButtonFlat> {
         draw_bg: {
-            border_size: (THEME_BEVELING)
-            border_radius: (THEME_CORNER_RADIUS)
-
-            color: (THEME_COLOR_U_HIDDEN)
             color_hover: (THEME_COLOR_U_HIDDEN)
             color_focus: (THEME_COLOR_U_HIDDEN)
             color_down: (THEME_COLOR_U_HIDDEN)
             color_disabled: (THEME_COLOR_OUTSET_DISABLED)
-
-            border_color_1: (THEME_COLOR_U_HIDDEN)
-            border_color_1_hover: (THEME_COLOR_U_HIDDEN)
-            border_color_1_down: (THEME_COLOR_U_HIDDEN)
-            border_color_1_focus: (THEME_COLOR_U_HIDDEN)
-            border_color_1_disabled: (THEME_COLOR_U_HIDDEN)
-
-            border_color_2: (THEME_COLOR_D_HIDDEN)
-            border_color_2_hover: (THEME_COLOR_D_HIDDEN)
-            border_color_2_down: (THEME_COLOR_D_HIDDEN)
-            border_color_2_focus: (THEME_COLOR_U_HIDDEN)
-            border_color_2_disabled: (THEME_COLOR_U_HIDDEN)
         }
     }
     

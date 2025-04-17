@@ -56,12 +56,12 @@ live_design!{
                     text: "<Button>"
                 }
 
-                iconbutton = <ButtonIcon> {
+                iconbutton = <Button> {
                     draw_icon: {
                         color: #f00,
                         svg_file: dep("crate://self/resources/Icon_Favorite.svg"),
                     }
-                    text: "<ButtonIcon>"
+                    text: "<Button>"
                 }
             }
 
