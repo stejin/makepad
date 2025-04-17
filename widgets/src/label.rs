@@ -147,7 +147,7 @@ live_design!{
 
     pub TextBox = <Label> {
         width: Fill, height: Fit,
-        flow: RightWrap,
+        // flow: RightWrap, // TODO: reintroduce
         margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
 
         draw_text: {
