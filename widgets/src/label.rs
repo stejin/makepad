@@ -32,12 +32,8 @@ live_design!{
         }
     }
     
-    pub LabelGradientY = <Label> {
-        width: Fit, height: Fit,
+    pub LabelGradientY = <LabelGradientX> {
         draw_text: {
-            uniform color_1: #f00,
-            uniform color_2: #ff0
-
             fn get_color(self) ->vec4{
                 return mix(self.color_1, self.color_2, self.pos.x)
             }
@@ -55,7 +51,7 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H1"
+        text: "H1"
     }
     
     pub H1italic = <Label> {
@@ -68,7 +64,7 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H1"
+        text: "H1 italic"
     }
     
     pub H2 = <Label> {
@@ -81,7 +77,7 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H2"
+        text: "H2"
     }
     
     pub H2italic = <Label> {
@@ -94,7 +90,7 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H2"
+        text: "H2 italic"
     }
     
     pub H3 = <Label> {
@@ -107,7 +103,7 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H3"
+        text: "H3"
     }
     
     pub H3italic = <Label> {
@@ -120,7 +116,7 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H3"
+        text: "H3 italic"
     }
     
     pub H4 = <Label> {
@@ -133,7 +129,7 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H4"
+        text: "H4"
     }
     
     pub H4italic = <Label> {
@@ -146,14 +142,14 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT_HL)
         }
-        text: "Headline H4"
+        text: "H4 italic"
     }
-    
-    pub P = <Label> {
-        width: Fill,
-        margin: 0.,
-        padding: 0.,
+
+    pub TextBox = <Label> {
+        width: Fill, height: Fit,
+        flow: RightWrap,
         margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+
         draw_text: {
             text_style: <THEME_FONT_REGULAR> {
                 line_spacing: (THEME_FONT_LINE_SPACING),
@@ -161,52 +157,45 @@ live_design!{
             }
             color: (THEME_COLOR_TEXT)
         }
+        text: "TextBox"
+    }
+    
+    pub P = <TextBox> {
         text: "Paragraph"
     }
     
-    pub Pbold = <Label> {
-        width: Fill,
-        margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+    pub Pbold = <TextBox> {
         draw_text: {
             text_style: <THEME_FONT_BOLD> {
                 line_spacing: (THEME_FONT_LINE_SPACING),
                 font_size: (THEME_FONT_SIZE_P)
             }
-            color: (THEME_COLOR_TEXT)
         }
         text: "Paragraph"
     }
     
-    pub Pitalic = <Label> {
-        width: Fill,
-        margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+    pub Pitalic = <TextBox> {
         draw_text: {
             text_style: <THEME_FONT_ITALIC> {
                 line_spacing: (THEME_FONT_LINE_SPACING),
                 font_size: (THEME_FONT_SIZE_P)
             }
-            color: (THEME_COLOR_TEXT)
         }
         text: "Paragraph"
     }
     
-    pub Pbolditalic = <Label> {
-        width: Fill,
-        margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+    pub Pbolditalic = <TextBox> {
         draw_text: {
             text_style: <THEME_FONT_BOLD_ITALIC> {
                 line_spacing: (THEME_FONT_LINE_SPACING),
                 font_size: (THEME_FONT_SIZE_P)
             }
-            color: (THEME_COLOR_TEXT)
         }
         text: "Paragraph"
     }
 
     pub IconSet = <Label> {
         width: Fit,
-        margin: 0.
-        padding: 0.
         draw_text: {
             text_style: <THEME_FONT_ICONS> {
                 line_spacing: (THEME_FONT_LINE_SPACING),
