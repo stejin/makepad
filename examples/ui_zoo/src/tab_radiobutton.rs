@@ -1093,37 +1093,6 @@ live_design!{
                 }
             }
 
-            <H4> { text: "Media"}
-            <View> {
-                height: Fit
-                flow: Right
-                align: { x: 0.0, y: 0.5 }
-                radios_demo_19 = <View> {
-                    width: Fit, height: Fit,
-                    flow: Right,
-                    spacing: (THEME_SPACE_2)
-                    radio1 = <RadioButtonImage> {
-                        width: 50, height: 50,
-                        media: Image,
-                        image: <Image> { source: dep("crate://self/resources/ducky.png" ) }
-                    }
-                    radio2 = <RadioButtonImage> {
-                        width: 50, height: 50,
-                        media: Image,
-                        image: <Image> { source: dep("crate://self/resources/ducky.png" ) }
-                    }
-                    radio3 = <RadioButtonImage> {
-                        width: 50, height: 50,
-                        media: Image,
-                        image: <Image> { source: dep("crate://self/resources/ducky.png" ) }
-                    }
-                    radio4 = <RadioButtonImage> {
-                        width: 50, height: 50,
-                        media: Image,
-                        image: <Image> { source: dep("crate://self/resources/ducky.png" ) }
-                    }
-                }
-            }
         }
     }
 }
