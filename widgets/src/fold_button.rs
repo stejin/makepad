@@ -39,8 +39,8 @@ live_design!{
                 sdf.close_path();
                 sdf.fill(
                     mix(
-                        mix( self.color, self.color_hover, self.hover),
-                        mix( self.color_active, self.color_hover, self.hover),
+                        mix(self.color, self.color_hover, self.hover),
+                        mix(self.color_active, self.color_hover, self.hover),
                         self.active
                     )
                 );
