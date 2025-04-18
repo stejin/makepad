@@ -43,6 +43,8 @@ workspace.members = [
     # "comp_demo",
     "tools/cargo_makepad",
     "tools/auto_version",
+    # === projects ===
+    "projects/test_1",
 ]
 
 workspace.exclude = [
