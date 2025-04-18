@@ -48,19 +48,19 @@ live_design!{
             uniform color_2_focus: (THEME_COLOR_INSET_2_FOCUS)
             uniform color_2_disabled: (THEME_COLOR_INSET_2_DISABLED)
 
-            uniform border_color_1: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_hover: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_active: (THEME_COLOR_BEVEL_SHADOW)
-            uniform border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
+            uniform border_color_1: (THEME_COLOR_BEVEL_2)
+            uniform border_color_1_hover: (THEME_COLOR_BEVEL_2_HOVER)
+            uniform border_color_1_down: (THEME_COLOR_BEVEL_2_DOWN)
+            uniform border_color_1_active: (THEME_COLOR_BEVEL_2_ACTIVE)
+            uniform border_color_1_focus: (THEME_COLOR_BEVEL_2_FOCUS)
+            uniform border_color_1_disabled: (THEME_COLOR_BEVEL_2_DISABLED)
 
-            uniform border_color_2: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_hover: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_2: (THEME_COLOR_BEVEL_1)
+            uniform border_color_2_hover: (THEME_COLOR_BEVEL_1_HOVER)
             uniform border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
-            uniform border_color_2_active: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
+            uniform border_color_2_active: (THEME_COLOR_BEVEL_1_ACTIVE)
+            uniform border_color_2_focus: (THEME_COLOR_BEVEL_1_FOCUS)
+            uniform border_color_2_disabled: (THEME_COLOR_BEVEL_1_DISABLED)
 
             uniform mark_size: 0.65
             uniform mark_color: (THEME_COLOR_U_HIDDEN)
@@ -529,15 +529,15 @@ live_design!{
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_1_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_1_active: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_1_focus: (THEME_COLOR_BEVEL_SHADOW_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_SHADOW_DISABLED)
+            border_color_1_focus: (THEME_COLOR_BEVEL_FOCUS)
+            border_color_1_disabled: (THEME_COLOR_BEVEL_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_2_active: (THEME_COLOR_BEVEL_FOCUS)
-            border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
+            border_color_2_focus: (THEME_COLOR_BEVEL_FOCUS)
+            border_color_2_disabled: (THEME_COLOR_BEVEL_DISABLED)
         }
 
     }
@@ -779,15 +779,15 @@ live_design!{
             border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_1_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_1_active: (THEME_COLOR_BEVEL_ACTIVE)
-            border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_1_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
+            border_color_1_focus: (THEME_COLOR_BEVEL_FOCUS)
+            border_color_1_disabled: (THEME_COLOR_BEVEL_DISABLED)
 
             border_color_2: (THEME_COLOR_BEVEL)
             border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
             border_color_2_down: (THEME_COLOR_BEVEL_DOWN)
             border_color_2_active: (THEME_COLOR_BEVEL_ACTIVE)
-            border_color_2_focus: (THEME_COLOR_BEVEL_LIGHT_FOCUS)
-            border_color_2_disabled: (THEME_COLOR_BEVEL_LIGHT_DISABLED)
+            border_color_2_focus: (THEME_COLOR_BEVEL_FOCUS)
+            border_color_2_disabled: (THEME_COLOR_BEVEL_DISABLED)
         }
     }
         

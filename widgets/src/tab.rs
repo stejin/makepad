@@ -59,7 +59,7 @@ live_design!{
 
             uniform border_color_1: (THEME_COLOR_U_HIDDEN)
             uniform border_color_1_hover: (THEME_COLOR_U_HIDDEN)
-            uniform border_color_1_active: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_1_active: (THEME_COLOR_BEVEL_1)
 
             uniform border_color_2: (THEME_COLOR_D_HIDDEN)
             uniform border_color_2_hover: (THEME_COLOR_D_HIDDEN)
@@ -187,7 +187,7 @@ live_design!{
 
             border_color_1: (THEME_COLOR_U_HIDDEN)
             border_color_1_hover: (THEME_COLOR_U_HIDDEN)
-            border_color_1_active: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_1_active: (THEME_COLOR_BEVEL_1)
 
             border_color_2: (THEME_COLOR_D_HIDDEN)
             border_color_2_hover: (THEME_COLOR_D_HIDDEN)
@@ -250,7 +250,7 @@ live_design!{
 
             border_color_1: (THEME_COLOR_U_HIDDEN)
             border_color_1_hover: (THEME_COLOR_U_HIDDEN)
-            border_color_1_active: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_1_active: (THEME_COLOR_BEVEL_1)
 
             border_color_2: (THEME_COLOR_D_HIDDEN)
             border_color_2_hover: (THEME_COLOR_D_HIDDEN)

@@ -20,8 +20,8 @@ live_design! {
 
         show_bg: true, 
         draw_bg: {
-            uniform color_1: (THEME_COLOR_BEVEL_SHADOW)
-            uniform color_2: (THEME_COLOR_BEVEL_LIGHT)
+            uniform color_1: (THEME_COLOR_BEVEL_2)
+            uniform color_2: (THEME_COLOR_BEVEL_1)
             uniform border_size: (THEME_BEVELING)
 
             fn pixel(self) -> vec4 {
@@ -50,8 +50,8 @@ live_design! {
 
         show_bg: true, 
         draw_bg: {
-            uniform color_1: (THEME_COLOR_BEVEL_SHADOW)
-            uniform color_2: (THEME_COLOR_BEVEL_LIGHT)
+            uniform color_1: (THEME_COLOR_BEVEL_2)
+            uniform color_2: (THEME_COLOR_BEVEL_1)
             uniform border_size: (THEME_BEVELING)
 
             fn pixel(self) -> vec4 {

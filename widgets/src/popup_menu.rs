@@ -442,8 +442,8 @@ live_design!{
             uniform color_dither: 1.0
             uniform color: (THEME_COLOR_FLOATING_BG)
 
-            uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1: (THEME_COLOR_BEVEL_1)
+            uniform border_color_2: (THEME_COLOR_BEVEL_2)
             uniform border_radius: (THEME_CORNER_RADIUS)
             uniform border_size: (THEME_BEVELING)
             uniform inset: vec4(0.0, 0.0, 0.0, 0.0),
@@ -511,8 +511,8 @@ live_design!{
             uniform color_1: (THEME_COLOR_FG_APP)
             uniform color_2: (#4)
 
-            uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1: (THEME_COLOR_BEVEL_1)
+            uniform border_color_2: (THEME_COLOR_BEVEL_2)
 
         }
     }
@@ -529,8 +529,8 @@ live_design!{
             uniform color_1: (THEME_COLOR_FG_APP)
             uniform color_2: (#4)
 
-            uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
-            uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_1: (THEME_COLOR_BEVEL_1)
+            uniform border_color_2: (THEME_COLOR_BEVEL_2)
                     
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size)

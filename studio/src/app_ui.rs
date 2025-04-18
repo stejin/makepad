@@ -45,12 +45,12 @@ live_design!{
         <View> {
             width: (THEME_BEVELING * 2.0), height: Fill
             show_bg: true,
-            draw_bg: { color: (THEME_COLOR_BEVEL_SHADOW) }
+            draw_bg: { color: (THEME_COLOR_BEVEL_2) }
         }
         <View> {
             width: (THEME_BEVELING), height: Fill,
             show_bg: true,
-            draw_bg: { color: (THEME_COLOR_BEVEL_LIGHT) }
+            draw_bg: { color: (THEME_COLOR_BEVEL_1) }
         }
     }
 

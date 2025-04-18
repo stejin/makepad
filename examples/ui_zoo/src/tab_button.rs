@@ -44,13 +44,13 @@ live_design!{
                         color_hover: (THEME_COLOR_OUTSET_HOVER)
                         color_down: (THEME_COLOR_OUTSET_DOWN)
 
-                        border_color_1: (THEME_COLOR_BEVEL_LIGHT)
-                        border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
-                        border_color_1_down: (THEME_COLOR_BEVEL_SHADOW)
+                        border_color_1: (THEME_COLOR_BEVEL_1)
+                        border_color_1_hover: (THEME_COLOR_BEVEL_1)
+                        border_color_1_down: (THEME_COLOR_BEVEL_2)
 
-                        border_color_2: (THEME_COLOR_BEVEL_SHADOW)
-                        border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
-                        border_color_2_down: (THEME_COLOR_BEVEL_LIGHT)
+                        border_color_2: (THEME_COLOR_BEVEL_2)
+                        border_color_2_hover: (THEME_COLOR_BEVEL_2)
+                        border_color_2_down: (THEME_COLOR_BEVEL_1)
                     }
 
                     text: "<Button>"
