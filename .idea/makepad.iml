@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/audio_graph/audio_widgets/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/audio_graph/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/draw/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/draw/vector/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/ai_docs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/chatgpt/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/hello_widgets/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/ironfish/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/ironfish/synth_ironfish/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/news_feed/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/sdxl/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/simple/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/simple_shader/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/slides/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/text_flow/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/ui_zoo/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/web_cam/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/experiments/homescreens/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/experiments/html_experiment/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/experiments/huedmx/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/experiments/sdxl_remote/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/experiments/teamtalk/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/base64/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/digest/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/futures_legacy/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/html/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/http/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/live_id/id_macros/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/live_id/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/markdown/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/math/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/micro_proc_macro/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/micro_serde/derive/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/micro_serde/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/miniz/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/objc-sys/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/rustybuzz/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/shell/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/toml_parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/ttf-parser/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/ttf-parser/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/ttf-parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/ttf-parser/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/wasm_bridge/derive/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/wasm_bridge/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/wasm_strip/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/zune-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/zune-inflate/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/zune-jpeg/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/zune-jpeg/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/libs/zune-png/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/platform/derive_live/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/platform/live_compiler/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/platform/live_compiler/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/platform/live_tokenizer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/platform/shader_compiler/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/platform/shader_compiler/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/platform/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/projects/test_1/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/studio/file_protocol/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/studio/file_server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/studio/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tools/auto_version/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tools/cargo_makepad/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/widgets/derive_widget/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/widgets/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

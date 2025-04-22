@@ -1,9 +1,11 @@
 use makepad_widgets::*;
+
+//mod shader;
    
 live_design!{
     import makepad_widgets::base::*;
     import makepad_widgets::theme_desktop_dark::*; 
-    import test_1::demofiletree::*;
+    //import test_1::demofiletree::*;
     import test_1::my_widget::*;
     import makepad_draw::shader::std::*;
 
@@ -59,13 +61,13 @@ live_design!{
     }
     
     App = {{App}} {
-
         ui: <Window>{ 
             show_bg: true
             width: Fill,
             height: Fill
             
             draw_bg: {
+                
                 fn pixel(self) -> vec4 {
                     // test
                     //return mix(#7, #3, self.pos.y);
@@ -115,7 +117,8 @@ live_design!{
                                 let uv = self.pos - 0.5;
                                 let uv0 = uv;
                                 let finalColor = vec3(0.0);
-
+                                
+                                
                                 let i = 0;
                                 //for _i in 0..4 { // you cannot refer to _i inside the for loop; use i instead
                                 
@@ -363,7 +366,7 @@ live_design!{
                     title = {text:"<FileTree>"}
                     <ZooDesc> {text:"File Tree"}
                     <ZooGroup> {
-                        <DemoFileTree> { file_tree:{ height: 400. } }
+                     //   <DemoFileTree> { file_tree:{ height: 400. } }
                     }
                 }
 
@@ -548,7 +551,7 @@ pub struct App {
 impl LiveRegister for App {
     fn live_register(cx: &mut Cx) {
         crate::makepad_widgets::live_design(cx);
-        //  crate::demofiletree::live_design(cx);
+        //crate::demofiletree::live_design(cx);
         crate::my_widget::live_design(cx);
     }
 }
