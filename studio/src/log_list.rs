@@ -16,10 +16,10 @@ use {
 };
 
 live_design!{
-    import makepad_draw::shader::std::*;
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*;
-    import makepad_code_editor::code_view::CodeView;
+    use link::shaders::*;
+    use link::widgets::*;
+    use link::theme::*;
+    use makepad_code_editor::code_view::CodeView;
     
     Icon = <View> {
         width: 10, height: 10
@@ -44,7 +44,7 @@ live_design!{
                         THEME_COLOR_BG_ODD,
                         self.is_even
                     ),
-                    THEME_COLOR_CTRL_SELECTED,
+                    THEME_COLOR_OUTSET_ACTIVE,
                     self.selected
                 );
             }
@@ -98,7 +98,7 @@ live_design!{
             
             fold_button = <FoldButton>{
                 animator:{
-                    open={default:off}
+                    active={default:off}
                 }
             }
             
@@ -191,7 +191,7 @@ live_design!{
         }
     }
     
-    LogList = {{LogList}}{
+    pub LogList = {{LogList}}{
         height: Fill, width: Fill,
         list = <PortalList> {
             capture_overload: false,
@@ -276,7 +276,7 @@ impl LogList{
                                     if open > 0.0{
                                         cx.turtle_new_line();
                                         let code = tf.item_counted(cx, live_id!(code_view));
-                                        code.set_text(explanation);
+                                        code.set_text(cx, explanation);
                                         code.as_code_view().borrow_mut().unwrap().editor.height_scale = open;
                                         code.draw_all_unscoped(cx);
                                     }

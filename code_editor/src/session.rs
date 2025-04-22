@@ -102,7 +102,7 @@ impl CodeSession {
             selection_state.selections.as_selections()
         })
     }
-
+    
     pub fn last_added_selection_index(&self) -> Option<usize> {
         self.selection_state.borrow().last_added_selection_index
     }
@@ -163,26 +163,29 @@ impl CodeSession {
         let mut new_folding_lines = HashSet::new();
         let fold_state = &mut *fold_state_ref;
         for &line in &fold_state.folding_lines {
-            layout.scale[line] *= 0.9;
-            if layout.scale[line] < 0.1 + 0.001 {
-                layout.scale[line] = 0.1;
-                fold_state.folded_lines.insert(line);
-            } else {
-                new_folding_lines.insert(line);
+            if let Some(scale) = layout.scale.get_mut(line){
+                *scale *= 0.9;
+                if *scale < 0.1 + 0.001 {
+                    *scale = 0.1;
+                    fold_state.folded_lines.insert(line);
+                } else {
+                    new_folding_lines.insert(line);
+                }
+                layout.y.truncate(line + 1);
             }
-            layout.y.truncate(line + 1);
         }
         fold_state.folding_lines = new_folding_lines;
         let mut new_unfolding_lines = HashSet::new();
         for &line in &fold_state_ref.unfolding_lines {
-            let scale = layout.scale[line];
-            layout.scale[line] = 1.0 - 0.9 * (1.0 - scale);
-            if layout.scale[line] > 1.0 - 0.001 {
-                layout.scale[line] = 1.0;
-            } else {
-                new_unfolding_lines.insert(line);
+            if let Some(scale) = layout.scale.get_mut(line){
+                *scale = 1.0 - 0.9 * (1.0 - *scale);
+                if *scale > 1.0 - 0.001 {
+                    *scale = 1.0;
+                } else {
+                    new_unfolding_lines.insert(line);
+                }
+                layout.y.truncate(line + 1);
             }
-            layout.y.truncate(line + 1);
         }
         fold_state_ref.unfolding_lines = new_unfolding_lines;
         drop(layout);
@@ -215,7 +218,8 @@ impl CodeSession {
         }
     }
     
-    fn clamp_position(&self, mut position: Position) -> Position {
+    
+    pub fn clamp_position(&self, mut position: Position) -> Position {
         let text = self.document().as_text();
         let lines = text.as_lines();
         if position.line_index >= lines.len() {
@@ -697,7 +701,7 @@ impl CodeSession {
                     } else {
                         // There is at least one non-whitespace character before the cursor on the
                         // current line, so delete backwards by a single grapheme.
-                        let byte_count = lines[position.line_index]
+                        let byte_count = lines[position.line_index][..position.byte_index]
                             .graphemes()
                             .next_back()
                             .unwrap()
@@ -816,6 +820,33 @@ impl CodeSession {
             .clear();
         self.document
             .redo(self.id, &self.selection_state.borrow().selections)
+    }
+
+    /// Returns the word at the main cursor position as a String.
+    pub fn word_at_cursor(&self) -> Option<String> {
+        let selection_state = self.selection_state.borrow();
+        if let Some(index) = selection_state.last_added_selection_index {
+            let cursor = selection_state.selections[index].cursor;
+            let position = cursor.position;
+            let text = self.document().as_text();
+            let lines = text.as_lines();
+            
+            // Handle empty document or invalid cursor position
+            if lines.is_empty() || position.line_index >= lines.len() {
+                return None;
+            }
+            
+            let line = &lines[position.line_index];
+            let word_separators = &self.settings.word_separators;
+            
+            // Find word boundaries
+            let start_byte_index = line.find_prev_word_boundary(position.byte_index, word_separators);
+            let end_byte_index = line.find_next_word_boundary(position.byte_index, word_separators);
+            if start_byte_index!=end_byte_index{
+                return Some(line[start_byte_index..end_byte_index].to_string())
+            }
+        }
+        None
     }
 
     pub fn handle_changes(&mut self) {

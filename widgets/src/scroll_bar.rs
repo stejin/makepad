@@ -1,8 +1,127 @@
 use crate::makepad_draw::*;
 
 live_design!{
+    link widgets;
+    use link::theme::*;
+    use makepad_draw::shader::std::*;
+    
     DrawScrollBar= {{DrawScrollBar}} {}
-    ScrollBarBase= {{ScrollBar}} {}
+    
+    pub ScrollBarBase= {{ScrollBar}} {}
+    
+    pub ScrollBar = <ScrollBarBase> {
+        bar_size: 10.0,
+        bar_side_margin: 3.0
+        min_handle_size: 30.0
+        draw_bg: {
+            instance drag: 0.0
+            instance hover: 0.0
+
+            uniform size: 6.0
+            uniform border_size: 1.0
+            uniform border_radius: 1.5
+
+            uniform color: (THEME_COLOR_OUTSET)
+            uniform color_hover: (THEME_COLOR_OUTSET_HOVER)
+            uniform color_drag: (THEME_COLOR_SCROLLBAR_HOVER * 1.2)
+
+            uniform border_color: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_hover: (THEME_COLOR_U_HIDDEN)
+            uniform border_color_drag: (THEME_COLOR_U_HIDDEN)
+
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                if self.is_vertical > 0.5 {
+                    sdf.box(
+                        1.,
+                        self.rect_size.y * self.norm_scroll,
+                        self.size,
+                        self.rect_size.y * self.norm_handle,
+                        self.border_radius
+                    );
+                }
+                else {
+                    sdf.box(
+                        self.rect_size.x * self.norm_scroll,
+                        1.,
+                        self.rect_size.x * self.norm_handle,
+                        self.size,
+                        self.border_radius
+                    );
+                }
+
+                sdf.fill_keep(mix(
+                    self.color,
+                    mix(
+                        self.color_hover,
+                        self.color_drag,
+                        self.drag
+                    ),
+                    self.hover
+                ));
+
+                sdf.stroke(mix(
+                    self.border_color,
+                    mix(
+                        self.border_color_hover,
+                        self.border_color_drag,
+                        self.drag
+                    ),
+                    self.hover
+                ), self.border_size);
+
+                return sdf.result
+            }
+        }
+
+        animator: {
+            hover = {
+                default: off
+                off = {
+                    from: {all: Forward {duration: 0.1}}
+                    apply: {
+                        draw_bg: {drag: 0.0, hover: 0.0}
+                    }
+                }
+                                
+                on = {
+                    cursor: Default,
+                    from: {
+                        all: Forward {duration: 0.1}
+                        drag: Forward {duration: 0.01}
+                    }
+                    apply: {
+                        draw_bg: {
+                            drag: 0.0,
+                            hover: [{time: 0.0, value: 1.0}],
+                        }
+                    }
+                }
+                                
+                drag = {
+                    cursor: Default,
+                    from: {all: Snap}
+                    apply: {
+                        draw_bg: {
+                            drag: 1.0,
+                            hover: 1.0,
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pub ScrollBarTabs = <ScrollBar> {
+        draw_bg: {
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                return sdf.fill(THEME_COLOR_U_HIDDEN)
+            }
+        }
+    }
+
+
 }
 
 #[derive(Copy, Clone, Debug, Live, LiveHook)]
@@ -13,7 +132,7 @@ pub enum ScrollAxis {
 }
 #[derive(Live, LiveHook, LiveRegister)]
 pub struct ScrollBar {
-    #[live] draw_bar: DrawScrollBar,
+    #[live] draw_bg: DrawScrollBar,
     #[live] pub bar_size: f64,
     #[live] pub min_handle_size: f64, //minimum size of the handle in pixels
     #[live] bar_side_margin: f64,
@@ -89,7 +208,7 @@ impl ScrollBar {
     // writes the norm_scroll value into the shader
     pub fn update_shader_scroll_pos(&mut self, cx: &mut Cx) {
         let (norm_scroll, _) = self.get_normalized_scroll_pos();
-        self.draw_bar.apply_over(cx, live!{
+        self.draw_bg.apply_over(cx, live!{
             norm_scroll: (norm_scroll)
         });
         //self.draw_bg.set_norm_scroll(cx, norm_scroll);
@@ -260,7 +379,7 @@ impl ScrollBar {
         }
     }
     pub fn is_area_captured(&self, cx:&Cx)->bool{
-        cx.fingers.is_area_captured(self.draw_bar.area())
+        cx.fingers.is_area_captured(self.draw_bg.area())
     }
     
     pub fn handle_event_with(&mut self, cx: &mut Cx, event: &Event, dispatch_action: &mut dyn FnMut(&mut Cx, ScrollBarAction)) {
@@ -273,9 +392,9 @@ impl ScrollBar {
                 return dispatch_action(cx, self.make_scroll_action());
             }
             
-            match event.hits(cx, self.draw_bar.area()) {
-                Hit::FingerDown(fe) => {
-                    self.animator_play(cx, id!(hover.pressed));
+            match event.hits(cx, self.draw_bg.area()) {
+                Hit::FingerDown(fe) if fe.is_primary_hit() => {
+                    self.animator_play(cx, id!(hover.drag));
                     let rel = fe.abs - fe.rect.pos;
                     let rel = match self.axis {
                         ScrollAxis::Horizontal => rel.x,
@@ -300,7 +419,7 @@ impl ScrollBar {
                 Hit::FingerHoverOut(_) => {
                     self.animator_play(cx, id!(hover.off));
                 },
-                Hit::FingerUp(fe) => {
+                Hit::FingerUp(fe) if fe.is_primary_hit() => {
                     self.drag_point = None;
                     if fe.is_over && fe.device.has_hovers() {
                         self.animator_play(cx, id!(hover.on));
@@ -356,11 +475,11 @@ impl ScrollBar {
                 
                 if self.visible {
                     let (norm_scroll, norm_handle) = self.get_normalized_scroll_pos();
-                    self.draw_bar.is_vertical = 0.0;
-                    self.draw_bar.norm_scroll = norm_scroll as f32;
-                    self.draw_bar.norm_handle = norm_handle as f32;
+                    self.draw_bg.is_vertical = 0.0;
+                    self.draw_bg.norm_scroll = norm_scroll as f32;
+                    self.draw_bg.norm_handle = norm_handle as f32;
                     let scroll = cx.turtle().scroll();
-                    self.draw_bar.draw_rel(
+                    self.draw_bg.draw_rel(
                         cx,
                         Rect {
                             pos: dvec2(self.bar_side_margin, view_rect.size.y - self.bar_size) + scroll,
@@ -383,11 +502,11 @@ impl ScrollBar {
                 self.scroll_pos = self.scroll_pos.min(self.view_total - self.view_visible).max(0.);
                 if self.visible {
                     let (norm_scroll, norm_handle) = self.get_normalized_scroll_pos();
-                    self.draw_bar.is_vertical = 1.0;
-                    self.draw_bar.norm_scroll = norm_scroll as f32;
-                    self.draw_bar.norm_handle = norm_handle as f32;
+                    self.draw_bg.is_vertical = 1.0;
+                    self.draw_bg.norm_scroll = norm_scroll as f32;
+                    self.draw_bg.norm_handle = norm_handle as f32;
                     let scroll = cx.turtle().scroll();
-                    self.draw_bar.draw_rel(
+                    self.draw_bg.draw_rel(
                         cx,
                         Rect {
                             pos: dvec2(view_rect.size.x - self.bar_size, self.bar_side_margin) + scroll,

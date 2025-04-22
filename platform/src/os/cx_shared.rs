@@ -1,4 +1,3 @@
-
 use {
     std::collections::{HashSet, HashMap},
     crate::{
@@ -78,7 +77,7 @@ impl Cx {
             if self.passes[pass_id].paint_dirty {
                 let mut inserted = false;
                 match self.passes[pass_id].parent {
-                    CxPassParent::Window(_) => {
+                    CxPassParent::Window(_) | CxPassParent::Xr=> {
                     },
                     CxPassParent::Pass(dep_of_pass_id) => {
                         if pass_id == dep_of_pass_id {
@@ -117,7 +116,7 @@ impl Cx {
     
     pub (crate) fn inner_call_event_handler(&mut self, event: &Event) {
         self.event_id += 1;
-        if Cx::has_studio_web_socket(){
+        if false{//Cx::has_studio_web_socket(){
             let start = self.seconds_since_app_start();
             let mut event_handler = self.event_handler.take().unwrap();
             event_handler(self, event);
@@ -134,6 +133,16 @@ impl Cx {
             let mut event_handler = self.event_handler.take().unwrap();
             event_handler(self, event);
             self.event_handler = Some(event_handler);
+        }
+
+        // Reset widget query invalidation after all views have processed it.
+        // We wait until event_id is at least 1 events past the invalidation event
+        // to ensure the cache clear has propagated through the widget hierarchy
+        // during the previous event cycle.
+        if let Some(event_id) = self.widget_query_invalidation_event {
+            if self.event_id > event_id + 1 {
+                self.widget_query_invalidation_event = None;
+            }
         }
     }
     
@@ -201,7 +210,10 @@ impl Cx {
     pub (crate) fn call_draw_event(&mut self) {
         let mut draw_event = DrawEvent::default();
         std::mem::swap(&mut draw_event, &mut self.new_draw_event);
+        self.in_draw_event = true;
+
         self.call_event_handler(&Event::Draw(draw_event));
+        self.in_draw_event = false;
     }
 
     pub (crate) fn call_next_frame_event(&mut self, time: f64) {

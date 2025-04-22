@@ -11,11 +11,11 @@ use {
 };
 
 live_design!{
-    import crate::code_editor::CodeEditor;
+    use crate::code_editor::CodeEditor;
         
-    CodeView = {{CodeView}}{
+    pub CodeView = {{CodeView}}{
         editor: <CodeEditor>{
-            pad_left_top: vec2(0.0,0.0)
+            pad_left_top: vec2(0.0,-0.0)
             height:Fit
             read_only: true,
             show_gutter: false
@@ -28,12 +28,12 @@ live_design!{
 pub struct CodeView{
     #[wrap] #[live] pub editor: CodeEditor,
     // alright we have to have a session and a document.
-    #[rust] session: Option<CodeSession>,
+     #[rust] pub session: Option<CodeSession>,
     #[live] text: ArcStringMut,
 }
 
 impl CodeView{
-    fn lazy_init_session(&mut self){
+    pub fn lazy_init_session(&mut self){
         if self.session.is_none(){
             let dec = DecorationSet::new();
             let doc = CodeDocument::new(self.text.as_ref().into(), dec);
@@ -68,10 +68,11 @@ impl Widget for CodeView {
         self.text.as_ref().to_string()
     }
         
-    fn set_text(&mut self, v:&str){
+    fn set_text(&mut self, cx:&mut Cx, v:&str){
         if self.text.as_ref() != v{
             self.text.as_mut_empty().push_str(v);
             self.session = None;
+            self.redraw(cx);
         }
     }
 }

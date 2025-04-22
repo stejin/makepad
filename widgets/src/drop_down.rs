@@ -10,8 +10,409 @@ use {
 };
 
 live_design!{
-    DrawLabelText = {{DrawLabelText}} {}
-    DropDownBase = {{DropDown}} {}
+    link widgets;
+    use link::theme::*;
+    use link::shaders::*;
+    use crate::popup_menu::PopupMenu;
+    use crate::popup_menu::PopupMenuFlat;
+    use crate::popup_menu::PopupMenuFlatter;
+    use crate::popup_menu::PopupMenuGradientX;
+    use crate::popup_menu::PopupMenuGradientY;
+    
+    pub DrawLabelText = {{DrawLabelText}} {}
+    pub DropDownBase = {{DropDown}} {}
+    
+    pub DropDown = <DropDownBase> {
+        width: Fit, height: Fit,
+        margin: 0.,
+        padding: <THEME_MSPACE_2> { right: 22.5 }
+        align: {x: 0., y: 0.}
+        
+        draw_text: {
+            uniform color: (THEME_COLOR_TEXT)
+            uniform color_hover: (THEME_COLOR_TEXT_HOVER)
+            uniform color_focus: (THEME_COLOR_TEXT_FOCUS)
+
+            text_style: <THEME_FONT_REGULAR> {
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            
+            fn get_color(self) -> vec4 {
+                return mix(
+                    mix(self.color, self.color_hover, self.hover),
+                    mix(self.color_focus, self.color_hover, self.hover),
+                    self.focus
+                )
+            }
+        }
+        
+        draw_bg: {
+            instance hover: 0.0
+            instance focus: 0.0
+            instance active: 0.0
+                        
+            uniform border_size: (THEME_BEVELING)
+            uniform border_radius: (THEME_CORNER_RADIUS)
+
+            uniform color_dither: 1.0
+
+            uniform color: (THEME_COLOR_OUTSET)
+            uniform color_hover: (THEME_COLOR_OUTSET_HOVER)
+            uniform color_focus: (THEME_COLOR_OUTSET * 1.2)
+
+            uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT * 1.3)
+
+            uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW * 1.3)
+
+            uniform arrow_color: (THEME_COLOR_TEXT)
+            uniform arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
+            uniform arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
+            
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
+
+                // lets draw a little triangle in the corner
+                let c = vec2(self.rect_size.x - 10.0, self.rect_size.y * 0.5)
+                let sz = 2.5;
+                let offset = 1.;
+                let offset_x = 2.;
+                
+                sdf.move_to(c.x - sz - offset_x, c.y - sz + offset);
+                sdf.line_to(c.x + sz - offset_x, c.y - sz + offset);
+                sdf.line_to(c.x - offset_x, c.y + sz * 0.25 + offset);
+                sdf.close_path();
+                
+                sdf.fill_keep(
+                    mix(
+                        mix(
+                            self.arrow_color,
+                            self.arrow_color_focus,
+                            self.focus
+                        ),
+                        self.arrow_color_hover,
+                        self.hover
+                    )
+                );
+
+                sdf.box(
+                    1.,
+                    1.,
+                    self.rect_size.x - 2.0,
+                    self.rect_size.y - 2.0,
+                    self.border_radius
+                )
+
+                sdf.stroke_keep(
+                    mix(
+                        mix(
+                            mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                            mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                            self.hover
+                        ),
+                        mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                        self.focus
+                    ), self.border_size)
+
+                sdf.fill(
+                    mix(
+                        mix(
+                            self.color,
+                            self.color_hover,
+                            self.hover
+                        ),
+                        self.color_focus,
+                        self.focus
+                    )
+                )
+                return sdf.result
+            }
+        }
+        
+        popup_menu: <PopupMenu> {}
+        
+        selected_item: 0,
+        
+        animator: {
+            hover = {
+                default: off,
+                off = {
+                    from: {all: Forward {duration: 0.1}}
+                    apply: {
+                        draw_bg: {hover: 0.0}
+                        draw_text: {hover: 0.0}
+                    }
+                }
+                
+                on = {
+                    from: {
+                        all: Forward {duration: 0.1}
+                    }
+                    apply: {
+                        draw_bg: { hover: [{time: 0.0, value: 1.0}],}
+                        draw_text: { hover: [{time: 0.0, value: 1.0}],}
+                    }
+                }
+                
+            }
+            focus = {
+                default: off
+                off = {
+                    from: {all: Forward {duration: 0.2}}
+                    apply: {
+                        draw_bg: {focus: 0.0},
+                        draw_text: {focus: 0.0}
+                    }
+                }
+                on = {
+                    from: {all: Snap}
+                    apply: {
+                        draw_bg: {focus: 1.0},
+                        draw_text: {focus: 1.0}
+                    }
+                }
+            }
+        }
+    }
+    
+    pub DropDownFlat = <DropDown> {
+        draw_bg: {
+            border_size: 1.,
+
+            color: (THEME_COLOR_U_HIDDEN)
+            color_hover: (THEME_COLOR_OUTSET_HOVER)
+            color_focus: (THEME_COLOR_OUTSET * 1.2)
+
+            border_color_1: (THEME_COLOR_BEVEL)
+            border_color_1_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_1_focus: (THEME_COLOR_BEVEL_FOCUS)
+
+            border_color_2: (THEME_COLOR_BEVEL)
+            border_color_2_hover: (THEME_COLOR_BEVEL_HOVER)
+            border_color_2_focus: (THEME_COLOR_BEVEL_FOCUS)
+        }
+
+        popup_menu: <PopupMenuFlat> {}
+    }
+
+    pub DropDownFlatter = <DropDown> {
+        draw_bg: {
+            border_size: 0.,
+
+            color: (THEME_COLOR_U_HIDDEN)
+            color_hover: (THEME_COLOR_OUTSET_HOVER)
+            color_focus: (THEME_COLOR_OUTSET * 1.2)
+
+            border_color_1: (THEME_COLOR_U_HIDDEN)
+            border_color_1_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_1_focus: (THEME_COLOR_U_HIDDEN)
+
+            border_color_2: (THEME_COLOR_U_HIDDEN)
+            border_color_2_hover: (THEME_COLOR_U_HIDDEN)
+            border_color_2_focus: (THEME_COLOR_U_HIDDEN)
+        }
+
+        popup_menu: <PopupMenuFlatter> {}
+    }
+
+
+    pub DropDownGradientX = <DropDown> {
+        
+        draw_bg: {
+            instance hover: 0.0
+            instance focus: 0.0
+                        
+            uniform border_size: (THEME_BEVELING)
+            uniform border_radius: (THEME_CORNER_RADIUS)
+
+            uniform color_dither: 1.0
+
+            uniform color_1: (THEME_COLOR_OUTSET * 1.75)
+            uniform color_1_hover: (THEME_COLOR_OUTSET_HOVER * 1.5)
+            uniform color_1_focus: (THEME_COLOR_OUTSET * 2.5)
+
+            uniform color_2: (THEME_COLOR_OUTSET)
+            uniform color_2_hover: (THEME_COLOR_OUTSET_HOVER)
+            uniform color_2_focus: (THEME_COLOR_OUTSET * 1.25)
+
+            uniform border_color_1: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
+            uniform border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT * 1.3)
+
+            uniform border_color_2: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
+            uniform border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW * 1.3)
+
+            uniform arrow_color: (THEME_COLOR_TEXT)
+            uniform arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
+            uniform arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
+            
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
+
+                // lets draw a little triangle in the corner
+                let c = vec2(self.rect_size.x - 10.0, self.rect_size.y * 0.5)
+                let sz = 2.5;
+                let offset = 1.;
+                let offset_x = 2.;
+                
+                sdf.move_to(c.x - sz - offset_x, c.y - sz + offset);
+                sdf.line_to(c.x + sz - offset_x, c.y - sz + offset);
+                sdf.line_to(c.x - offset_x, c.y + sz * 0.25 + offset);
+                sdf.close_path();
+                
+                sdf.fill_keep(
+                    mix(
+                        mix(
+                            self.arrow_color,
+                            self.arrow_color_focus,
+                            self.focus
+                        ),
+                        self.arrow_color_hover,
+                        self.hover
+                    )
+                )
+
+                sdf.box(
+                    1.,
+                    1.,
+                    self.rect_size.x - 2.0,
+                    self.rect_size.y - 2.0,
+                    self.border_radius
+                )
+
+                sdf.stroke_keep(
+                    mix(
+                        mix(
+                            mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                            mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                            self.hover
+                        ),
+                        mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                        self.focus
+                    ), self.border_size)
+
+                sdf.fill(
+                    mix(
+                        mix(
+                            mix(self.color_1, self.color_2, self.pos.x),
+                            mix(self.color_1_hover, self.color_2_hover, self.pos.x),
+                            self.hover
+                        ),
+                        mix(self.color_1_focus, self.color_2_focus, self.pos.x),
+                        self.focus
+                    )
+                )
+                
+                return sdf.result
+            }
+        }
+        
+        popup_menu: <PopupMenuGradientX> {}
+    }
+
+
+    pub DropDownGradientY = <DropDownGradientX> {
+        
+        draw_bg: {
+            instance hover: 0.0
+            instance focus: 0.0
+                        
+            border_size: (THEME_BEVELING)
+            border_radius: (THEME_CORNER_RADIUS)
+
+            color_dither: 1.0
+
+            color_1: (THEME_COLOR_OUTSET * 1.75)
+            color_1_hover: (THEME_COLOR_OUTSET_HOVER * 1.5)
+            color_1_focus: (THEME_COLOR_OUTSET * 2.5)
+
+            color_2: (THEME_COLOR_OUTSET)
+            color_2_hover: (THEME_COLOR_OUTSET_HOVER)
+            color_2_focus: (THEME_COLOR_OUTSET * 1.25)
+
+            border_color_1: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_1_hover: (THEME_COLOR_BEVEL_LIGHT)
+            border_color_1_focus: (THEME_COLOR_BEVEL_LIGHT * 1.3)
+
+            border_color_2: (THEME_COLOR_BEVEL_SHADOW)
+            border_color_2_hover: (THEME_COLOR_BEVEL_SHADOW)
+            border_color_2_focus: (THEME_COLOR_BEVEL_SHADOW * 1.3)
+            
+            arrow_color: (THEME_COLOR_TEXT)
+            arrow_color_focus: (THEME_COLOR_TEXT_FOCUS)
+            arrow_color_hover: (THEME_COLOR_TEXT_HOVER)
+
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                let dither = Math::random_2d(self.pos.xy) * 0.04 * self.color_dither;
+
+                // lets draw a little triangle in the corner
+                let c = vec2(self.rect_size.x - 10.0, self.rect_size.y * 0.5)
+                let sz = 2.5;
+                let offset = 1.;
+                let offset_x = 2.;
+                
+                sdf.move_to(c.x - sz - offset_x, c.y - sz + offset);
+                sdf.line_to(c.x + sz - offset_x, c.y - sz + offset);
+                sdf.line_to(c.x - offset_x, c.y + sz * 0.25 + offset);
+                sdf.close_path();
+                
+                sdf.fill_keep(
+                    mix(
+                        mix(
+                            self.arrow_color,
+                            self.arrow_color_focus,
+                            self.focus
+                        ),
+                        self.arrow_color_hover,
+                        self.hover
+                    )
+                )
+
+                sdf.box(
+                    1.,
+                    1.,
+                    self.rect_size.x - 2.0,
+                    self.rect_size.y - 2.0,
+                    self.border_radius
+                )
+
+                sdf.stroke_keep(
+                    mix(
+                        mix(
+                            mix(self.border_color_1, self.border_color_2, self.pos.y + dither),
+                            mix(self.border_color_1_hover, self.border_color_2_hover, self.pos.y + dither),
+                            self.hover
+                        ),
+                        mix(self.border_color_1_focus, self.border_color_2_focus, self.pos.y + dither),
+                        self.focus
+                    ), self.border_size)
+
+                sdf.fill(
+                    mix(
+                        mix(
+                            mix(self.color_1, self.color_2, self.pos.y),
+                            mix(self.color_1_hover, self.color_2_hover, self.pos.y),
+                            self.hover
+                        ),
+                        mix(self.color_1_focus, self.color_2_focus, self.pos.y),
+                        self.focus
+                    )
+                )
+                
+                return sdf.result
+            }
+        }
+        
+        popup_menu: <PopupMenuGradientY> {}
+    }
+
 }
 
 #[derive(Copy, Clone, Debug, Live, LiveHook)]
@@ -40,7 +441,7 @@ pub struct DropDown {
     
     #[live] popup_menu_position: PopupMenuPosition,
     
-    #[rust] is_open: bool,
+    #[rust] is_active: bool,
     
     #[live] selected_item: usize,
     
@@ -54,10 +455,9 @@ struct PopupMenuGlobal {
 
 #[derive(Live, LiveHook, LiveRegister)]#[repr(C)]
 struct DrawLabelText {
-    #[deref] draw_super: DrawText,
+    #[deref] draw_super: DrawText2,
     #[live] focus: f32,
     #[live] hover: f32,
-    #[live] pressed: f32,
 }
 
 impl LiveHook for DropDown {
@@ -86,9 +486,9 @@ pub enum DropDownAction {
 
 impl DropDown {
     
-    pub fn set_open(&mut self, cx: &mut Cx) {
-        self.is_open = true;
-        self.draw_bg.apply_over(cx, live!{open: 1.0});
+    pub fn set_active(&mut self, cx: &mut Cx) {
+        self.is_active = true;
+        self.draw_bg.apply_over(cx, live!{active: 1.0});
         self.draw_bg.redraw(cx);
         let global = cx.global::<PopupMenuGlobal>().clone();
         let mut map = global.map.borrow_mut();
@@ -99,8 +499,8 @@ impl DropDown {
     }
     
     pub fn set_closed(&mut self, cx: &mut Cx) {
-        self.is_open = false;
-        self.draw_bg.apply_over(cx, live!{open: 0.0});
+        self.is_active = false;
+        self.draw_bg.apply_over(cx, live!{active: 0.0});
         self.draw_bg.redraw(cx);
         cx.sweep_unlock(self.draw_bg.area());
     }
@@ -130,9 +530,9 @@ impl DropDown {
         
         cx.add_nav_stop(self.draw_bg.area(), NavRole::DropDown, Margin::default());
         
-        if self.is_open && self.popup_menu.is_some() {
+        if self.is_active && self.popup_menu.is_some() {
             //cx.set_sweep_lock(self.draw_bg.area());
-            // ok so if self was not open, we need to
+            // ok so if self was not active, we need to
             // ok so how will we solve this one
             let global = cx.global::<PopupMenuGlobal>().clone();
             let mut map = global.map.borrow_mut();
@@ -175,6 +575,13 @@ impl DropDown {
 }
 
 impl Widget for DropDown {
+    fn set_disabled(&mut self, cx:&mut Cx, disabled:bool){
+        self.animator_toggle(cx, disabled, Animate::Yes, id!(disabled.on), id!(disabled.off));
+    }
+                
+    fn disabled(&self, cx:&Cx) -> bool {
+        self.animator_in_state(cx, id!(disabled.on))
+    }
     
     fn widget_to_data(&self, _cx: &mut Cx, actions: &Actions, nodes: &mut LiveNodeVec, path: &[LiveId]) -> bool {
         match actions.find_widget_action_cast(self.widget_uid()) {
@@ -204,7 +611,7 @@ impl Widget for DropDown {
         self.animator_handle_event(cx, event);
         let uid = self.widget_uid();
                 
-        if self.is_open && self.popup_menu.is_some() {
+        if self.is_active && self.popup_menu.is_some() {
             // ok so how will we solve this one
             let global = cx.global::<PopupMenuGlobal>().clone();
             let mut map = global.map.borrow_mut();
@@ -234,6 +641,7 @@ impl Widget for DropDown {
                 if !menu.menu_contains_pos(cx, e.abs) {
                     self.set_closed(cx);
                     self.animator_play(cx, id!(hover.off));
+                    return;
                 }
             }
         }
@@ -267,10 +675,10 @@ impl Widget for DropDown {
                 },
                 _ => ()
             }
-            Hit::FingerDown(_fe) => {
+            Hit::FingerDown(fe) if fe.is_primary_hit() => {
                 cx.set_key_focus(self.draw_bg.area());
-                self.set_open(cx);
-                self.animator_play(cx, id!(hover.pressed));
+                self.set_active(cx);
+                // self.animator_play(cx, id!(hover.down));
             },
             Hit::FingerHoverIn(_) => {
                 cx.set_cursor(MouseCursor::Hand);
@@ -279,7 +687,7 @@ impl Widget for DropDown {
             Hit::FingerHoverOut(_) => {
                 self.animator_play(cx, id!(hover.off));
             }
-            Hit::FingerUp(fe) => {
+            Hit::FingerUp(fe) if fe.is_primary_hit() => {
                 if fe.is_over {
                     if fe.device.has_hovers() {
                         self.animator_play(cx, id!(hover.on));
@@ -300,13 +708,8 @@ impl Widget for DropDown {
 }
 
 impl DropDownRef {
-    pub fn set_labels(&self, labels: Vec<String>) {
-        if let Some(mut inner) = self.borrow_mut() {
-            inner.labels = labels
-        }
-    }
     
-    pub fn set_labels_with<F:FnMut(&mut String)>(&self, mut f:F) {
+    pub fn set_labels_with<F:FnMut(&mut String)>(&self, cx: &mut Cx, mut f:F) {
         if let Some(mut inner) = self.borrow_mut() {
             let mut i = 0;
             loop {
@@ -322,16 +725,18 @@ impl DropDownRef {
                 i+=1;
             }
             inner.labels.truncate(i);
+            inner.draw_bg.redraw(cx);
         }
     }
     
-    pub fn set_labels_and_redraw(&self, cx: &mut Cx, labels: Vec<String>) {
+    pub fn set_labels(&self, cx: &mut Cx, labels: Vec<String>) {
         if let Some(mut inner) = self.borrow_mut() {
             inner.labels = labels;
             inner.draw_bg.redraw(cx);
         }
     }
     
+    //DEPRICATED
     pub fn selected(&self, actions: &Actions) -> Option<usize> {
         if let Some(item) = actions.find_widget_action(self.widget_uid()) {
             if let DropDownAction::Select(id, _) = item.cast() {
@@ -341,13 +746,27 @@ impl DropDownRef {
         None
     }
     
-    pub fn set_selected_item(&self, item: usize) {
-        if let Some(mut inner) = self.borrow_mut() {
-            inner.selected_item = item.min(inner.labels.len().max(1) - 1)
+    pub fn changed(&self, actions: &Actions) -> Option<usize> {
+        if let Some(item) = actions.find_widget_action(self.widget_uid()) {
+            if let DropDownAction::Select(id, _) = item.cast() {
+                return Some(id)
+            }
         }
+        None
+    }
+        
+    pub fn changed_label(&self, actions: &Actions) -> Option<String> {
+        if let Some(item) = actions.find_widget_action(self.widget_uid()) {
+            if let DropDownAction::Select(id, _) = item.cast() {
+                 if let Some(inner) = self.borrow() {
+                    return Some(inner.labels[id].clone())
+                }
+            }
+        }
+        None
     }
     
-    pub fn set_selected_item_and_redraw(&self, cx: &mut Cx, item: usize) {
+    pub fn set_selected_item(&self, cx: &mut Cx, item: usize) {
         if let Some(mut inner) = self.borrow_mut() {
             let new_selected = item.min(inner.labels.len().max(1) - 1);
             if new_selected != inner.selected_item{
@@ -370,15 +789,7 @@ impl DropDownRef {
         "".to_string()
     }
     
-    pub fn set_selected_by_label(&self, label: &str) {
-        if let Some(mut inner) = self.borrow_mut() {
-            if let Some(index) = inner.labels.iter().position( | v | v == label) {
-                inner.selected_item = index
-            }
-        }
-    }
-    
-    pub fn set_selected_by_label_and_redraw(&self, label: &str, cx: &mut Cx) {
+    pub fn set_selected_by_label(&self, label: &str, cx: &mut Cx) {
         if let Some(mut inner) = self.borrow_mut() {
             if let Some(index) = inner.labels.iter().position( | v | v == label) {
                 if inner.selected_item != index{
@@ -388,5 +799,4 @@ impl DropDownRef {
             }
         }
     }
-    
 }

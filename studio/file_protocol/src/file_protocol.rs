@@ -47,7 +47,18 @@ pub enum FileRequest {
         id: u64,
         patch: bool
     },
+    Search{
+        id: u64,
+        set: Vec<SearchItem>
+    }
+}
 
+#[derive(Clone, Debug, SerBin, DeBin)]
+pub struct SearchItem{
+    pub needle: String,
+    pub prefixes: Option<Vec<String>>,
+    pub pre_word_boundary: bool,
+    pub post_word_boundary: bool
 }
 
 /// A type for representing either a response or a notification from the collab server.
@@ -82,7 +93,6 @@ pub struct OpenFileResponse{
     pub id: u64, 
 }
 
-
 /// Each `Response` corresponds to the `Request` with the same name.
 #[derive(Clone, Debug, SerBin, DeBin)]
 pub enum FileResponse {
@@ -94,8 +104,8 @@ pub enum FileResponse {
     /// The result of requesting the collab server to apply a delta to a revision of the file with
     /// the given id.
     SaveFile(Result<SaveFileResponse, FileError>),
-    
     // Existing variants...
+    SearchInProgress(u64)
 }
 
 /// A type for representing data about a file tree.
@@ -127,10 +137,22 @@ pub struct DirectoryEntry {
     pub node: FileNodeData,
 }
 
+#[derive(Clone, Debug, SerBin, DeBin)]
+pub struct SearchResult{
+    pub file_name: String,
+    pub line: usize,
+    pub column_byte: usize,
+    pub result_line: String,
+}
+
 /// A type for representing a notification from the collab server.
 #[derive(Clone, Debug, SerBin, DeBin)]
 pub enum FileNotification {
     FileChangedOnDisk(SaveFileResponse),
+    SearchResults{
+        id: u64,
+        results: Vec<SearchResult>
+    }
     // Notifies the client that another client applied the given delta to the file with the given
     // id. This is only sent for files for which the client is a participant.
    // DeltaWasApplied(TextFileId),

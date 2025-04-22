@@ -45,6 +45,7 @@ impl Cx {
         self.repaint_id += 1;
         for &pass_id in &passes_todo {
             match self.passes[pass_id].parent.clone() {
+                CxPassParent::Xr => {}
                 CxPassParent::Window(window_id) => {
                     // only render to swapchain if swapchain exists
                     let window = &mut windows[window_id.id()];
@@ -57,7 +58,7 @@ impl Cx {
                             window.present_index = (window.present_index + 1) % swapchain.presentable_images.len();
                             
                             // render to swapchain
-                            self.draw_pass_to_texture(pass_id, d3d11_cx, current_image.image.texture_id());
+                            self.draw_pass_to_texture(pass_id, d3d11_cx, Some(current_image.image.texture_id()));
 
                             let dpi_factor = self.passes[pass_id].dpi_factor.unwrap();
                             let pass_rect = self.get_pass_rect(pass_id, dpi_factor).unwrap();
@@ -78,10 +79,10 @@ impl Cx {
                 }
                 CxPassParent::Pass(_) => {
                     //let dpi_factor = self.get_delegated_dpi_factor(parent_pass_id);
-                    self.draw_pass_to_magic_texture(pass_id, d3d11_cx);
+                    self.draw_pass_to_texture(pass_id, d3d11_cx, None);
                 },
                 CxPassParent::None => {
-                    self.draw_pass_to_magic_texture(pass_id, d3d11_cx);
+                    self.draw_pass_to_texture(pass_id, d3d11_cx, None);
                 }
             }
         }
@@ -143,9 +144,10 @@ impl Cx {
                         dvec2(e.x, e.y),
                         e.time
                     );
-                    let  (window_id,pos) = self.windows.window_id_contains(dvec2(e.x, e.y));
-                    self.fingers.mouse_down(e.button, window_id);
-                    self.call_event_handler(&Event::MouseDown(e.into_event(window_id, pos)));
+                    let (window_id, pos) = self.windows.window_id_contains(dvec2(e.x, e.y));
+                    let mouse_down_event = e.into_event(window_id, pos);
+                    self.fingers.mouse_down(mouse_down_event.button, window_id);
+                    self.call_event_handler(&Event::MouseDown(mouse_down_event));
                 }
                 HostToStdin::MouseMove(e) => {
                     let (window_id, pos) = if let Some((_, window_id)) = self.fingers.first_mouse_button{
@@ -159,14 +161,15 @@ impl Cx {
                     self.fingers.switch_captures();
                 }
                 HostToStdin::MouseUp(e) => {
-                    let button = e.button;
                     let (window_id, pos) = if let Some((_, window_id)) = self.fingers.first_mouse_button{
                         (window_id, self.windows[window_id].window_geom.position)
                     }
                     else{
                         self.windows.window_id_contains(dvec2(e.x, e.y))
                     };
-                    self.call_event_handler(&Event::MouseUp(e.into_event(window_id, pos)));
+                    let mouse_up_event = e.into_event(window_id, pos);
+                    let button = mouse_up_event.button;
+                    self.call_event_handler(&Event::MouseUp(mouse_up_event));
                     self.fingers.mouse_up(button);
                     self.fingers.cycle_hover_area(live_id!(mouse).into());
                 }
@@ -216,6 +219,10 @@ impl Cx {
                         self.handle_media_signals();
                         self.call_event_handler(&Event::Signal);
                     }
+                    if SignalToUI::check_and_clear_action_signal() {
+                        self.handle_action_receiver();
+                    }
+                                        
                     if self.handle_live_edit() {
                         self.call_event_handler(&Event::LiveEdit);
                         self.redraw_all();

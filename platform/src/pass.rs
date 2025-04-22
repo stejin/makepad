@@ -136,6 +136,12 @@ impl Pass {
     
     pub fn pass_id(&self) -> PassId {PassId(self.0.id)}
     
+        
+    pub fn set_as_xr_pass(&self, cx: &mut Cx) {
+        let cxpass = &mut cx.passes[self.pass_id()];
+        cxpass.parent = CxPassParent::Xr;
+    }
+    
     pub fn set_pass_parent(&self, cx: &mut Cx, pass: &Pass) {
         let cxpass = &mut cx.passes[self.pass_id()];
         cxpass.parent = CxPassParent::Pass(pass.pass_id());
@@ -185,16 +191,26 @@ impl Pass {
         })
     }
     
+    pub fn set_color_texture(&self, cx: &mut Cx, texture: &Texture, clear_color: PassClearColor) {
+        let cxpass = &mut cx.passes[self.pass_id()];
+        if cxpass.color_textures.len()!=0{
+            cxpass.color_textures[0] = CxPassColorTexture {
+                texture: texture.clone(),
+                clear_color: clear_color
+            }
+        }
+        else{
+            cxpass.color_textures.push(CxPassColorTexture {
+                texture: texture.clone(),
+                clear_color: clear_color
+            })
+        }
+    }
+        
     pub fn set_depth_texture(&self, cx: &mut Cx, texture: &Texture, clear_depth: PassClearDepth) {
         let cxpass = &mut cx.passes[self.pass_id()];
         cxpass.depth_texture = Some(texture.clone());
         cxpass.clear_depth = clear_depth;
-    }
-    
-    pub fn set_matrix_mode(&self, cx: &mut Cx, pmm: PassMatrixMode) {
-        let cxpass = &mut cx.passes[self.pass_id()];
-        cxpass.paint_dirty = true;
-        cxpass.matrix_mode = pmm;
     }
     
     pub fn set_debug(&mut self, cx: &mut Cx, debug: bool) {
@@ -231,13 +247,15 @@ pub struct CxPassColorTexture {
 #[derive(Default, Clone)]
 #[repr(C)]
 pub struct PassUniforms {
-    camera_projection: Mat4,
-    camera_view: Mat4,
-    camera_inv: Mat4,
-    dpi_factor: f32,
-    dpi_dilate: f32,
-    time: f32,
-    pad2: f32
+    pub camera_projection: Mat4,
+    pub camera_projection_r: Mat4,
+    pub camera_view: Mat4,
+    pub camera_view_r: Mat4,
+    pub camera_inv: Mat4,
+    pub dpi_factor: f32,
+    pub dpi_dilate: f32,
+    pub time: f32,
+    pub pad2: f32
 }
 
 impl PassUniforms {
@@ -246,11 +264,6 @@ impl PassUniforms {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum PassMatrixMode {
-    Ortho,
-    Projection {fov_y: f32, near: f32, far: f32, cam: Mat4}
-}
 
 #[derive(Clone)]
 pub enum CxPassRect {
@@ -263,7 +276,6 @@ pub enum CxPassRect {
 pub struct CxPass {
     pub debug: bool,
     pub debug_name: String,
-    pub matrix_mode: PassMatrixMode,
     pub color_textures: Vec<CxPassColorTexture>,
     pub depth_texture: Option<Texture>,
     pub clear_depth: PassClearDepth,
@@ -288,7 +300,6 @@ impl Default for CxPass {
             debug: false,
             dont_clear: false,
             debug_name: String::new(),
-            matrix_mode: PassMatrixMode::Ortho,
             zbias_step: 0.001,
             pass_uniforms: PassUniforms::default(),
             color_textures: Vec::new(),
@@ -310,6 +321,7 @@ impl Default for CxPass {
 
 #[derive(Clone, Debug)]
 pub enum CxPassParent {
+    Xr,
     Window(WindowId),
     Pass(PassId),
     None
@@ -326,31 +338,22 @@ impl CxPass {
         self.pass_uniforms.dpi_dilate = dpi_dilate as f32;
     }
     
-    pub fn set_matrix(&mut self, offset: DVec2, size: DVec2) {
+    pub fn set_ortho_matrix(&mut self, offset: DVec2, size: DVec2) {
         
         let offset = offset + self.view_shift;
         let size = size * self.view_scale;
         
-        match self.matrix_mode {
-            PassMatrixMode::Ortho => {
-                let ortho = Mat4::ortho(
-                    offset.x as f32,
-                    (offset.x + size.x) as f32,
-                    offset.y as f32,
-                    (offset.y + size.y) as f32,
-                    100.,
-                    -100.,
-                    1.0,
-                    1.0
-                );
-                self.pass_uniforms.camera_projection = ortho;
-                self.pass_uniforms.camera_view = Mat4::identity();
-            }
-            PassMatrixMode::Projection {fov_y, near, far, cam} => {
-                let proj = Mat4::perspective(fov_y, (size.x / size.y) as f32, near, far);
-                self.pass_uniforms.camera_projection = proj;
-                self.pass_uniforms.camera_view = cam;
-            }
-        };
+        let ortho = Mat4::ortho(
+            offset.x as f32,
+            (offset.x + size.x) as f32,
+            offset.y as f32,
+            (offset.y + size.y) as f32,
+            100.,
+            -100.,
+            1.0,
+            1.0
+        );
+        self.pass_uniforms.camera_projection = ortho;
+        self.pass_uniforms.camera_view = Mat4::identity();
     }
 }

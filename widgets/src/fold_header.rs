@@ -6,7 +6,39 @@ use crate::{
 };
 
 live_design!{
-    FoldHeaderBase = {{FoldHeader}} {}
+    link widgets;
+    use link::theme::*;
+    
+    pub FoldHeaderBase = {{FoldHeader}} {}
+    pub FoldHeader = <FoldHeaderBase> {
+        width: Fill, height: Fit,
+        body_walk: { width: Fill, height: Fit}
+        
+        flow: Down,
+        
+        animator: {
+            active = {
+                default: on
+                off = {
+                    from: {all: Forward {duration: 0.2}}
+                    ease: ExpDecay {d1: 0.96, d2: 0.97}
+                    redraw: true
+                    apply: {
+                        opened: [{time: 0.0, value: 1.0}, {time: 1.0, value: 0.0}]
+                    }
+                }
+                on = {
+                    from: {all: Forward {duration: 0.2}}
+                    ease: ExpDecay {d1: 0.98, d2: 0.95}
+                    redraw: true
+                    apply: {
+                        opened: [{time: 0.0, value: 0.0}, {time: 1.0, value: 1.0}]
+                    }
+                }
+            }
+        }
+    }
+    
 }
 
 #[derive(Live, LiveHook, Widget)]
@@ -33,7 +65,7 @@ enum DrawState {
 impl Widget for FoldHeader {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
         if self.animator_handle_event(cx, event).must_redraw() {
-            if self.animator.is_track_animating(cx, id!(open)) {
+            if self.animator.is_track_animating(cx, id!(active)) {
                 self.area.redraw(cx);
             }
         };
@@ -43,10 +75,10 @@ impl Widget for FoldHeader {
         if let Event::Actions(actions) = event{
             match actions.find_widget_action(self.header.widget(id!(fold_button)).widget_uid()).cast() {
                 FoldButtonAction::Opening => {
-                    self.animator_play(cx, id!(open.on))
+                    self.animator_play(cx, id!(active.on))
                 }
                 FoldButtonAction::Closing => {
-                    self.animator_play(cx, id!(open.off))
+                    self.animator_play(cx, id!(active.off))
                 }
                 _ => ()
             }

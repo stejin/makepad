@@ -19,8 +19,9 @@ use {
 // We dont have a UI yet 
 
 live_design!{
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*; 
+    use link::theme::*;
+    use link::shaders::*;
+    use link::widgets::*;
     App = {{App}} {
         ui: <Window>{
             show_bg: true
@@ -192,7 +193,7 @@ impl App {
                     wire_data.clear();
                     wire_packet.ser_bin(&mut wire_data);
                     // send to all peers
-                    write_audio.send_to(&wire_data, "255.255.255.255:41531").unwrap();
+                    write_audio.send_to(&wire_data, "10.0.0.255:41531").unwrap();
                 };
             }
         });

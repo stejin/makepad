@@ -6,7 +6,10 @@ use crate::{
 };
 
 live_design!{
-    PageFlipBase = {{PageFlip}} {}
+    link widgets;
+    pub PageFlipBase = {{PageFlip}} {}
+    pub PageFlip = <PageFlipBase>{
+    }
 }
 
 #[derive(Live, LiveRegisterWidget, WidgetRef, WidgetSet)]
@@ -126,11 +129,21 @@ impl Widget for PageFlip {
     
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
         let uid = self.widget_uid();
-        if let Some(page) = self.pages.get_mut(&self.active_page) {
-            let item_uid = page.widget_uid();
-            cx.group_widget_actions(uid, item_uid, |cx|{
-                page.handle_event(cx, event, scope)
-            });
+        if event.requires_visibility(){
+            if let Some(page) = self.pages.get_mut(&self.active_page) {
+                let item_uid = page.widget_uid();
+                cx.group_widget_actions(uid, item_uid, |cx|{
+                    page.handle_event(cx, event, scope)
+                });
+            }
+        }
+        else{
+            for page in self.pages.values(){
+                let item_uid = page.widget_uid();
+                cx.group_widget_actions(uid, item_uid, |cx|{
+                    page.handle_event(cx, event, scope)
+                });
+            }
         }
     }
     
@@ -155,12 +168,7 @@ impl Widget for PageFlip {
 }
 
 impl PageFlipRef {
-    pub fn set_active_page(&self, page: LiveId) {
-        if let Some(mut inner) = self.borrow_mut() {
-            inner.active_page = page;
-        }
-    }
-    pub fn set_active_page_and_redraw(&self, cx: &mut Cx, page: LiveId) {
+    pub fn set_active_page(&self, cx: &mut Cx, page: LiveId) {
         if let Some(mut inner) = self.borrow_mut() {
             inner.redraw(cx);
             inner.active_page = page;

@@ -4,7 +4,77 @@ use crate::{
 };
 
 live_design! {
-    VideoBase = {{Video}} {}
+    link widgets;
+    use link::shaders::*;
+    
+    pub VideoBase = {{Video}} {}
+    pub Video = <VideoBase> {
+        width: 100, height: 100
+        
+        draw_bg: {
+            shape: Solid,
+            fill: Image
+            texture video_texture: textureOES
+            texture thumbnail_texture: texture2d
+            uniform show_thumbnail: 0.0
+            
+            instance opacity: 1.0
+            instance image_scale: vec2(1.0, 1.0)
+            instance image_pan: vec2(0.5, 0.5)
+            
+            uniform source_size: vec2(1.0, 1.0)
+            uniform target_size: vec2(-1.0, -1.0)
+            
+            fn get_color_scale_pan(self) -> vec4 {
+                // Early return for default scaling and panning,
+                // used when walk size is not specified or non-fixed.
+                if self.target_size.x <= 0.0 && self.target_size.y <= 0.0 {
+                    if self.show_thumbnail > 0.0 {
+                        return sample2d(self.thumbnail_texture, self.pos).xyzw;
+                    } else {
+                        return sample2dOES(self.video_texture, self.pos);
+                    }  
+                }
+                
+                let scale = self.image_scale;
+                let pan = self.image_pan;
+                let source_aspect_ratio = self.source_size.x / self.source_size.y;
+                let target_aspect_ratio = self.target_size.x / self.target_size.y;
+                
+                // Adjust scale based on aspect ratio difference
+                if (source_aspect_ratio != target_aspect_ratio) {
+                    if (source_aspect_ratio > target_aspect_ratio) {
+                        scale.x = target_aspect_ratio / source_aspect_ratio;
+                        scale.y = 1.0;
+                    } else {
+                        scale.x = 1.0;
+                        scale.y = source_aspect_ratio / target_aspect_ratio;
+                    }
+                }
+                
+                // Calculate the range for panning
+                let pan_range_x = max(0.0, (1.0 - scale.x));
+                let pan_range_y = max(0.0, (1.0 - scale.y));
+                
+                // Adjust the user pan values to be within the pan range
+                let adjusted_pan_x = pan_range_x * pan.x;
+                let adjusted_pan_y = pan_range_y * pan.y;
+                let adjusted_pan = vec2(adjusted_pan_x, adjusted_pan_y);
+                let adjusted_pos = (self.pos * scale) + adjusted_pan;
+                
+                if self.show_thumbnail > 0.5 {
+                    return sample2d(self.thumbnail_texture, adjusted_pos).xyzw;
+                } else {
+                    return sample2dOES(self.video_texture, adjusted_pos);
+                }      
+            }
+            
+            fn pixel(self) -> vec4 {
+                let color = self.get_color_scale_pan();
+                return Pal::premul(vec4(color.xyz, color.w * self.opacity));
+            }
+        }
+    }
 }
 
 /// Currently only supported on Android
@@ -308,7 +378,12 @@ pub enum VideoAction {
     PlaybackBegan,
     TextureUpdated,
     PlaybackCompleted,
-    PlayerReset
+    PlayerReset,
+    // The video view was secondary clicked (right-clicked) or long-pressed.
+    SecondaryClicked {
+        abs: DVec2,
+        modifiers: KeyModifiers,
+    }
 }
 
 impl Widget for Video {
@@ -322,7 +397,7 @@ impl Widget for Video {
         DrawStep::done()
     }
 
-    fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope:&mut Scope){
+    fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope){
         let uid = self.widget_uid();
         match event{
             Event::VideoPlaybackPrepared(event)=> if event.video_id == self.id {
@@ -360,7 +435,7 @@ impl Widget for Video {
             _=>()
         }
         
-        self.handle_gestures(cx, event);
+        self.handle_gestures(cx, event, scope);
         self.handle_activity_events(cx, event);
         self.handle_errors(event);
     }
@@ -427,19 +502,26 @@ impl Video {
         }
     }
 
-    fn handle_gestures(&mut self, cx: &mut Cx, event: &Event) {
+    fn handle_gestures(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
         match event.hits(cx, self.draw_bg.area()) {
-            Hit::FingerDown(_fe) => {
+            Hit::FingerDown(fe) if fe.is_primary_hit() => {
                 if self.hold_to_pause {
                     self.pause_playback(cx);
                 }
             }
-            Hit::FingerUp(_fe) => {
+            Hit::FingerDown(fe) if fe.mouse_button().is_some_and(|mb| mb.is_secondary()) => {
+                self.handle_secondary_click(cx, scope, fe.abs, fe.modifiers);
+            }
+            Hit::FingerLongPress(lp) => {
+                // TODO: here we could offer some customization, e.g., setting playback speed to 2x.
+                // For now, we treat a long press just like a secondary click.
+                self.handle_secondary_click(cx, scope, lp.abs, Default::default());
+            }
+            Hit::FingerUp(fe) if fe.is_primary_hit() => {
                 if self.hold_to_pause {
                     self.resume_playback(cx);
                 }
             }
-            
             _ => (),
         }
     }
@@ -478,6 +560,23 @@ impl Video {
         } else if self.playback_state == PlaybackState::Prepared {
             cx.begin_video_playback(self.id);
         }
+    }
+
+    fn handle_secondary_click(
+        &mut self,
+        cx: &mut Cx,
+        scope: &mut Scope,
+        abs: DVec2,
+        modifiers: KeyModifiers,
+    ) {
+        cx.widget_action(
+            self.widget_uid(),
+            &scope.path,
+            VideoAction::SecondaryClicked {
+                abs,
+                modifiers,
+            }
+        );
     }
 
     fn pause_playback(&mut self, cx: &mut Cx) {

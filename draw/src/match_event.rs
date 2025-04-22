@@ -1,5 +1,5 @@
 use makepad_platform::*;
-use crate::Cx2d;
+use crate::{Cx2d, CxDraw};
 
 pub trait MatchEvent{
     fn handle_startup(&mut self, _cx: &mut Cx){}
@@ -55,7 +55,14 @@ pub trait MatchEvent{
     fn handle_draw_2d(&mut self, _cx: &mut Cx2d){}
     fn handle_key_down(&mut self, _cx: &mut Cx, _e:&KeyEvent){}
     fn handle_key_up(&mut self, _cx: &mut Cx, _e:&KeyEvent){}
-    fn handle_back_pressed(&mut self, _cx: &mut Cx){}
+    /// Handles the [`Event::BackPressed`] event.
+    ///
+    /// This will only be called if this event was not already handled.
+    ///
+    /// Returns `true` if the event was handled, `false` otherwise.
+    /// Returning `true` will mark this as handled, meaning that
+    /// no other widgets will receive this event.
+    fn handle_back_pressed(&mut self, _cx: &mut Cx) -> bool { false }
 
     fn match_event(&mut self, cx:&mut Cx, event:&Event){
         match event{
@@ -78,7 +85,10 @@ pub trait MatchEvent{
             Event::NetworkResponses(e)=>self.handle_network_responses(cx, e),
             Event::KeyDown(e)=>self.handle_key_down(cx, e),
             Event::KeyUp(e)=>self.handle_key_up(cx, e),
-            Event::BackPressed=>self.handle_back_pressed(cx),
+            Event::BackPressed { handled } if !handled.get() => {
+                let was_handled = self.handle_back_pressed(cx);
+                handled.set(was_handled);
+            }
             _=>()
         }
     }
@@ -86,8 +96,9 @@ pub trait MatchEvent{
     fn match_event_with_draw_2d(&mut self, cx:&mut Cx, event:&Event)->Result<(),()>{
         match event{
             Event::Draw(e)=>{
-                let cx = &mut Cx2d::new(cx, e);
-                self.handle_draw_2d(cx);
+                let mut cx_draw = CxDraw::new(cx, e);
+                let mut cx_2d = Cx2d::new(&mut cx_draw);
+                self.handle_draw_2d(&mut cx_2d);
                 Ok(())
             }
             e=>{

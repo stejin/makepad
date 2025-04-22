@@ -3,8 +3,6 @@ use {
         time::Instant,
         rc::Rc,
         cell::{RefCell},
-        io::prelude::*,
-        fs::File,
     }, 
  
     crate::{ 
@@ -78,6 +76,7 @@ impl Cx {
         self.repaint_id += 1;
         for pass_id in &passes_todo {
             match self.passes[*pass_id].parent.clone() {
+                CxPassParent::Xr => {}
                 CxPassParent::Window(_window_id) => {
                     let mtk_view = get_tvos_app_global().mtk_view.unwrap();
                     self.draw_pass(*pass_id, metal_cx, DrawPassMode::MTKView(mtk_view));
@@ -121,7 +120,10 @@ impl Cx {
                         self.handle_media_signals();
                         self.call_event_handler(&Event::Signal);
                     }
-                    self.handle_action_receiver();
+                    if SignalToUI::check_and_clear_action_signal() {
+                        self.handle_action_receiver();
+                    }
+
                     if self.handle_live_edit(){
                         // self.draw_shaders.ptr_to_item.clear();
                         // self.draw_shaders.fingerprints.clear();
@@ -188,47 +190,11 @@ impl Cx {
                     window.window_geom = get_tvos_app_global().last_window_geom.clone();
                     window.is_created = true;
                 },
-                CxOsOp::Quit=>{}
-                CxOsOp::CloseWindow(_window_id) => {
-                },
-                CxOsOp::MinimizeWindow(_window_id) => {
-                },
-                CxOsOp::MaximizeWindow(_window_id) => {
-                },
-                CxOsOp::RestoreWindow(_window_id) => {
-                },
-                CxOsOp::FullscreenWindow(_window_id) => {
-                    todo!()
-                },
-                CxOsOp::NormalizeWindow(_window_id) => {
-                    todo!()
-                }
-                CxOsOp::SetTopmost(_window_id, _is_topmost) => {
-                    todo!()
-                }
-                CxOsOp::XrStartPresenting => {
-                    //todo!()
-                },
-                CxOsOp::XrStopPresenting => {
-                    //todo!()
-                },
-                CxOsOp::ShowTextIME(_area, _pos) => {
-                    //IosApp::show_keyboard();
-                },
-                CxOsOp::HideTextIME => {
-                    //IosApp::hide_keyboard();
-                },
-                CxOsOp::SetCursor(_cursor) => { 
-                },
                 CxOsOp::StartTimer {timer_id, interval, repeats} => {
                     get_tvos_app_global().start_timer(timer_id, interval, repeats);
                 },
                 CxOsOp::StopTimer(timer_id) => {
                     get_tvos_app_global().stop_timer(timer_id);
-                },
-                CxOsOp::StartDragging(_) => {
-                }
-                CxOsOp::UpdateMacosMenu(_menu) => {
                 },
                 CxOsOp::HttpRequest {request_id, request} => {
                     self.os.http_requests.make_http_request(request_id, request, self.os.network_response.sender.clone());
@@ -242,20 +208,9 @@ impl Cx {
                 CxOsOp::CopyToClipboard(_request) => {
                     crate::error!("Clipboard actions not yet implemented for tvOS");
                 }
-                CxOsOp::PrepareVideoPlayback(_, _, _, _, _) => todo!(),
-                CxOsOp::BeginVideoPlayback(_) => todo!(),
-                CxOsOp::PauseVideoPlayback(_) => todo!(),
-                CxOsOp::ResumeVideoPlayback(_) => todo!(),
-                CxOsOp::MuteVideoPlayback(_) => todo!(),
-                CxOsOp::UnmuteVideoPlayback(_) => todo!(),
-                CxOsOp::CleanupVideoPlaybackResources(_) => todo!(),
-                CxOsOp::UpdateVideoSurfaceTexture(_) => todo!(),
-
-                CxOsOp::SaveFileDialog(_) => todo!(),
-                CxOsOp::SelectFileDialog(_) => todo!(),
-                CxOsOp::SaveFolderDialog(_) => todo!(),
-                CxOsOp::SelectFolderDialog(_) => todo!(),
-                
+                e=>{
+                    crate::error!("Not implemented on this platform: CxOsOp::{:?}", e);
+                }
             }
         }
     }
@@ -278,9 +233,9 @@ impl CxOsApi for Cx {
         
         self.live_scan_dependencies();
 
-        #[cfg(apple_bundle)]
+        #[cfg(not(apple_sim))]
         self.apple_bundle_load_dependencies();
-        #[cfg(not(apple_bundle))]
+        #[cfg(apple_sim)]
         self.native_load_dependencies();
     }
     

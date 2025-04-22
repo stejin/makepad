@@ -79,12 +79,15 @@ pub fn parse_profiles()->Result<ParsedProfiles, String>{
     let home_dir = std::env::var("HOME").unwrap();
     let profile_dir = format!("{}/Library/MobileDevice/Provisioning Profiles/", home_dir);
         
-    let profile_files = std::fs::read_dir(profile_dir).unwrap();
+    let profile_files: Vec<_> = std::fs::read_dir(profile_dir).unwrap()
+    .filter_map(Result::ok)
+    .map(|e| e.path())
+    .filter(|p| p.extension().map_or(false, |ext| ext == "mobileprovision"))
+    .collect();
     let mut profiles = Vec::new();
     for file in profile_files {
         // lets read it
-        let profile_path = file.unwrap().path();
-        if let Some(profile) = ProvisionData::parse(&profile_path) {
+        if let Some(profile) = ProvisionData::parse(&file) {
             profiles.push(profile);
         }
     }
@@ -186,20 +189,75 @@ impl PlistValues{
             <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
             <plist version="1.0">
             <dict>
-              <key>CFBundleIdentifier</key>
-              <string>{0}</string>
-              <key>CFBundleDisplayName</key>
-              <string>{1}</string>
-              <key>CFBundleName</key>
-              <string>{2}</string>
-              <key>CFBundleExecutable</key>
-              <string>{3}</string>
-              <key>CFBundleVersion</key>
-              <string>{4}</string>
-              <key>CFBundleShortVersionString</key>
-              <string>{4}</string>
-              <key>UILaunchStoryboardName</key>
-              <string></string>
+                <key>CFBundleIdentifier</key>
+                <string>{0}</string>
+                <key>CFBundleDisplayName</key>
+                <string>{1}</string>
+                <key>CFBundleName</key>
+                <string>{2}</string>
+                <key>CFBundleExecutable</key>
+                <string>{3}</string>
+                <key>CFBundleVersion</key>
+                <string>{4}</string>
+                <key>CFBundleShortVersionString</key>
+                <string>{4}</string>
+                <key>UILaunchStoryboardName</key>
+                <string></string>
+                <key>CFBundleSupportedPlatforms</key>
+                <array>
+                    <string>iPhoneOS</string>
+                </array>
+                <key>CFBundleVersion</key>
+                <string>1</string>
+                <key>DTCompiler</key>
+                <string>com.apple.compilers.llvm.clang.1_0</string>
+                <key>DTPlatformBuild</key>
+                <string>22A3362</string>
+                <key>DTPlatformName</key>
+                <string>iphoneos</string>
+                <key>DTPlatformVersion</key>
+                <string>17.5</string>
+                <key>DTSDKBuild</key>
+                <string>22A3362</string>
+                <key>DTSDKName</key>
+                <string>iphoneos17.5</string>
+                <key>DTXcode</key>
+                <string>1600</string>
+                <key>DTXcodeBuild</key>
+                <string>16A242d</string>
+                <key>LSEnvironment</key>
+                <dict>
+                    <key>RUST_BACKTRACE</key>
+                    <string>1</string>
+                </dict>
+                <key>LSRequiresIPhoneOS</key>
+                <true/>
+                <key>MinimumOSVersion</key>
+                <string>17.5</string>
+                <key>UIApplicationSupportsIndirectInputEvents</key>
+                <true/>
+                <key>UIDeviceFamily</key>
+                <array>
+                    <integer>1</integer>
+                    <integer>2</integer>
+                </array>
+                <key>UIRequiredDeviceCapabilities</key>
+                <array>
+                    <string>arm64</string>
+                </array>
+                <key>UISupportedInterfaceOrientations~ipad</key>
+                <array>
+                    <string>UIInterfaceOrientationPortrait</string>
+                    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+                    <string>UIInterfaceOrientationLandscapeLeft</string>
+                    <string>UIInterfaceOrientationLandscapeRight</string>
+                </array>
+                <key>UISupportedInterfaceOrientations~iphone</key>
+                <array>
+                    <string>UIInterfaceOrientationPortrait</string>
+                    <string>UIInterfaceOrientationLandscapeLeft</string>
+                    <string>UIInterfaceOrientationLandscapeRight</string>
+                </array>
             </dict>
             </plist>"#,
             self.identifier,
@@ -343,7 +401,15 @@ pub fn build(stable:bool, org: &str, product: &str, args: &[String], apple_targe
         args_out.push("build-std=std");
     }
     
-    shell_env(if stable{&[("MAKEPAD", "")]}else{&[("MAKEPAD", "lines")]}, &cwd, "rustup", &args_out) ?;
+    shell_env(
+        &[
+            ("RUST_BACKTRACE", "1"),
+            ("MAKEPAD", if stable {""} else {"lines"}),
+        ],
+        &cwd,
+        "rustup",
+        &args_out,
+    ) ?;
     
     // alright lets make the .app file with manifest
     let plist = PlistValues {

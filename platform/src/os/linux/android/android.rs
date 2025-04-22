@@ -1,5 +1,9 @@
+use std::cell::Cell;
+
 #[allow(unused)]
 use makepad_jni_sys as jni_sys;
+use crate::event::LongPressEvent;
+
 use {
     std::rc::Rc,
     std::cell::{RefCell},
@@ -14,10 +18,14 @@ use {
         android_jni::{self, *},
         android_keycodes::android_to_makepad_key_code,
         super::egl_sys::{self, LibEgl},
+        super::libc_sys,
         ndk_sys,
+        
     },
     self::super::super::{
+        openxr::{CxOpenXr, CxOpenXrOptions},
         gl_sys,
+        gl_sys::LibGl,
         //libc_sys,
     },
     crate::{
@@ -28,7 +36,6 @@ use {
         //makepad_live_compiler::LiveFileChange,
         thread::SignalToUI,
         studio::{AppToStudio,GPUSample},
-        
         event::{
             VirtualKeyboardEvent,
             NetworkResponseItem,
@@ -90,12 +97,19 @@ impl Cx {
         self.redraw_all();
 
         self.start_network_live_file_watcher();
+        
         while !self.os.quit {
+            if self.os.in_xr_mode{
+                if self.openxr_render_loop(&from_java_rx){continue};
+            }
+            
             // Wait for the next message, blocking until one is received.
             // This ensures we're in sync with the Android Choreographer when we receive a RenderLoop message.
             match from_java_rx.recv() {
                 Ok(FromJavaMessage::RenderLoop) => {
-                    self.handle_all_pending_messages(&from_java_rx);
+                    while let Ok(msg) = from_java_rx.try_recv() {
+                        self.handle_message(msg);
+                    }
                     self.handle_other_events();
                     self.handle_drawing();
                 },
@@ -108,22 +122,29 @@ impl Cx {
                 }
             }
         }
-    }
-
-    fn handle_all_pending_messages(&mut self, from_java_rx: &mpsc::Receiver<FromJavaMessage>) {
-        // Handle the messages that arrived during the last frame
-        while let Ok(msg) = from_java_rx.try_recv() {
-            self.handle_message(msg);
+        if let Err(e) = self.os.openxr.destroy_instance(
+            &self.os.display.as_ref().unwrap().libgl
+        ){
+            crate::log!("OpenXR destroy destroy_instance error: {e}")
         }
+        from_java_messages_clear()
     }
-
-    fn handle_message(&mut self, msg: FromJavaMessage) {
+    
+    pub(crate) fn handle_message(&mut self, msg: FromJavaMessage) {
         match msg {
+            FromJavaMessage::SwitchedActivity(activity_handle, activity_thread_id)=>{
+                self.os.activity_thread_id = Some(activity_thread_id);
+                if self.os.in_xr_mode{
+                    if let Err(e) = self.os.openxr.create_instance(activity_handle){
+                        crate::error!("OpenXR init failed: {}", e);
+                    }
+                }
+            },
             FromJavaMessage::RenderLoop => {
                 // This should not happen here, as it's handled in the main loop
             },
             FromJavaMessage::BackPressed => {
-                self.call_event_handler(&Event::BackPressed);
+                self.call_event_handler(&Event::BackPressed { handled: Cell::new(false)});
             }
             FromJavaMessage::SurfaceCreated {window} => unsafe {
                 self.os.display.as_mut().unwrap().update_surface(window);
@@ -136,10 +157,23 @@ impl Cx {
                 width,
                 height,
             } => {
-
+                
+                if self.os.in_xr_mode && self.os.openxr.session.is_none(){
+                    if let Err(e) = self.os.openxr.create_session(self.os.display.as_ref().unwrap(),CxOpenXrOptions{
+                        buffer_scale: 1.5,
+                        multisamples: 4
+                    }){
+                        crate::error!("OpenXR create_xr_session failed: {}", e);
+                    }
+                    else{
+                        self.openxr_init_textures();
+                    }
+                }
+                
                 unsafe {
                     self.os.display.as_mut().unwrap().update_surface(window);
                 }
+                
                 self.os.display_size = dvec2(width as f64, height as f64);
                 let window_id = CxWindowPool::id_zero();
                 let window = &mut self.windows[window_id];
@@ -169,6 +203,17 @@ impl Cx {
                 self.redraw_all();
                 self.os.first_after_resize = true;
                 self.call_event_handler(&Event::ClearAtlasses);
+            }
+            FromJavaMessage::LongClick { abs, pointer_id, time } => {
+                let window = &mut self.windows[CxWindowPool::id_zero()];
+                let dpi_factor = window.dpi_override.unwrap_or(self.os.dpi_factor);
+                let e = Event::LongPress(LongPressEvent {
+                    abs: abs / dpi_factor,
+                    uid: pointer_id,
+                    window_id: CxWindowPool::id_zero(),
+                    time,
+                });
+                self.call_event_handler(&e);
             }
             FromJavaMessage::Touch(mut touches) => {
                 let time = touches[0].time;
@@ -240,7 +285,7 @@ impl Cx {
                         }
                     } else {
                         if makepad_keycode == KeyCode::Back {
-                            self.call_event_handler(&Event::BackPressed);
+                            self.call_event_handler(&Event::BackPressed { handled: Cell::new(false)});
                         }
 
                         e = Event::KeyDown(
@@ -415,8 +460,11 @@ impl Cx {
                 self.call_event_handler(&Event::Background);
             }
             FromJavaMessage::Destroy => {
-                self.call_event_handler(&Event::Shutdown);
-                self.os.quit = true;
+                if !self.os.ignore_destroy{
+                    self.call_event_handler(&Event::Shutdown);
+                    self.os.quit = true;
+                }
+                self.os.ignore_destroy = false;
             }
             FromJavaMessage::WindowFocusChanged { has_focus } => {
                 if has_focus {
@@ -426,12 +474,11 @@ impl Cx {
                 }
             }
             FromJavaMessage::Init(_) => {
-                panic!()
             }
         }
     }
 
-    fn handle_drawing(&mut self) {
+    pub(crate) fn handle_drawing(&mut self) {
         if self.any_passes_dirty() || self.need_redrawing() || !self.new_next_frames.is_empty() {
             if !self.new_next_frames.is_empty() {
                 self.call_next_frame_event(self.os.timers.time_now());
@@ -448,20 +495,11 @@ impl Cx {
 
             self.handle_repaint();
         }
-        else{
-            /*unsafe{
-               let _ret = ndk_sys::ANativeWindow_setFrameRate(self.os.display.as_ref().unwrap().window, 120.00001, 0); 
-                if let Some(display) = &mut self.os.display {
-                    (display.libegl.eglSurfaceAttrib.unwrap())(display.egl_display, display.surface, egl_sys::EGL_SWAP_BEHAVIOR, egl_sys::EGL_BUFFER_PRESERVED);
-                    (display.libegl.eglSwapBuffers.unwrap())(display.egl_display, display.surface);
-                }
-            }*/
-        }
     }
 
     /// Processes events that need to be checked regularly, regardless of incoming messages.
     /// This includes timers, signals, video updates, live edits, and platform operations.
-    fn handle_other_events(&mut self) {
+    pub(crate) fn handle_other_events(&mut self) {
         // Timers
         for event in self.os.timers.get_dispatch() {
             self.call_event_handler(&event);
@@ -472,7 +510,10 @@ impl Cx {
             self.handle_media_signals();
             self.call_event_handler(&Event::Signal);
         }
-        self.handle_action_receiver();
+        if SignalToUI::check_and_clear_action_signal() {
+            self.handle_action_receiver();
+        }
+
         // Video updates
         let to_dispatch = self.get_video_updates();
         for video_id in to_dispatch {
@@ -509,23 +550,42 @@ impl Cx {
     }
 
     pub fn android_entry<F>(activity: *const std::ffi::c_void, startup: F) where F: FnOnce() -> Box<Cx> + Send + 'static {
+        let activity_thread_id =  unsafe { libc_sys::syscall(libc_sys::SYS_GETTID) as u64 };
+        let activity_handle = unsafe {android_jni::fetch_activity_handle(activity)};
+        
+        let already_running = android_jni::from_java_messages_already_set();
+        if already_running{
+            android_jni::jni_update_activity(activity_handle);
+            // maybe send activity update?
+            android_jni::send_from_java_message(FromJavaMessage::SwitchedActivity(
+                activity_handle, activity_thread_id
+            ));
+            
+            return
+        }
+        
         let (from_java_tx, from_java_rx) = mpsc::channel();
-
+        
         std::panic::set_hook(Box::new(|info| {
             crate::log!("Custom panic hook: {}", info);
         }));
-
-        // SAFETY: This function initializes JNI globals and is expected to be called only once.
-        unsafe {android_jni::jni_init_globals(activity, from_java_tx)};
-
+        
+        android_jni::jni_set_activity(activity_handle);
+        android_jni::jni_set_from_java_tx(from_java_tx);
+                
         // lets start a thread
         std::thread::spawn(move || {
+            
             // SAFETY: This attaches the current thread to the JVM. It's safe as long as we're in the correct thread.
             unsafe {attach_jni_env()};
             let mut cx = startup();
             cx.android_load_dependencies();
             let mut libegl = LibEgl::try_load().expect("Cant load LibEGL");
-
+            
+            cx.os.activity_thread_id = Some(activity_thread_id);
+            cx.os.render_thread_id = Some(unsafe { libc_sys::syscall(libc_sys::SYS_GETTID) as u64 });
+            
+            
             let window = loop {
                 // Here use blocking method `recv` to reduce CPU usage during cold start.
                 match from_java_rx.recv() {
@@ -548,19 +608,33 @@ impl Cx {
             // SAFETY:
             // The LibEgl instance (libegl) has been properly loaded and initialized earlier.
             // We're not requesting a robust context (false), which is usually fine for most applications.
+            #[cfg(not(quest))]
             let (egl_context, egl_config, egl_display) = unsafe {egl_sys::create_egl_context(
                 &mut libegl,
                 std::ptr::null_mut(),/* EGL_DEFAULT_DISPLAY */
-                false,
             ).expect("Cant create EGL context")};
-
+            
+            #[cfg(quest)]
+            let (egl_context, egl_config, egl_display) = unsafe {egl_sys::create_egl_context_openxr(
+                &mut libegl,
+                std::ptr::null_mut(),/* EGL_DEFAULT_DISPLAY */
+            ).expect("Cant create EGL context")};
+            
             // SAFETY: This is loading OpenGL function pointers. It's safe as long as we have a valid EGL context.
-            unsafe {gl_sys::load_with( | s | {
-                let s = CString::new(s).unwrap();
-                libegl.eglGetProcAddress.unwrap()(s.as_ptr())
-            })};
-
+            let libgl = LibGl::try_load(| s | {
+                for s in s{
+                    let s = CString::new(*s).unwrap();
+                    let p = unsafe{libegl.eglGetProcAddress.unwrap()(s.as_ptr())};
+                    if !p.is_null(){
+                        return p
+                    }
+                }
+                0 as _
+            }).expect("Cant load openGL functions");
+            
             // SAFETY: This creates an EGL surface. It's safe as long as we have valid EGL display, config, and window.
+            libgl.enable_debugging();
+            
             let surface = unsafe {(libegl.eglCreateWindowSurface.unwrap())(
                 egl_display,
                 egl_config,
@@ -571,19 +645,25 @@ impl Cx {
             if unsafe {(libegl.eglMakeCurrent.unwrap())(egl_display, surface, surface, egl_context)} == 0 {
                 panic!();
             }
+            
+            //libgl.enable_debugging();
+                                                
 
-            cx.maybe_warn_hardware_support();
+            //cx.maybe_warn_hardware_support();
 
             cx.os.display = Some(CxAndroidDisplay {
                 libegl,
+                libgl,
                 egl_display,
                 egl_config,
                 egl_context,
                 surface,
                 window
             });
+            
+           
             cx.main_loop(from_java_rx);
-
+            
             let display = cx.os.display.take().unwrap();
 
             // SAFETY: These calls clean up EGL resources. They're safe as long as we have valid EGL objects.
@@ -689,8 +769,9 @@ impl Cx {
         self.passes[pass_id].paint_dirty = false;
         //let panning_offset = if self.os.keyboard_visible {self.os.keyboard_panning_offset} else {0};
 
+        let gl = self.os.gl();
         unsafe {
-            gl_sys::Viewport(0, 0, self.os.display_size.x as i32, self.os.display_size.y as i32);
+            (gl.glViewport)(0, 0, self.os.display_size.x as i32, self.os.display_size.y as i32);
         }
 
         let clear_color = if self.passes[pass_id].color_textures.len() == 0 {
@@ -709,13 +790,13 @@ impl Cx {
 
         if !self.passes[pass_id].dont_clear {
             unsafe {
-                //gl_sys::BindFramebuffer(gl_sys::FRAMEBUFFER, 0);
-                gl_sys::ClearDepthf(clear_depth as f32);
-                gl_sys::ClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-                gl_sys::Clear(gl_sys::COLOR_BUFFER_BIT | gl_sys::DEPTH_BUFFER_BIT);
+                //(gl.glBindFramebuffer)(gl_sys::FRAMEBUFFER, 0);
+                (gl.glClearDepthf)(clear_depth as f32);
+                (gl.glClearColor)(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+                (gl.glClear)(gl_sys::COLOR_BUFFER_BIT | gl_sys::DEPTH_BUFFER_BIT);
             }
         }
-        Self::set_default_depth_and_blend_mode();
+        Self::set_default_depth_and_blend_mode(gl);
 
         let mut zbias = 0.0;
         let zbias_step = self.passes[pass_id].zbias_step;
@@ -741,6 +822,9 @@ impl Cx {
         for pass_id in &passes_todo {
             self.passes[*pass_id].set_time(self.os.timers.time_now() as f32);
             match self.passes[*pass_id].parent.clone() {
+                CxPassParent::Xr=>{
+                    // cant happen
+                }
                 CxPassParent::Window(_) => {
                     //let window = &self.windows[window_id];
                     let start = self.seconds_since_app_start();
@@ -750,22 +834,17 @@ impl Cx {
                         start, end 
                     }));
                     unsafe {
-                        //let frame_time = (1000_0000_0000f64 / 120.0) as i64;
-                        ////self.os.frame_time += frame_time;
-                        //let _ret = ndk_sys::ANativeWindow_setFrameRate(self.os.display.as_ref().unwrap().window, 120.00001, 0); 
                         if let Some(display) = &mut self.os.display { 
-                            //(display.libegl.eglSurfaceAttrib.unwrap())(display.egl_display, display.surface, egl_sys::EGL_SWAP_BEHAVIOR, egl_sys::EGL_BUFFER_DESTROYED);
                             (display.libegl.eglSwapBuffers.unwrap())(display.egl_display, display.surface);
-
                         }
                     }
                 }
                 CxPassParent::Pass(_) => {
                     //let dpi_factor = self.get_delegated_dpi_factor(parent_pass_id);
-                    self.draw_pass_to_magic_texture(*pass_id);
+                    self.draw_pass_to_texture(*pass_id, None);
                 },
                 CxPassParent::None => {
-                    self.draw_pass_to_magic_texture(*pass_id);
+                    self.draw_pass_to_texture(*pass_id, None);
                 }
             }
         }
@@ -801,9 +880,6 @@ impl Cx {
                         old_geom
                     }));
                 },
-                CxOsOp::SetCursor(_cursor) => {
-                    //xlib_app.set_mouse_cursor(cursor);
-                },
                 CxOsOp::StartTimer {timer_id, interval, repeats} => {
                     self.os.timers.timers.insert(timer_id, PollTimer::new(interval, repeats));
                 },
@@ -817,9 +893,6 @@ impl Cx {
                 CxOsOp::HideTextIME => {
                     //self.os.keyboard_visible = false;
                     unsafe {android_jni::to_java_show_keyboard(false);}
-                },
-                CxOsOp::ShowClipboardActions(_selected) => {
-                    //to_java.show_clipboard_actions(selected.as_str());
                 },
                 CxOsOp::CopyToClipboard(content) => {
                     unsafe {android_jni::to_java_copy_to_clipboard(content);}
@@ -869,7 +942,20 @@ impl Cx {
                         android_jni::to_java_cleanup_video_playback_resources(env, video_id);
                     }
                 },
-                _ => ()
+                CxOsOp::SwitchToXr=>{
+                    self.os.ignore_destroy = true;
+                    self.os.in_xr_mode = !self.os.in_xr_mode;
+                    unsafe {
+                        let env = attach_jni_env();
+                        android_jni::to_java_switch_activity(env);
+                    }
+                }
+                CxOsOp::SetCursor(_)=>{
+                    // no need
+                },
+                e=>{
+                    crate::error!("Not implemented on this platform: CxOsOp::{:?}", e);
+                }
             }
         }
         EventFlow::Poll
@@ -894,6 +980,10 @@ impl CxOsApi for Cx {
     fn open_url(&mut self, _url:&str, _in_place:OpenUrlInPlace){
         crate::error!("open_url not implemented on this platform");
     }
+    
+    fn in_xr_mode(&self)->bool{
+        self.os.in_xr_mode
+    }
 }
 
 impl Default for CxOs {
@@ -912,15 +1002,21 @@ impl Default for CxOs {
             timers: Default::default(),
             video_surfaces: HashMap::new(),
             websocket_parsers: HashMap::new(),
+            openxr: CxOpenXr::default(),
+            activity_thread_id: None,
+            render_thread_id: None,
+            ignore_destroy: false,
+            in_xr_mode: false
         }
     }
 }
 
 pub struct CxAndroidDisplay {
-    libegl: LibEgl,
-    egl_display: egl_sys::EGLDisplay,
-    egl_config: egl_sys::EGLConfig,
-    egl_context: egl_sys::EGLContext,
+    pub libegl: LibEgl,
+    pub libgl: LibGl,
+    pub egl_display: egl_sys::EGLDisplay,
+    pub egl_config: egl_sys::EGLConfig,
+    pub egl_context: egl_sys::EGLContext,
     surface: egl_sys::EGLSurface,
     window: *mut ndk_sys::ANativeWindow,
     //event_handler: Box<dyn EventHandler>,
@@ -941,6 +1037,17 @@ pub struct CxOs {
     pub (crate) media: CxAndroidMedia,
     pub (crate) video_surfaces: HashMap<LiveId, jobject>,
     websocket_parsers: HashMap<u64, WebSocketImpl>,
+    pub (crate) openxr: CxOpenXr,
+    pub (crate) activity_thread_id: Option<u64>,
+    pub (crate) render_thread_id: Option<u64>,
+    pub (crate) ignore_destroy: bool,
+    pub (crate) in_xr_mode: bool
+}
+
+impl CxOs{
+    pub (crate) fn gl(&self)->&LibGl{
+        &self.display.as_ref().unwrap().libgl
+    }
 }
 
 impl CxAndroidDisplay {

@@ -2,7 +2,7 @@ use crate::makepad_draw::*;
 
 
 live_design!{
-    import makepad_draw::shader::std::*;
+    use makepad_draw::shader::std::*;
     
     DrawRect = {{DrawRect}} {
         fn pixel(self) -> vec4 {
@@ -12,7 +12,6 @@ live_design!{
             return sdf.result;
             //return vec4(self.color.xyz * self.color.w, self.color.w)
         }
-        draw_depth: 20.0
     }
     
     DebugView = {{DebugView}} {  
@@ -87,7 +86,6 @@ impl DebugView {
             self.rect.color = color;
             let rect = area.rect(cx);
             let rect = Rect{pos: rect.pos - tl, size: rect.size + tl + br};
-            println!("DRAWING RECT {:?}", rect);
             self.rect.draw_abs(cx, rect);
         }
         

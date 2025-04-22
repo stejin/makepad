@@ -372,7 +372,7 @@ impl BuildManager {
                                         time: e.time,
                                         x: e.abs.x,
                                         y: e.abs.y,
-                                        button: e.button,
+                                        button_raw_bits: e.button.bits(),
                                         modifiers: StdinKeyModifiers::from_key_modifiers(
                                             &e.modifiers,
                                         ),
@@ -397,7 +397,7 @@ impl BuildManager {
             Event::MouseUp(e) => {
                 self.broadcast_to_stdin(HostToStdin::MouseUp(StdinMouseUp {
                     time: e.time,
-                    button: e.button,
+                    button_raw_bits: e.button.bits(),
                     x: e.abs.x,
                     y: e.abs.y,
                     modifiers: StdinKeyModifiers::from_key_modifiers(&e.modifiers),
@@ -489,6 +489,13 @@ impl BuildManager {
                         AppToStudio::EditFile(ef) => cx.action(AppAction::EditFile(ef)),
                         AppToStudio::JumpToFile(jt) => {
                             cx.action(AppAction::JumpTo(jt));
+                        }
+                        AppToStudio::SelectInFile(jt) => {
+                            cx.action(AppAction::SelectInFile(jt));
+                        }
+                        AppToStudio::SwapSelection(ss) => {
+                            // alright now what do we do
+                            cx.action(AppAction::SwapSelection(ss));
                         }
                         AppToStudio::DesignerComponentMoved(mv)=>{
                             self.designer_state.get_build_storage(build_id, |bs|{

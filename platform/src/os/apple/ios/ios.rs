@@ -3,20 +3,16 @@ use {
         time::Instant,
         rc::Rc,
         cell::{RefCell},
-        io::prelude::*,
-        fs::File,
     },
 
     crate::{
         makepad_live_id::*,
         os::{
-            apple::apple_sys::*,
-            apple::apple_util::nsstring_to_string,
             cx_native::EventFlow,
             apple::{
                 ios::{
                     ios_event::IosEvent,
-                    ios_app::{IosApp, init_ios_app_global,get_ios_app_global}
+                    ios_app::{IosApp, init_ios_app_global,with_ios_app}
                 },
                 url_session::{AppleHttpRequests},
             },
@@ -43,7 +39,7 @@ impl Cx {
         cx.borrow_mut().os_type = OsType::Ios;
         let metal_cx: Rc<RefCell<MetalCx >> = Rc::new(RefCell::new(MetalCx::new()));
         //let cx = Rc::new(RefCell::new(self));
-        crate::log!("Makepad iOS application started.");
+        //crate::log!("Makepad iOS application started.");
         //let metal_windows = Rc::new(RefCell::new(Vec::new()));
         let device = metal_cx.borrow().device;
         init_apple_classes_global();
@@ -74,8 +70,9 @@ impl Cx {
         self.repaint_id += 1;
         for pass_id in &passes_todo {
             match self.passes[*pass_id].parent.clone() {
+                CxPassParent::Xr => {}
                 CxPassParent::Window(_window_id) => {
-                    let mtk_view = get_ios_app_global().mtk_view.unwrap();
+                    let mtk_view = with_ios_app(|app| app.mtk_view.unwrap());
                     self.draw_pass(*pass_id, metal_cx, DrawPassMode::MTKView(mtk_view));
                 }
                 CxPassParent::Pass(_) => {
@@ -117,7 +114,7 @@ impl Cx {
             }
             IosEvent::Timer(te) => {
                 if te.timer_id == 0 {
-                    let vk = get_ios_app_global().virtual_keyboard_event.take();
+                    let vk = with_ios_app(|app| app.virtual_keyboard_event.take());
                     if let Some(vk) = vk{
                         self.call_event_handler(&Event::VirtualKeyboard(vk));
                     }
@@ -126,7 +123,10 @@ impl Cx {
                         self.handle_media_signals();
                         self.call_event_handler(&Event::Signal);
                     }
-                    self.handle_action_receiver();
+                    if SignalToUI::check_and_clear_action_signal() {
+                        self.handle_action_receiver();
+                    }
+
                     if self.handle_live_edit(){
                         // self.draw_shaders.ptr_to_item.clear();
                         // self.draw_shaders.fingerprints.clear();
@@ -145,7 +145,7 @@ impl Cx {
                 self.call_event_handler(&Event::VirtualKeyboard(vk));
             }
             IosEvent::Init=>{
-                get_ios_app_global().start_timer(0, 0.008, true);
+                with_ios_app(|app| app.start_timer(0, 0.008, true));
                 self.start_studio_websocket_delayed();
                 self.call_event_handler(&Event::Startup);
                 self.redraw_all();
@@ -166,7 +166,7 @@ impl Cx {
             }
             IosEvent::Paint => {
                 if self.new_next_frames.len() != 0 {
-                    let time_now = get_ios_app_global().time_now();
+                    let time_now = with_ios_app(|app| app.time_now());
                     self.call_next_frame_event(time_now);
                 }
                 if self.need_redrawing() {
@@ -182,6 +182,9 @@ impl Cx {
                 self.call_event_handler(&e);
                 let e = if let Event::TouchUpdate(e) = e{e}else{panic!()};
                 self.fingers.process_touch_update_end(&e.touches);
+            }
+            IosEvent::LongPress(e) => {
+                self.call_event_handler(&Event::LongPress(e.into()));
             }
             IosEvent::MouseDown(e) => {
                 self.fingers.process_tap_count(
@@ -240,32 +243,8 @@ impl Cx {
             match op {
                 CxOsOp::CreateWindow(window_id) => {
                     let window = &mut self.windows[window_id];
-                    window.window_geom = get_ios_app_global().last_window_geom.clone();
+                    window.window_geom = with_ios_app(|app| app.last_window_geom.clone());
                     window.is_created = true;
-                },
-                CxOsOp::Quit=>{}
-                CxOsOp::CloseWindow(_window_id) => {
-                },
-                CxOsOp::MinimizeWindow(_window_id) => {
-                },
-                CxOsOp::MaximizeWindow(_window_id) => {
-                },
-                CxOsOp::RestoreWindow(_window_id) => {
-                },
-                CxOsOp::FullscreenWindow(_window_id) => {
-                    todo!()
-                },
-                CxOsOp::NormalizeWindow(_window_id) => {
-                    todo!()
-                }
-                CxOsOp::SetTopmost(_window_id, _is_topmost) => {
-                    todo!()
-                }
-                CxOsOp::XrStartPresenting => {
-                    //todo!()
-                },
-                CxOsOp::XrStopPresenting => {
-                    //todo!()
                 },
                 CxOsOp::ShowTextIME(_area, _pos) => {
                     IosApp::show_keyboard();
@@ -273,17 +252,11 @@ impl Cx {
                 CxOsOp::HideTextIME => {
                     IosApp::hide_keyboard();
                 },
-                CxOsOp::SetCursor(_cursor) => {
-                },
                 CxOsOp::StartTimer {timer_id, interval, repeats} => {
-                    get_ios_app_global().start_timer(timer_id, interval, repeats);
+                    with_ios_app(|app| app.start_timer(timer_id, interval, repeats));
                 },
                 CxOsOp::StopTimer(timer_id) => {
-                    get_ios_app_global().stop_timer(timer_id);
-                },
-                CxOsOp::StartDragging(_) => {
-                }
-                CxOsOp::UpdateMacosMenu(_menu) => {
+                    with_ios_app(|app| app.stop_timer(timer_id));
                 },
                 CxOsOp::HttpRequest {request_id, request} => {
                     self.os.http_requests.make_http_request(request_id, request, self.os.network_response.sender.clone());
@@ -295,22 +268,14 @@ impl Cx {
                     crate::log!("Show clipboard actions not supported yet");
                 }
                 CxOsOp::CopyToClipboard(content) => {
-                    get_ios_app_global().copy_to_clipboard(&content);
+                    with_ios_app(|app| app.copy_to_clipboard(&content));
                 }
-                CxOsOp::PrepareVideoPlayback(_, _, _, _, _) => todo!(),
-                CxOsOp::BeginVideoPlayback(_) => todo!(),
-                CxOsOp::PauseVideoPlayback(_) => todo!(),
-                CxOsOp::ResumeVideoPlayback(_) => todo!(),
-                CxOsOp::MuteVideoPlayback(_) => todo!(),
-                CxOsOp::UnmuteVideoPlayback(_) => todo!(),
-                CxOsOp::CleanupVideoPlaybackResources(_) => todo!(),
-                CxOsOp::UpdateVideoSurfaceTexture(_) => todo!(),
-
-                CxOsOp::SaveFileDialog(_) => todo!(),
-                CxOsOp::SelectFileDialog(_) => todo!(),
-                CxOsOp::SaveFolderDialog(_) => todo!(),
-                CxOsOp::SelectFolderDialog(_) => todo!(),
-
+                CxOsOp::SetCursor(_)=>{
+                    // no need
+                }
+                e=>{
+                    crate::error!("Not implemented on this platform: CxOsOp::{:?}", e);
+                }
             }
         }
     }
@@ -340,10 +305,10 @@ impl CxOsApi for Cx {
 
         self.live_scan_dependencies();
 
-        #[cfg(apple_bundle)]
-        self.apple_bundle_load_dependencies();
-        #[cfg(not(apple_bundle))]
+        #[cfg(apple_sim)]
         self.native_load_dependencies();
+        #[cfg(not(apple_sim))]
+        self.apple_bundle_load_dependencies();
     }
 
     fn spawn_thread<F>(&mut self, f: F) where F: FnOnce() + Send + 'static {
@@ -357,6 +322,9 @@ impl CxOsApi for Cx {
     fn open_url(&mut self, _url:&str, _in_place:OpenUrlInPlace){
         crate::error!("open_url not implemented on this platform");
     }
+    
+    fn max_texture_width()->usize{16384}
+    
     /*
     fn web_socket_open(&mut self, _url: String, _rec: WebSocketAutoReconnect) -> WebSocket {
         todo!()

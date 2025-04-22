@@ -4,7 +4,7 @@ use {
         layout::{BlockElement, WrappedElement},
         selection::Affinity,
         session::{SelectionMode, CodeSession},
-        history::{NewGroup},
+        history::NewGroup,
         settings::Settings,
         str::StrExt,
         text::Position,
@@ -17,9 +17,10 @@ use {
 };
 
 live_design! {
-    import makepad_draw::shader::std::*;
-    import makepad_widgets::theme_desktop_dark::*;
-
+    use link::shaders::*;
+    use link::theme::*;
+    use link::widgets::*;
+    
     TokenColors = {{TokenColors}} {
         whitespace: #6E6E6E,
         delimiter: #a,
@@ -112,7 +113,7 @@ live_design! {
 
     DrawCodeText = {{DrawCodeText}} { }
 
-    CodeEditor = {{CodeEditor}} {
+    pub CodeEditor = {{CodeEditor}} {
         height: Fill, width: Fill,
         margin: 0,
         pad_left_top: vec2(10.0,10.0)
@@ -215,7 +216,7 @@ live_design! {
 #[repr(C)]
 struct DrawCodeText {
     #[deref]
-    draw_super: DrawText,
+    draw_super: DrawText2,
     #[live]
     outline: f32,
 }
@@ -224,7 +225,7 @@ struct DrawCodeText {
 pub struct CodeEditor {
     #[walk] walk: Walk,
     #[live] scroll_bars: ScrollBars,
-    #[live] draw_gutter: DrawText,
+    #[live] draw_gutter: DrawText2,
     #[live] draw_text: DrawCodeText,
     #[live] token_colors: TokenColors,
     #[live] draw_indent_guide: DrawIndentGuide,
@@ -352,8 +353,14 @@ impl CodeEditor {
         // This needs to be called first to ensure the session is up to date.
         session.handle_changes();
 
-        self.cell_size =
-            self.draw_text.text_style.font_size * self.draw_text.get_monospace_base(cx);
+        let text = self.draw_text.layout(cx, 0.0, 0.0, None, Align::default(), "!");
+        let first_row = text.rows.first().unwrap();
+        let first_glyph = first_row.glyphs.first().unwrap();
+        self.cell_size = dvec2(
+            first_glyph.advance_in_lpxs() as f64,
+            ((first_glyph.ascender_in_lpxs() - first_glyph.descender_in_lpxs()) as f64) * self.draw_text.text_style.line_spacing as f64,
+        );
+
         let last_added_selection =
             session.selections()[session.last_added_selection_index().unwrap()];
         let (cursor_x, cursor_y) = session.layout().logical_to_normalized_position(
@@ -530,8 +537,9 @@ impl CodeEditor {
         );
         
         self.scroll_bars.end(cx);
+        
         if session.update_folds() {
-            self.scroll_bars.area().redraw(cx);
+            cx.redraw_area_in_draw(self.scroll_bars.area());
         } else if self.keep_cursor_in_view.is_locked() {
             self.keep_cursor_in_view = KeepCursorInView::Off;
         }
@@ -547,7 +555,21 @@ impl CodeEditor {
         pos: Position,
         session: &mut CodeSession,
     ) {
-        session.set_selection(pos, Affinity::Before, SelectionMode::Simple, NewGroup::Yes);
+        session.set_selection(session.clamp_position(pos), Affinity::Before, SelectionMode::Simple, NewGroup::Yes);
+        self.keep_cursor_in_view = KeepCursorInView::JumpToPosition;
+        self.redraw(cx);
+    }
+    
+    pub fn set_selection_and_scroll(
+        &mut self,
+        cx: &mut Cx,
+        start: Position,
+        end: Position,
+        session: &mut CodeSession,
+    ) {
+        
+        session.set_selection(session.clamp_position(start), Affinity::Before, SelectionMode::Simple, NewGroup::Yes);
+        session.move_to(session.clamp_position(end), Affinity::Before, NewGroup::Yes);
         self.keep_cursor_in_view = KeepCursorInView::JumpToPosition;
         self.redraw(cx);
     }
@@ -912,6 +934,9 @@ impl CodeEditor {
                     keyboard_moved_cursor = true;
                 }
             }
+            Hit::KeyDown(ke)=>{
+                actions.push(CodeEditorAction::UnhandledKeyDown(ke))
+            }
             Hit::FingerDown(FingerDownEvent {
                 abs,
                 tap_count,
@@ -1028,7 +1053,7 @@ impl CodeEditor {
         {
             match element {
                 BlockElement::Line { line, .. } => {
-                    self.draw_gutter.font_scale = line.scale();
+                    self.draw_gutter.font_scale = line.scale() as f32;
                     buf.clear();
                     match self.gutter_chars{
                         0|1=>write!(buf, "{: >0}", line_index + 1).unwrap(),
@@ -1072,7 +1097,7 @@ impl CodeEditor {
         {
             match element {
                 BlockElement::Line { line, .. } => {
-                    self.draw_text.font_scale = line.scale();
+                    self.draw_text.font_scale = line.scale() as f32;
                     let mut token_iter = line.tokens().iter().copied();
                     let mut token_slot = token_iter.next();
                     let mut row_index = 0;
@@ -1184,7 +1209,7 @@ impl CodeEditor {
         }
     }
 
-    fn draw_indent_guide_layer(&mut self, cx: &mut Cx2d<'_>, session: &CodeSession) {
+    fn draw_indent_guide_layer(&mut self, cx: &mut Cx2d, session: &CodeSession) {
         let mut origin_y = session.layout().line(self.line_start).y();
         for element in session
             .layout()
@@ -1222,7 +1247,7 @@ impl CodeEditor {
         }
     }
 
-    fn draw_decoration_layer(&mut self, cx: &mut Cx2d<'_>, session: &CodeSession) {
+    fn draw_decoration_layer(&mut self, cx: &mut Cx2d, session: &CodeSession) {
         let mut active_decoration = None;
         let decorations = session.document().decorations();
         let mut decorations = decorations.iter();
@@ -1247,7 +1272,7 @@ impl CodeEditor {
         .draw_decoration_layer(cx, session)
     }
 
-    fn draw_selection_layer(&mut self, cx: &mut Cx2d<'_>, session: &CodeSession) {
+    fn draw_selection_layer(&mut self, cx: &mut Cx2d, session: &CodeSession) {
         let mut active_selection = None;
         let selections = session.selections();
         let mut selections = selections.iter();
@@ -1484,9 +1509,10 @@ impl CodeEditor {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, DefaultNone)]
+#[derive(Clone, Copy, Debug, PartialEq, DefaultNone)]
 pub enum CodeEditorAction {
     TextDidChange,
+    UnhandledKeyDown(KeyEvent),
     None
 }
 
@@ -1881,8 +1907,8 @@ impl<'a> DrawSelectionLayer<'a> {
 
     fn draw_cursor(
         &mut self,
-        cx: &mut Cx2d<'_>,
-        line: Line<'_>,
+        cx: &mut Cx2d,
+        line: Line,
         origin_y: f64,
         row_index: usize,
         column_index: usize,
@@ -1904,7 +1930,7 @@ impl<'a> DrawSelectionLayer<'a> {
 
     fn draw_cursor_bg(
         &mut self,
-        cx: &mut Cx2d<'_>,
+        cx: &mut Cx2d,
         line: Line<'_>,
         origin_y: f64,
         row_index: usize,

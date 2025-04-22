@@ -9,8 +9,117 @@ use crate::{
 };
 
 live_design!{
-    DrawRoundCorner = {{DrawRoundCorner}} {}
-    DockBase = {{Dock}} {}
+    link widgets;
+    use link::theme::*;
+    use link::widgets::*;
+    use makepad_draw::shader::std::*;
+    use crate::view_ui::RectShadowView;
+
+    pub DrawRoundCorner = {{DrawRoundCorner}} {}
+    pub DockBase = {{Dock}} {}
+    pub Dock = <DockBase> {
+        flow: Down,
+
+        tab_bar: <TabBarGradientY> {}
+        splitter: <Splitter> {}
+
+        padding: {left: (THEME_DOCK_BORDER_SIZE), top: 0, right: (THEME_DOCK_BORDER_SIZE), bottom: (THEME_DOCK_BORDER_SIZE)}
+
+        round_corner: {
+            border_radius: 20.
+            uniform color: (THEME_COLOR_BG_APP)
+            fn pixel(self) -> vec4 {
+                let pos = vec2(
+                    mix(self.pos.x, 1.0 - self.pos.x, self.flip.x),
+                    mix(self.pos.y, 1.0 - self.pos.y, self.flip.y)
+                )
+
+                let sdf = Sdf2d::viewport(pos * self.rect_size);
+                sdf.rect(-10., -10., self.rect_size.x * 2.0, self.rect_size.y * 2.0);
+                sdf.box(
+                    0.25,
+                    0.25,
+                    self.rect_size.x * 2.0,
+                    self.rect_size.y * 2.0,
+                    4.0
+                );
+
+                sdf.subtract()
+
+                sdf.fill(self.color)
+                return sdf.result
+            }
+        }
+        drag_target_preview: {
+            draw_depth: 10.0
+            color: (THEME_COLOR_DRAG_TARGET_PREVIEW)
+        }
+    }
+
+    pub DockFlat = <DockBase> {
+        flow: Down,
+
+        tab_bar: <TabBarFlat> {}
+        splitter: <Splitter> {}
+
+        padding: {left: (THEME_DOCK_BORDER_SIZE), top: 0, right: (THEME_DOCK_BORDER_SIZE), bottom: (THEME_DOCK_BORDER_SIZE)}
+
+        round_corner: {
+            border_radius: 20.
+
+            fn pixel(self) -> vec4 {
+                let pos = vec2(
+                    mix(self.pos.x, 1.0 - self.pos.x, self.flip.x),
+                    mix(self.pos.y, 1.0 - self.pos.y, self.flip.y)
+                )
+
+                let sdf = Sdf2d::viewport(pos * self.rect_size);
+                sdf.rect(-10., -10., self.rect_size.x * 2.0, self.rect_size.y * 2.0);
+                sdf.box(
+                    0.25,
+                    0.25,
+                    self.rect_size.x * 2.0,
+                    self.rect_size.y * 2.0,
+                    4.0
+                );
+
+                sdf.subtract()
+                return sdf.fill(THEME_COLOR_BG_APP)
+            }
+        }
+
+        drag_target_preview: {
+            draw_depth: 10.0
+            color: (THEME_COLOR_DRAG_TARGET_PREVIEW)
+        }
+    }
+
+    pub DockToolbar = <RectShadowView> {
+        width: Fill, height: 38.,
+        flow: Down,
+        align: { x: 0., y: 0. }
+        margin: { top: -1. }
+        padding: <THEME_MSPACE_2> {}
+        spacing: 0.,
+
+        draw_bg: {
+            border_size: 0.0
+            border_color: (THEME_COLOR_BEVEL_LIGHT)
+            shadow_color: (THEME_COLOR_D_4)
+            shadow_radius: 7.5
+            shadow_offset: vec2(0.0, 0.0)
+            color: (THEME_COLOR_FG_APP),
+        }
+
+        content = <View> {
+            flow: Right,
+            width: Fill, height: Fill,
+            margin: 0.
+            padding: 0.
+            align: { x: 0., y: 0. }
+            spacing: (THEME_SPACE_3)
+        }
+    }
 }
 
 #[derive(Live, LiveHook, LiveRegister)]
@@ -44,19 +153,17 @@ pub struct Dock {
     #[layout] layout: Layout,
     #[live] drop_target_draw_list: DrawList2d,
     #[live] round_corner: DrawRoundCorner,
-    #[live] padding_fill: DrawColor,
-    #[live] border_size: f64,
-    #[live] drag_quad: DrawColor,
-    
+    #[live] drag_target_preview: DrawColor,
+
     #[live] tab_bar: Option<LivePtr>,
     #[live] splitter: Option<LivePtr>,
-    
+
     #[rust] needs_save: bool,
     #[rust] area: Area,
-    
+
     #[rust] tab_bars: ComponentMap<LiveId, TabBarWrap>,
     #[rust] splitters: ComponentMap<LiveId, Splitter>,
-    
+
     #[rust] dock_items: HashMap<LiveId, DockItem>,
     #[rust] templates: HashMap<LiveId, LivePtr>,
     #[rust] items: ComponentMap<LiveId, (LiveId, WidgetRef)>,
@@ -69,11 +176,11 @@ impl WidgetNode for Dock{
         self.walk
     }
     fn area(&self)->Area{self.area}
-    
+
     fn redraw(&mut self, cx: &mut Cx){
         self.area.redraw(cx)
     }
-    
+
     fn find_widgets(&self, path: &[LiveId], cached: WidgetCache, results: &mut WidgetSet) {
         if let Some((_, widget)) = self.items.get(&path[0]) {
             if path.len()>1 {
@@ -96,7 +203,7 @@ impl WidgetNode for Dock{
         }
         WidgetRef::empty()
     }
-}        
+}
 
 pub struct DockVisibleItemIterator<'a> {
     stack: &'a mut Vec<(LiveId, usize)>,
@@ -273,7 +380,7 @@ impl LiveHook for Dock {
         }
         nodes.skip_node(index)
     }
-    
+
     // alright lets update our tabs and splitters as well
     fn after_apply(&mut self, cx: &mut Cx, apply: &mut Apply, index: usize, nodes: &[LiveNode]) {
         if let Some(index) = nodes.child_by_name(index, live_id!(tab_bar).as_field()) {
@@ -287,7 +394,7 @@ impl LiveHook for Dock {
             }
         }
     }
-    
+
     fn after_new_from_doc(&mut self, cx: &mut Cx) {
         self.create_all_items(cx);
     }
@@ -306,34 +413,34 @@ impl Dock {
             self.item_or_create(cx, item_id, kind);
         }
     }
-    
+
     fn begin(&mut self, cx: &mut Cx2d, walk: Walk) {
         cx.begin_turtle(walk, self.layout);
         //self.drop_zones.clear();
     }
-    
+
     fn end(&mut self, cx: &mut Cx2d) {
-        
+
         if self.drop_target_draw_list.begin(cx, Walk::default()).is_redrawing() {
             if let Some(pos) = &self.drop_state {
-                self.drag_quad.draw_abs(cx, pos.rect);
+                self.drag_target_preview.draw_abs(cx, pos.rect);
             }
             self.drop_target_draw_list.end(cx);
         }
-        
+
         self.tab_bars.retain_visible();
         self.splitters.retain_visible();
-        
+
         // lets draw the corners here
         for splitter in self.splitters.values() {
             self.round_corner.draw_corners(cx, splitter.area_a().rect(cx));
             self.round_corner.draw_corners(cx, splitter.area_b().rect(cx));
         }
         self.round_corner.draw_corners(cx, cx.turtle().rect());
-        
+
         cx.end_turtle_with_area(&mut self.area);
     }
-    
+
     fn find_drop_position(&self, cx: &Cx, abs: DVec2) -> Option<DropPosition> {
         for (tab_bar_id, tab_bar) in self.tab_bars.iter() {
             let rect = tab_bar.contents_rect;
@@ -419,14 +526,14 @@ impl Dock {
         }
         None
     }
-    
+
     pub fn item(&mut self, entry_id: LiveId) -> Option<WidgetRef> {
         if let Some(entry) = self.items.get(&entry_id) {
             return Some(entry.1.clone())
         }
         None
     }
-    
+
     pub fn item_or_create(&mut self, cx: &mut Cx, entry_id: LiveId, template: LiveId) -> Option<WidgetRef> {
         if let Some(ptr) = self.templates.get(&template) {
             let entry = self.items.get_or_insert(cx, entry_id, | cx | {
@@ -439,11 +546,11 @@ impl Dock {
             None
         }
     }
-    
+
     pub fn items(&mut self) -> &ComponentMap<LiveId, (LiveId, WidgetRef)> {
         &self.items
     }
-    
+
     pub fn visible_items(&mut self) -> DockVisibleItemIterator {
         self.dock_item_iter_stack.clear();
         self.dock_item_iter_stack.push((live_id!(root), 0));
@@ -453,7 +560,7 @@ impl Dock {
             items: &self.items
         }
     }
-    
+
     fn set_parent_split(&mut self, what_item: LiveId, replace_item: LiveId) {
         for item in self.dock_items.values_mut() {
             match item {
@@ -471,7 +578,7 @@ impl Dock {
             }
         }
     }
-    
+
     fn redraw_item(&mut self, cx: &mut Cx, what_item_id: LiveId) {
         if let Some(tab_bar) = self.tab_bars.get_mut(&what_item_id) {
             tab_bar.contents_draw_list.redraw(cx);
@@ -482,7 +589,7 @@ impl Dock {
             }
         }
     }
-    
+
     fn unsplit_tabs(&mut self, cx: &mut Cx, tabs_id: LiveId) {
         self.needs_save = true;
         for (splitter_id, item) in self.dock_items.iter_mut() {
@@ -508,9 +615,9 @@ impl Dock {
             }
         }
     }
-    
+
     fn select_tab(&mut self, cx: &mut Cx, tab_id: LiveId) {
-        self.needs_save = true;        
+        self.needs_save = true;
         for (tabs_id, item) in self.dock_items.iter_mut() {
             match item {
                 DockItem::Tabs {tabs, selected, ..} => if let Some(pos) = tabs.iter().position( | v | *v == tab_id) {
@@ -524,7 +631,7 @@ impl Dock {
             }
         }
     }
-    
+
     fn set_tab_title(&mut self, cx: &mut Cx, tab_id: LiveId, new_name:String) {
         self.needs_save = true;
         if let Some(DockItem::Tab{name, ..}) = self.dock_items.get_mut(&tab_id){
@@ -532,7 +639,7 @@ impl Dock {
             self.redraw_tab(cx, tab_id);
         }
     }
-    
+
     fn redraw_tab(&mut self, cx: &mut Cx, tab_id: LiveId) {
         for (tabs_id, item) in self.dock_items.iter_mut() {
             match item {
@@ -545,7 +652,7 @@ impl Dock {
             }
         }
     }
-    
+
     fn find_tab_bar_of_tab(&mut self, tab_id: LiveId) -> Option<(LiveId, usize)> {
         for (tabs_id, item) in self.dock_items.iter_mut() {
             match item {
@@ -557,9 +664,9 @@ impl Dock {
         }
         None
     }
-    
+
     fn close_tab(&mut self, cx: &mut Cx, tab_id: LiveId, keep_item: bool) -> Option<LiveId> {
-        self.needs_save = true;        
+        self.needs_save = true;
         // ok so we have to find the tab id in our tab bars / tabs and remove it
         // if we are the last tab we need to remove a splitter
         for (tabs_id, item) in self.dock_items.iter_mut() {
@@ -595,7 +702,7 @@ impl Dock {
         }
         None
     }
-    
+
     fn check_drop_is_noop(&mut self, tab_id: LiveId, item_id: LiveId) -> bool {
         // ok so we have to find the tab id in our tab bars / tabs and remove it
         // if we are the last tab we need to remove a splitter
@@ -611,10 +718,10 @@ impl Dock {
         }
         false
     }
-    
+
     fn handle_drop(&mut self, cx: &mut Cx, abs: DVec2, item: LiveId, is_move: bool) -> bool {
         if let Some(pos) = self.find_drop_position(cx, abs) {
-            self.needs_save = true;                    
+            self.needs_save = true;
             // ok now what
             // we have a pos
             match pos.part {
@@ -720,7 +827,7 @@ impl Dock {
         }
         false
     }
-    
+
     fn drop_create(&mut self, cx: &mut Cx, abs: DVec2, item: LiveId, kind: LiveId, name: String, template:LiveId) {
         // lets add a tab
         if self.handle_drop(cx, abs, item, false) {
@@ -735,7 +842,7 @@ impl Dock {
             self.area.redraw(cx);
         }
     }
-    
+
     fn drop_clone(&mut self, cx: &mut Cx, abs: DVec2, item: LiveId, new_item: LiveId, template:LiveId) {
         // lets add a tab
         if let Some(DockItem::Tab {name, kind, ..}) = self.dock_items.get(&item) {
@@ -753,7 +860,7 @@ impl Dock {
             }
         }
     }
-    
+
     fn create_and_select_tab(&mut self, cx: &mut Cx, parent: LiveId, item: LiveId, kind: LiveId, name: String, template:LiveId, insert_after:Option<usize>)->Option<WidgetRef> {
         if self.items.get(&item).is_some(){
             self.select_tab(cx, item);
@@ -765,7 +872,7 @@ impl Dock {
             ret
         }
     }
-    
+
     fn create_tab(&mut self, cx: &mut Cx, parent: LiveId, item: LiveId, kind: LiveId, name: String, template:LiveId, insert_after:Option<usize>)->Option<WidgetRef> {
         if let Some(DockItem::Tabs {tabs, ..}) = self.dock_items.get_mut(&parent) {
             if let Some(after) = insert_after{
@@ -786,7 +893,7 @@ impl Dock {
             None
         }
     }
-    
+
     pub fn drawing_item_id(&self) -> Option<LiveId> {
         if let Some(stack) = self.draw_state.as_ref() {
             match stack.last() {
@@ -798,7 +905,7 @@ impl Dock {
         }
         None
     }
-        
+
     pub fn load_state(&mut self, cx: &mut Cx, dock_items: HashMap<LiveId, DockItem>) {
         //log!("{:#?}", self.dock_items);
         self.dock_items = dock_items;
@@ -812,7 +919,7 @@ impl Dock {
 
 
 impl Widget for Dock {
-    
+
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope:&mut Scope) {
         // call handle on all tab bars, splitters,
         let uid = self.widget_uid();
@@ -820,7 +927,7 @@ impl Widget for Dock {
         for (panel_id, splitter) in self.splitters.iter_mut() {
             for action in cx.capture_actions(|cx| splitter.handle_event(cx, event, scope)) {
                 // alright so here we need to redraw the left/right area.. how?
-                
+
                 match action.as_widget_action().cast() {
                     SplitterAction::Changed {axis, align} => {
                         // lets move the splitter
@@ -861,18 +968,27 @@ impl Widget for Dock {
                 }
             };
         }
-        for (id,(_templ_id, item)) in self.items.iter_mut() {
-            scope.with_id(*id, |scope|{
-               item.handle_event(cx, event, scope);
-            });
+        if event.requires_visibility(){
+            for (id, item) in self.visible_items(){
+                scope.with_id(id, |scope|{
+                    item.handle_event(cx, event, scope);
+                });
+            }
         }
-        
+        else{
+            for (id,(_templ_id, item)) in self.items.iter_mut() {
+                scope.with_id(*id, |scope|{
+                item.handle_event(cx, event, scope);
+                });
+            }
+        }
+    
         if let Event::DragEnd = event {
             // end our possible dragstate
             self.drop_state = None;
             self.drop_target_draw_list.redraw(cx);
         }
-        
+
         // alright lets manage the drag areas
         match event.drag_hits(cx, self.area) {
             DragHit::Drag(f) => {
@@ -894,7 +1010,7 @@ impl Widget for Dock {
             _ => {}
         }
     }
-    
+
     fn draw_walk(&mut self, cx: &mut Cx2d, scope:&mut Scope, walk: Walk) -> DrawStep {
         if self.draw_state.begin_with(cx, &self.dock_items, | _, dock_items | {
             let id = live_id!(root);
@@ -902,7 +1018,7 @@ impl Widget for Dock {
         }) {
             self.begin(cx, walk);
         }
-        
+
         while let Some(stack) = self.draw_state.as_mut() {
             match stack.pop() {
                 Some(DrawStackItem::SplitLeft {id}) => {
@@ -995,7 +1111,7 @@ impl Widget for Dock {
                     if let Some(DockItem::Tabs {..}) = self.dock_items.get(&id) {
                         let tab_bar = self.tab_bars.get_mut(&id).unwrap();
                         // lets create the full dropzone for this contentview
-                        
+
                         tab_bar.contents_draw_list.end(cx);
                     }
                     else {panic!()}
@@ -1006,10 +1122,10 @@ impl Widget for Dock {
                 }
             }
         }
-        
+
         self.end(cx);
         self.draw_state.end();
-        
+
         DrawStep::done()
     }
 }
@@ -1023,20 +1139,20 @@ impl DockRef {
         }
         WidgetRef::empty()
     }
-    
+
     pub fn item_or_create(&self, cx: &mut Cx, entry_id: LiveId, template: LiveId) -> Option<WidgetRef> {
         if let Some(mut dock) = self.borrow_mut() {
             return dock.item_or_create(cx, entry_id, template);
         }
         None
     }
-    
+
     pub fn close_tab(&self, cx: &mut Cx, tab_id: LiveId) {
         if let Some(mut dock) = self.borrow_mut() {
             dock.close_tab(cx, tab_id, false);
         }
     }
-    
+
     // user wants to drag, set dh accordingly
     pub fn accept_drag(&self, cx: &mut Cx, dh: DragHitEvent, dr: DragResponse) {
         if let Some(mut dock) = self.borrow_mut() {
@@ -1049,41 +1165,41 @@ impl DockRef {
             }
         }
     }
-    
+
     pub fn drawing_item_id(&self) -> Option<LiveId> {
         if let Some(dock) = self.borrow() {
             return dock.drawing_item_id();
         }
         None
     }
-    
+
     pub fn drop_clone(&self, cx: &mut Cx, abs: DVec2, old_item: LiveId, new_item: LiveId, template:LiveId) {
         if let Some(mut dock) = self.borrow_mut() {
             dock.drop_clone(cx, abs, old_item, new_item, template);
         }
     }
-    
+
     pub fn drop_move(&self, cx: &mut Cx, abs: DVec2, item: LiveId) {
         if let Some(mut dock) = self.borrow_mut() {
             dock.handle_drop(cx, abs, item, true);
         }
     }
-    
+
     pub fn drop_create(&self, cx: &mut Cx, abs: DVec2, item: LiveId, kind: LiveId, name: String, template:LiveId) {
         if let Some(mut dock) = self.borrow_mut() {
             dock.drop_create(cx, abs, item, kind, name, template);
         }
     }
-    
+
     pub fn create_and_select_tab(&self, cx: &mut Cx, parent: LiveId, item: LiveId, kind: LiveId, name: String, template:LiveId, insert_after:Option<usize>)->Option<WidgetRef> {
         if let Some(mut dock) = self.borrow_mut() {
             dock.create_and_select_tab(cx, parent, item, kind, name, template, insert_after)
         }
         else{
             None
-        }        
+        }
     }
-    
+
     pub fn create_tab(&self, cx: &mut Cx, parent: LiveId, item: LiveId, kind: LiveId, name: String, template:LiveId, insert_after:Option<usize>)->Option<WidgetRef> {
         if let Some(mut dock) = self.borrow_mut() {
             dock.create_tab(cx, parent, item, kind, name, template, insert_after)
@@ -1092,47 +1208,47 @@ impl DockRef {
             None
         }
     }
-    
+
     pub fn set_tab_title(&self, cx: &mut Cx, tab:LiveId, title:String) {
         if let Some(mut dock) = self.borrow_mut() {
             dock.set_tab_title(cx, tab, title);
         }
     }
-    
-    
+
+
     pub fn find_tab_bar_of_tab(&self, tab_id: LiveId) -> Option<(LiveId, usize)> {
         if let Some(mut dock) = self.borrow_mut() {
             return dock.find_tab_bar_of_tab(tab_id);
         }
         None
     }
-    
-    
+
+
     pub fn select_tab(&self, cx: &mut Cx, item: LiveId) {
         if let Some(mut dock) = self.borrow_mut() {
             dock.select_tab(cx, item);
         }
     }
-    
+
     pub fn redraw_tab(&self, cx: &mut Cx, tab_id: LiveId) {
         if let Some(mut dock) = self.borrow_mut() {
             dock.redraw_tab(cx, tab_id);
         }
     }
-    
+
     pub fn unique_tab_id(&self, base:u64)->LiveId{
         if let Some(dock) = self.borrow() {
             let mut id = LiveId(base);
             let mut i = 0u32;
             while dock.dock_items.get(&id).is_some(){
                 id = id.bytes_append(&i.to_be_bytes());
-                i += 1;            
+                i += 1;
             }
             return id;
         }
         LiveId(0)
     }
-        
+
     pub fn check_and_clear_need_save(&self)->bool{
         if let Some(mut dock) = self.borrow_mut() {
             if dock.needs_save{
@@ -1142,14 +1258,14 @@ impl DockRef {
         }
         false
     }
-    
+
     pub fn clone_state(&self)->Option<HashMap<LiveId, DockItem>>{
         if let Some(dock) = self.borrow(){
             return Some(dock.dock_items.clone());
         }
         None
     }
-    
+
     pub fn tab_start_drag(&self, cx: &mut Cx, _tab_id: LiveId, item: DragItem) {
         cx.start_dragging(vec![item]);
     }

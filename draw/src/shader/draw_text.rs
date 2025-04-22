@@ -1,45 +1,48 @@
 use {
     crate::{
-        cx_2d::Cx2d, draw_list_2d::ManyInstances, font_atlas::{self, CxFontAtlas, CxFontsAtlasTodo, CxShapeCache, Font}, geometry::GeometryQuad2D, makepad_platform::*, turtle::{Align, Flow, Size, Walk}
+        cx_2d::Cx2d, draw_list_2d::ManyInstances, font_atlas::{CxFontAtlas, TextShaper, Font}, geometry::GeometryQuad2D, makepad_platform::*, turtle::{Align, Flow, Size, Walk},
+        font_loader::FontLoader, text_shaper::GlyphInfo,
+        glyph_rasterizer::{Command, Mode, Params},
     },
-    makepad_rustybuzz::Direction,
     unicode_segmentation::UnicodeSegmentation,
-    std::borrow::Cow,
 };
 
-const ZBIAS_STEP: f32 = 0.00001;
-
 live_design!{
-    
-    DrawText = {{DrawText}} {
+    use link::shaders::*;
+    pub DrawText = {{DrawText}} {
         //debug: true;
         color: #fff
-        
+
        // uniform brightness: float
        // uniform curve: float
         //uniform sdf_radius: float
         //uniform sdf_cutoff: float
-        
+
         texture tex: texture2d
-        
+
         varying tex_coord1: vec2
         varying tex_coord2: vec2
         varying tex_coord3: vec2
         varying clipped: vec2
         varying pos: vec2
-        
+
         fn vertex(self) -> vec4 {
             let min_pos = vec2(self.rect_pos.x, self.rect_pos.y)
             let max_pos = vec2(self.rect_pos.x + self.rect_size.x, self.rect_pos.y - self.rect_size.y)
-            
+
             self.clipped = clamp(
-                mix(min_pos, max_pos, self.geom_pos),
-                self.draw_clip.xy,
-                self.draw_clip.zw
-            )
+                clamp(
+                    mix(min_pos, max_pos, self.geom_pos),
+                    self.draw_clip.xy,
+                    self.draw_clip.zw
+                )
+                + self.view_shift,
+                self.view_clip.xy,
+                self.view_clip.zw
+            );
             
             let normalized: vec2 = (self.clipped - min_pos) / vec2(self.rect_size.x, -self.rect_size.y)
-            
+
             self.tex_coord1 = mix(
                 vec2(self.font_t1.x, 1.0-self.font_t1.y),
                 vec2(self.font_t2.x, 1.0-self.font_t2.y),
@@ -53,24 +56,24 @@ live_design!{
                 1.
             )))
         }
-        
+
         fn get_color(self) -> vec4 {
             return self.color;
         }
         fn blend_color(self, incol:vec4)->vec4{
             return incol
         }
-        
+
         fn get_brightness(self)->float{
             return 1.0;
         }
-        
+
         fn sample_color(self, scale:float, pos:vec2)->vec4{
             let brightness = self.get_brightness();
             let sdf_radius = 8.0;
             let sdf_cutoff = 0.25;
             let s = sample2d(self.tex, pos).x;
-            let curve = 0.5; 
+            let curve = 0.5;
             //if (self.sdf_radius != 0.0) {
             // HACK(eddyb) harcoded atlas size (see asserts below).
             let texel_coords = pos.xy * 4096.0;
@@ -78,10 +81,10 @@ live_design!{
             //} else {
             //    s = pow(s, curve);
             //}
-            let col = self.get_color(); 
+            let col = self.get_color();
             return self.blend_color(vec4(s * col.rgb * brightness * col.a, s * col.a));
         }
-        
+
         fn pixel(self) -> vec4 {
             let texel_coords = self.tex_coord1.xy;
             let dxt = length(dFdx(texel_coords));
@@ -115,27 +118,27 @@ live_design!{
             //16x AA
             /*
             let d = 0.25;
-            let d2 = 0.5; 
-            let d3 = 0.75; 
+            let d2 = 0.5;
+            let d3 = 0.75;
             let x1 = self.sample_color(scale, self.tex_coord1.xy);
             let x2 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d,0.0));
             let x3 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d2,0.0));
             let x4 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d3,0.0));
-                        
+
             let x5 = self.sample_color(scale, self.tex_coord1.xy+vec2(0.0,dyt *d));
             let x6 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d,dyt *d));
             let x7 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d2,dyt *d));
             let x8 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d2,dyt *d));
-                        
+
             let x9 = self.sample_color(scale, self.tex_coord1.xy+vec2(0.0,dyt *d2));
             let x10 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d,dyt *d2));
             let x11 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d2,dyt *d2));
-            let x12 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d3,dyt *d2));           
-            
+            let x12 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d3,dyt *d2));
+
             let x13 = self.sample_color(scale, self.tex_coord1.xy+vec2(0.0,dyt *d3));
             let x14 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d,dyt *d3));
             let x15 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d2,dyt *d3));
-            let x16 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d3,dyt *d3));            
+            let x16 =  self.sample_color(scale, self.tex_coord1.xy+vec2(dxt * d3,dyt *d3));
             return (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15+x16)/16 ;*/
         }
     }
@@ -148,6 +151,7 @@ const _: () = assert!(crate::font_atlas::ATLAS_HEIGHT == 4096);
 #[derive(Debug, Clone, Live, LiveHook, LiveRegister)]
 #[live_ignore]
 pub struct TextStyle {
+    #[live()] pub font_family: FontFamily,
     #[live()] pub font: Font,
     #[live()] pub font2: Font,
     #[live(9.0)] pub font_size: f64,
@@ -168,22 +172,57 @@ pub enum TextWrap {
     Line
 }
 
+// DSL FontFamily struct
+#[derive(Debug, Clone, Live, LiveRegister, PartialEq)]
+pub struct FontFamily {
+    #[rust] id: LiveId,
+}
+
+impl LiveHook for FontFamily{
+    // lets implement apply
+    fn skip_apply(&mut self, _cx: &mut Cx, _apply: &mut Apply, index: usize, nodes: &[LiveNode])->Option<usize>{
+        // alright lets process our structure
+        // lets iterate over the node structure
+        // and collect the deps in a hash
+        let mut node_iter = Some(index+1);
+        let mut _family_id = LiveId::seeded();
+        while let Some(index) = node_iter {
+            if let LiveValue::Dependency(dep) = &nodes[index].value{
+                let ptr = dep.as_ptr() as *const _ as u64;
+                _family_id = _family_id.xor(ptr);
+            }
+            node_iter = nodes.next_child(index);
+        }
+        // TODO! use the hash to look up the font family
+        self.id = _family_id;
+        // else we build the font family here
+        let mut node_iter = Some(index+1);
+        while let Some(index) = node_iter {
+            if let LiveValue::Dependency(_dep) = &nodes[index].value{
+                // alright we have a dependency here
+            }
+            node_iter = nodes.next_child(index);
+        }
+        return Some(nodes.skip_node(index));
+    }
+}
+
 #[derive(Live, LiveRegister)]
 #[repr(C)]
 pub struct DrawText {
     #[rust] pub many_instances: Option<ManyInstances>,
-    
+
 
     #[live] pub geometry: GeometryQuad2D,
     #[live] pub text_style: TextStyle,
     #[live] pub wrap: TextWrap,
-    
+
     #[live] pub ignore_newlines: bool,
     #[live] pub combine_spaces: bool,
-    
+
     #[live(1.0)] pub font_scale: f64,
     #[live(1.0)] pub draw_depth: f32,
-    
+
     #[deref] pub draw_vars: DrawVars,
     // these values are all generated
     #[live] pub color: Vec4,
@@ -205,51 +244,51 @@ impl LiveHook for DrawText {
 }
 
 impl DrawText {
-    
+
     pub fn draw(&mut self, cx: &mut Cx2d, pos: DVec2, val: &str) {
         self.draw_inner(cx, pos, val, &mut *cx.fonts_atlas_rc.clone().0.borrow_mut());
         if self.many_instances.is_some() {
             self.end_many_instances(cx)
         }
     }
-    
+
     pub fn draw_rel(&mut self, cx: &mut Cx2d, pos: DVec2, val: &str) {
         self.draw_inner(cx, pos + cx.turtle().origin(), val, &mut *cx.fonts_atlas_rc.clone().0.borrow_mut());
         if self.many_instances.is_some() {
             self.end_many_instances(cx)
         }
     }
-    
+
     pub fn draw_abs(&mut self, cx: &mut Cx2d, pos: DVec2, val: &str) {
         self.draw_inner(cx, pos, val, &mut *cx.fonts_atlas_rc.clone().0.borrow_mut());
         if self.many_instances.is_some() {
             self.end_many_instances(cx)
         }
     }
-    
+
     pub fn begin_many_instances(&mut self, cx: &mut Cx2d) {
         let fonts_atlas_rc = cx.fonts_atlas_rc.clone();
         let fonts_atlas = fonts_atlas_rc.0.borrow();
         self.begin_many_instances_internal(cx, &*fonts_atlas);
     }
-    
+
     fn begin_many_instances_internal(&mut self, cx: &mut Cx2d, fonts_atlas: &CxFontAtlas) {
         self.update_draw_call_vars(fonts_atlas);
         let mi = cx.begin_many_aligned_instances(&self.draw_vars);
         self.many_instances = mi;
     }
-    
+
     pub fn end_many_instances(&mut self, cx: &mut Cx2d) {
         if let Some(mi) = self.many_instances.take() {
             let new_area = cx.end_many_instances(mi);
             self.draw_vars.area = cx.update_area_refs(self.draw_vars.area, new_area);
         }
     }
-    
+
     pub fn new_draw_call(&self, cx: &mut Cx2d) {
         cx.new_draw_call(&self.draw_vars);
     }
-    
+
     pub fn update_draw_call_vars(&mut self, font_atlas: &CxFontAtlas) {
         self.draw_vars.texture_slots[0] = Some(font_atlas.texture_sdf.clone());
         // self.draw_vars.user_uniforms[0] = self.text_style.brightness;
@@ -259,15 +298,15 @@ impl DrawText {
         //self.draw_vars.user_uniforms[0] = sdf_radius;
         //self.draw_vars.user_uniforms[1] = sdf_cutoff;
     }
-    
+
     pub fn get_line_spacing(&self) -> f64 {
         self.text_style.font_size * self.font_scale * self.text_style.line_spacing
     }
-    
+
     pub fn get_font_size(&self) -> f64 {
         self.text_style.font_size
     }
-    
+
     pub fn get_monospace_base(&self, cx: &Cx2d) -> DVec2 {
         // If the font did not load, there is nothing to draw.
         let Some(font_id) = self.text_style.font.font_id else {
@@ -283,23 +322,23 @@ impl DrawText {
             &font_ids[..1]
         };
 
-        // Borrow the font atlas from the context.
-        let font_atlas_rc = cx.fonts_atlas_rc.clone();
-        let mut font_atlas = font_atlas_rc.0.borrow_mut();
-        let font_atlas = &mut *font_atlas;
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader;
 
-        if font_atlas.fonts[font_id].is_none() {
+        if font_loader[font_id].is_none() {
             return DVec2::default();
         }
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
         let line_spacing = line_height * self.text_style.line_spacing;
 
-        let font = font_atlas.fonts[font_id].as_mut().unwrap();
+        let font = font_loader[font_id].as_mut().unwrap();
         let slot = font.owned_font_face.with_ref( | face | face.glyph_index('!').map_or(0, | id | id.0 as usize));
         let glyph = font.get_glyph_by_id(slot).unwrap();
-        
+
         //let font_size = if let Some(font_size) = font_size{font_size}else{self.font_size};
         DVec2 {
             x: glyph.horizontal_metrics.advance_width * (96.0 / (72.0 * font.ttf_font.units_per_em)),
@@ -323,14 +362,14 @@ impl DrawText {
             font_ids[0] = font_id;
             &font_ids[..1]
         };
-        
-        // Borrow the font atlas from the context.
-        let font_atlas_rc = cx.fonts_atlas_rc.clone();
-        let mut font_atlas_ref = font_atlas_rc.0.borrow_mut();
-        let font_atlas = &mut *font_atlas_ref;
+
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader_ref = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader_ref;
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
 
         line_height
     }
@@ -341,7 +380,7 @@ impl DrawText {
 
     pub fn selected_rects(
         &self,
-        cx: &mut Cx2d, 
+        cx: &mut Cx2d,
         walk: Walk,
         _align: Align,
         width: f64,
@@ -368,18 +407,18 @@ impl DrawText {
             &font_ids[..1]
         };
 
-        // Borrow the font atlas from the context.
-        let font_atlas_rc = cx.fonts_atlas_rc.clone();
-        let mut font_atlas_ref = font_atlas_rc.0.borrow_mut();
-        let font_atlas = &mut *font_atlas_ref;
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader_ref = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader_ref;
 
-        // Borrow the shape cache from the context.
-        let shape_cache_rc = cx.shape_cache_rc.clone();
-        let mut shape_cache_ref = shape_cache_rc.0.borrow_mut();
-        let shape_cache = &mut *shape_cache_ref;
+        // Borrow the text shaper from the context.
+        let text_shaper_rc = cx.text_shaper.clone();
+        let mut text_shaper_ref = text_shaper_rc.borrow_mut();
+        let text_shaper = &mut *text_shaper_ref;
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
         let line_spacing = line_height * self.text_style.line_spacing;
 
         let fixed_width = if !walk.width.is_fit() {
@@ -405,9 +444,9 @@ impl DrawText {
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas,
-            shape_cache,
-            |position, index, event, _font_atlas| {
+            font_loader,
+            text_shaper,
+            |position, index, event, _| {
                 match event {
                     LayoutEvent::Newline { .. } => {
                         if start.index < index && end.index >= prev_newline_index {
@@ -429,10 +468,10 @@ impl DrawText {
                 size: dvec2(position.x, line_height),
             });
         }
-        
-        drop(shape_cache_ref);
-        drop(font_atlas_ref);
-        
+
+        drop(text_shaper_ref);
+        drop(font_loader_ref);
+
         if let Some(rect) = rects.last_mut() {
             let end_position = self.index_affinity_to_position(
                 cx,
@@ -491,18 +530,18 @@ impl DrawText {
             &font_ids[..1]
         };
 
-        // Borrow the font atlas from the context.
-        let font_atlas_rc = cx.fonts_atlas_rc.clone();
-        let mut font_atlas_ref = font_atlas_rc.0.borrow_mut();
-        let font_atlas = &mut *font_atlas_ref;
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader_ref = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader_ref;
 
         // Borrow the shape cache from the context.
-        let shape_cache_rc = cx.shape_cache_rc.clone();
-        let mut shape_cache_ref = shape_cache_rc.0.borrow_mut();
-        let shape_cache = &mut *shape_cache_ref;
+        let text_shaper_rc = cx.text_shaper.clone();
+        let mut text_shaper_ref = text_shaper_rc.borrow_mut();
+        let text_shaper = &mut *text_shaper_ref;
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
         let line_spacing = line_height * self.text_style.line_spacing;
 
         let fixed_width = if !walk.width.is_fit() {
@@ -518,7 +557,7 @@ impl DrawText {
         };
 
         let mut closest = IndexAffinity::new(text.len(), Affinity::After);
-        let line_height = compute_line_height(font_ids, font_size, font_atlas);
+        let line_height = compute_line_height(font_ids, font_size, font_loader);
         let mut prev_glyph_end = 0;
         let mut position = DVec2::new();
         layout_text(
@@ -529,9 +568,9 @@ impl DrawText {
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas,
-            shape_cache,
-            |position, start, event, font_atlas| {
+            font_loader,
+            text_shaper,
+            |position, start, event, font_loader| {
                 match event {
                     LayoutEvent::Chunk {
                         string,
@@ -543,7 +582,7 @@ impl DrawText {
                         while let Some(glyph_info) = iter.next() {
                             let glyph_start = start + glyph_info.cluster;
                             let glyph_end = start + iter.peek().map_or(string.len(), |glyph_info| glyph_info.cluster);
-                            let glyph_width = compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_atlas);
+                            let glyph_width = compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_loader);
                             let grapheme_count = text[glyph_start..glyph_end].graphemes(true).count();
                             let width_per_grapheme = glyph_width / (grapheme_count + 1) as f64;
                             for index in 0..grapheme_count {
@@ -611,18 +650,18 @@ impl DrawText {
             &font_ids[..1]
         };
 
-        // Borrow the font atlas from the context.
-        let font_atlas_rc = cx.fonts_atlas_rc.clone();
-        let mut font_atlas_ref = font_atlas_rc.0.borrow_mut();
-        let font_atlas = &mut *font_atlas_ref;
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader;
 
         // Borrow the shape cache from the context.
-        let shape_cache_rc = cx.shape_cache_rc.clone();
-        let mut shape_cache_ref = shape_cache_rc.0.borrow_mut();
-        let shape_cache = &mut *shape_cache_ref;
+        let text_shaper_rc = cx.text_shaper.clone();
+        let mut text_shaper_ref = text_shaper_rc.borrow_mut();
+        let text_shaper = &mut *text_shaper_ref;
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
         let line_spacing = line_height * self.text_style.line_spacing;
 
         let fixed_width = if !walk.width.is_fit() {
@@ -648,9 +687,9 @@ impl DrawText {
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas,
-            shape_cache,
-            |position, start, event, font_atlas| {
+            font_loader,
+            text_shaper,
+            |position, start, event, font_loader| {
                 match event {
                     LayoutEvent::Chunk {
                         string,
@@ -662,7 +701,7 @@ impl DrawText {
                         while let Some(glyph_info) = iter.next() {
                             let glyph_start = start + glyph_info.cluster;
                             let glyph_end = start + iter.peek().map_or(string.len(), |glyph_info| glyph_info.cluster);
-                            let glyph_width = compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_atlas);
+                            let glyph_width = compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_loader);
                             let grapheme_count = text[glyph_start..glyph_end].graphemes(true).count();
                             let glyph_width_per_grapheme = glyph_width / grapheme_count as f64;
                             for (grapheme_start, grapheme) in text[glyph_start..glyph_end].grapheme_indices(true) {
@@ -692,7 +731,7 @@ impl DrawText {
 
     fn draw_inner(&mut self, cx: &mut Cx2d, position: DVec2, line: &str, font_atlas: &mut CxFontAtlas) {
         self.char_depth = self.draw_depth;
-        
+
         // If the line is empty, there is nothing to draw.
         if line.is_empty() {
             return;
@@ -712,15 +751,20 @@ impl DrawText {
             &font_ids[..1]
         };
 
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader;
+
         // Borrow the shape cache from the context.
-        let shape_cache_rc = cx.shape_cache_rc.clone();
-        let mut shape_cache_ref = shape_cache_rc.0.borrow_mut();
-        let shape_cache = &mut *shape_cache_ref;
+        let text_shaper_rc = cx.text_shaper.clone();
+        let mut text_shaper_ref = text_shaper_rc.borrow_mut();
+        let text_shaper = &mut *text_shaper_ref;
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
         let line_spacing = line_height * self.text_style.line_spacing;
-        
+
         let origin = position;
         let mut position = DVec2::new();
         layout_line(
@@ -733,9 +777,9 @@ impl DrawText {
             font_size,
             line_spacing,
             None,
-            font_atlas,
-            shape_cache,
-            |position, _, event, font_atlas| {
+            font_loader,
+            text_shaper,
+            |position, _, event, font_loader| {
                 if let LayoutEvent::Chunk {
                     glyph_infos,
                     ..
@@ -744,8 +788,9 @@ impl DrawText {
                         cx,
                         origin + position,
                         font_size,
-                        &glyph_infos, 
-                        font_atlas
+                        &glyph_infos,
+                        font_loader,
+                        font_atlas,
                     );
                 }
                 false
@@ -762,12 +807,12 @@ impl DrawText {
         text: &str,
     ) {
         self.char_depth = self.draw_depth;
-        
+
         // If the text is empty, there is nothing to draw.
         if text.is_empty() {
             return;
         }
-        
+
         // If the font did not load, there is nothing to draw.
         let Some(font_id) = self.text_style.font.font_id else {
             return;
@@ -781,19 +826,24 @@ impl DrawText {
             font_ids[0] = font_id;
             &font_ids[..1]
         };
-        
+
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader;
+
         // Borrow the font atlas from the context.
         let font_atlas_rc = cx.fonts_atlas_rc.clone();
         let mut font_atlas = font_atlas_rc.0.borrow_mut();
         let font_atlas = &mut *font_atlas;
 
         // Borrow the shape cache from the context.
-        let shape_cache_rc = cx.shape_cache_rc.clone();
-        let mut shape_cache = shape_cache_rc.0.borrow_mut();
-        let shape_cache = &mut *shape_cache;
+        let text_shaper_rc = cx.text_shaper.clone();
+        let mut text_shaper = text_shaper_rc.borrow_mut();
+        let text_shaper = &mut *text_shaper;
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
         let line_spacing = line_height * self.text_style.line_spacing;
 
         // Compute the fixed width of the bounding box, if it has one.
@@ -828,8 +878,8 @@ impl DrawText {
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas,
-            shape_cache,
+            font_loader,
+            text_shaper,
             |position, _, event, _| {
                 if let LayoutEvent::Chunk {
                     width,
@@ -862,7 +912,7 @@ impl DrawText {
         });
 
         // cx.cx.debug.rect(rect, vec4(1.0, 0.0, 0.0, 1.0));
-        
+
         // Lay out the text again to draw the glyphs in the draw rectangle.
         let mut position = DVec2::new();
         layout_text(
@@ -873,9 +923,9 @@ impl DrawText {
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas,
-            shape_cache,
-            |position, _, event, font_atlas| {
+            font_loader,
+            text_shaper,
+            |position, _, event, font_loader| {
                 if let LayoutEvent::Chunk {
                     glyph_infos,
                     ..
@@ -887,6 +937,7 @@ impl DrawText {
                         rect.pos + position,
                         font_size,
                         glyph_infos,
+                        font_loader,
                         font_atlas,
                     );
                 }
@@ -915,12 +966,12 @@ impl DrawText {
         mut f: impl FnMut(&mut Cx2d, Rect)
     ) {
         self.char_depth = self.draw_depth;
-        
+
         // If the text is empty, there is nothing to draw.
         if text.is_empty() {
             return
         }
-        
+
         // If the font did not load, there is nothing to draw.
         let Some(font_id) = self.text_style.font.font_id else {
             return
@@ -935,18 +986,23 @@ impl DrawText {
             &font_ids[..1]
         };
 
+        // Borrow the font loader from the context.
+        let font_loader_rc = cx.font_loader.clone();
+        let mut font_loader = font_loader_rc.borrow_mut();
+        let font_loader = &mut *font_loader;
+
         // Borrow the font atlas from the context.
         let font_atlas_rc = cx.fonts_atlas_rc.clone();
         let mut font_atlas = font_atlas_rc.0.borrow_mut();
         let font_atlas = &mut *font_atlas;
 
         // Borrow the shape cache from the context.
-        let shape_cache_rc = cx.shape_cache_rc.clone();
-        let mut shape_cache = shape_cache_rc.0.borrow_mut();
-        let shape_cache = &mut *shape_cache;
+        let text_shaper_rc = cx.text_shaper.clone();
+        let mut text_shaper = text_shaper_rc.borrow_mut();
+        let text_shaper = &mut *text_shaper;
 
         let font_size = self.text_style.font_size * self.font_scale;
-        let line_height = compute_line_height(font_ids, font_size, font_atlas) * self.text_style.line_scale;
+        let line_height = compute_line_height(font_ids, font_size, font_loader) * self.text_style.line_scale;
         let line_spacing = line_height * self.text_style.line_spacing;
 
         let fixed_width = if cx.turtle().padded_rect().size.x.is_nan() {
@@ -971,9 +1027,9 @@ impl DrawText {
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas,
-            shape_cache,
-            |_, _, event, font_atlas| {
+            font_loader,
+            text_shaper,
+            |_, _, event, font_loader| {
                 match event {
                     LayoutEvent::Chunk {
                         width,
@@ -993,6 +1049,7 @@ impl DrawText {
                             rect.pos,
                             font_size,
                             &glyph_infos,
+                            font_loader,
                             font_atlas
                         );
 
@@ -1032,7 +1089,8 @@ impl DrawText {
         cx: &mut Cx2d,
         position: DVec2,
         font_size: f64,
-        glyph_infos: &[font_atlas::GlyphInfo],
+        glyph_infos: &[GlyphInfo],
+        font_loader: &mut FontLoader,
         font_atlas: &mut CxFontAtlas,
     ) {
         // If the position is invalid, there is nothing to draw.
@@ -1057,7 +1115,7 @@ impl DrawText {
         let Some(mi) = &mut self.many_instances else {
             return;
         };
-        
+
         // Get the device pixel ratio.
         let device_pixel_ratio = cx.current_dpi_factor();
 
@@ -1065,13 +1123,13 @@ impl DrawText {
         let glyph_padding_dpx = 2.0;
         let glyph_padding_lpx = glyph_padding_dpx / device_pixel_ratio;
 
-        
+
         let mut position = position;
         for glyph_info in glyph_infos {
-            let font = font_atlas.fonts[glyph_info.font_id].as_mut().unwrap();
+            let font = font_loader[glyph_info.font_id].as_mut().unwrap();
             let units_per_em = font.ttf_font.units_per_em;
             let ascender = units_to_lpxs(font.ttf_font.ascender, units_per_em, font_size) * self.text_style.line_scale;
-            
+
             // Use the glyph id to get the glyph from the font.
             let glyph = font.owned_font_face.with_ref(|face| {
                 font.ttf_font.get_glyph_by_id(face, glyph_info.glyph_id as usize).unwrap()
@@ -1082,7 +1140,7 @@ impl DrawText {
                 units_to_lpxs(glyph.bounds.p_min.x, units_per_em, font_size),
                 units_to_lpxs(glyph.bounds.p_min.y, units_per_em, font_size),
             );
-            
+
             // Compute the size of the bounding box of the glyph in logical pixels.
             let glyph_size_lpx = dvec2(
                 units_to_lpxs(glyph.bounds.p_max.x - glyph.bounds.p_min.x, units_per_em, font_size),
@@ -1103,7 +1161,7 @@ impl DrawText {
 
             // Compute the padded size of the bounding box of the glyph in logical pixels.
             let padded_glyph_size_lpx = padded_glyph_size_dpx / device_pixel_ratio;
-            
+
             // Compute the left side bearing.
             let left_side_bearing = units_to_lpxs(glyph.horizontal_metrics.left_side_bearing, units_per_em, font_size);
 
@@ -1116,14 +1174,16 @@ impl DrawText {
             // Use the padded glyph size in device pixels to get the atlas glyph from the atlas page.
             let atlas_glyph = *atlas_page.atlas_glyphs.entry(glyph_info.glyph_id as usize).or_insert_with(|| {
                 font_atlas
-                    .alloc
                     .alloc_atlas_glyph(
                         padded_glyph_size_dpx.x / self.font_scale,
                         padded_glyph_size_dpx.y / self.font_scale,
-                        CxFontsAtlasTodo {
-                            font_id: glyph_info.font_id,
-                            atlas_page_id,
-                            glyph_id: glyph_info.glyph_id as usize,
+                        Command {
+                            mode: Mode::Sdf,
+                            params: Params {
+                                font_id: glyph_info.font_id,
+                                atlas_page_id,
+                                glyph_id: glyph_info.glyph_id as usize,
+                            },
                         }
                     )
             });
@@ -1135,8 +1195,8 @@ impl DrawText {
             );
 
             // Compute the advance width.
-            let advance_width = compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, self.text_style.font_size, font_atlas);
-            
+            let advance_width = compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, self.text_style.font_size, font_loader);
+
             // Emit the instance data.
             self.font_t1 = atlas_glyph.t1;
             self.font_t2 = atlas_glyph.t2;
@@ -1144,8 +1204,8 @@ impl DrawText {
             self.rect_size = padded_glyph_size_lpx.into();
             mi.instances.extend_from_slice(self.draw_vars.as_slice());
 
-            self.char_depth += ZBIAS_STEP;
-            
+            self.char_depth += cx.micro_zbias_step();
+
             // Advance to the next position.
             position.x += advance_width;
         }
@@ -1184,15 +1244,15 @@ fn layout_text(
     font_size: f64,
     line_spacing: f64,
     wrap_width: Option<f64>,
-    font_atlas: &mut CxFontAtlas,
-    shape_cache: &mut CxShapeCache,
-    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut CxFontAtlas) -> bool,
+    font_loader: &mut FontLoader,
+    text_shaper: &mut TextShaper,
+    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut FontLoader) -> bool,
 ) -> bool {
     for (index, line) in lines(text).enumerate() {
         let line_start = line.as_ptr() as usize - text.as_ptr() as usize;
         let line_end = line_start + line.len();
         if index > 0 {
-            if f(*position, line_start, LayoutEvent::Newline { is_soft: false }, font_atlas) {
+            if f(*position, line_start, LayoutEvent::Newline { is_soft: false }, font_loader) {
                 return true;
             }
             position.x = 0.0;
@@ -1208,8 +1268,8 @@ fn layout_text(
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas,
-            shape_cache,
+            font_loader,
+            text_shaper,
             &mut f,
         ) {
             return true;
@@ -1228,9 +1288,9 @@ fn layout_line(
     font_size: f64,
     line_spacing: f64,
     wrap_width: Option<f64>,
-    font_atlas: &mut CxFontAtlas,
-    shape_cache: &mut CxShapeCache,
-    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut CxFontAtlas) -> bool,
+    font_loader: &mut FontLoader,
+    text_shaper: &mut TextShaper,
+    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut FontLoader) -> bool,
 ) -> bool {
     let line = &text[line_start..line_end];
     for (index, word) in words(line).enumerate() {
@@ -1247,8 +1307,8 @@ fn layout_line(
             font_size,
             line_spacing,
             wrap_width,
-            font_atlas, 
-            shape_cache,
+            font_loader,
+            text_shaper,
             &mut f,
         ) {
             return true;
@@ -1268,17 +1328,17 @@ fn layout_word(
     font_size: f64,
     line_spacing: f64,
     wrap_width: Option<f64>,
-    font_atlas: &mut CxFontAtlas,
-    shape_cache: &mut CxShapeCache,
-    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut CxFontAtlas) -> bool,
+    font_loader: &mut FontLoader,
+    text_shaper: &mut TextShaper,
+    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut FontLoader) -> bool,
 ) -> bool {
     let word = &text[word_start..word_end];
-    let glyph_infos = shape(is_secret, word, font_ids, font_atlas, shape_cache);
+    let glyph_infos = shape(is_secret, word, font_ids, font_loader, text_shaper);
     let width: f64 = glyph_infos.iter().map(|glyph_info| {
-        compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_atlas)
+        compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_loader)
     }).sum();
     if wrap_width.map_or(false, |wrap_width| position.x + width > wrap_width) && !is_first {
-        if f(*position, word_start, LayoutEvent::Newline { is_soft: true }, font_atlas) {
+        if f(*position, word_start, LayoutEvent::Newline { is_soft: true }, font_loader) {
             return true;
         }
         position.x = 0.0;
@@ -1299,8 +1359,8 @@ fn layout_word(
                 font_size,
                 line_spacing,
                 wrap_width,
-                font_atlas,
-                shape_cache,
+                font_loader,
+                text_shaper,
                 &mut f,
             ) {
                 return true;
@@ -1311,7 +1371,7 @@ fn layout_word(
             width,
             string: word,
             glyph_infos: &glyph_infos,
-        }, font_atlas) {
+        }, font_loader) {
             return true;
         }
         position.x += width;
@@ -1330,17 +1390,17 @@ fn layout_grapheme(
     font_size: f64,
     line_spacing: f64,
     wrap_width: Option<f64>,
-    font_atlas: &mut CxFontAtlas,
-    shape_cache: &mut CxShapeCache, 
-    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut CxFontAtlas) -> bool,
+    font_loader: &mut FontLoader,
+    text_shaper: &mut TextShaper,
+    mut f: impl FnMut(DVec2, usize, LayoutEvent, &mut FontLoader) -> bool,
 ) -> bool {
     let grapheme = &text[grapheme_start..grapheme_end];
-    let glyph_infos = shape(is_secret, grapheme, font_ids, font_atlas, shape_cache);
+    let glyph_infos = shape(is_secret, grapheme, font_ids, font_loader, text_shaper);
     let width: f64 = glyph_infos.iter().map(|glyph_info| {
-        compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_atlas)
+        compute_glyph_width(glyph_info.font_id, glyph_info.glyph_id, font_size, font_loader)
     }).sum();
     if wrap_width.map_or(false, |wrap_width| position.x + width > wrap_width) && !is_first {
-        if f(*position, grapheme_start, LayoutEvent::Newline { is_soft: true }, font_atlas) {
+        if f(*position, grapheme_start, LayoutEvent::Newline { is_soft: true }, font_loader) {
             return true;
         }
         position.x = 0.0;
@@ -1350,7 +1410,7 @@ fn layout_grapheme(
         width,
         string: grapheme,
         glyph_infos: &glyph_infos
-    }, font_atlas) {
+    }, font_loader) {
         return true;
     }
     position.x += width;
@@ -1361,7 +1421,7 @@ enum LayoutEvent<'a> {
     Chunk {
         width: f64,
         string: &'a str,
-        glyph_infos: &'a [font_atlas::GlyphInfo],
+        glyph_infos: &'a [GlyphInfo],
     },
     Newline {
         is_soft: bool
@@ -1404,10 +1464,10 @@ fn split_at_indices(
 fn compute_line_height(
     font_ids: &[usize],
     font_size: f64,
-    font_atlas: &CxFontAtlas,
+    font_loader: &FontLoader,
 ) -> f64 {
     font_ids.iter().map(|&font_id| {
-        let font = font_atlas.fonts[font_id].as_ref().unwrap();
+        let font = font_loader[font_id].as_ref().unwrap();
         let units_per_em = font.ttf_font.units_per_em;
         let line_height = font.ttf_font.ascender - font.ttf_font.descender;
         units_to_lpxs(line_height, units_per_em, font_size)
@@ -1418,9 +1478,9 @@ fn compute_glyph_width(
     font_id: usize,
     glyph_id: usize,
     font_size: f64,
-    font_atlas: &mut CxFontAtlas,
+    font_loader: &mut FontLoader,
 ) -> f64 {
-    let font = font_atlas.fonts[font_id].as_mut().unwrap();
+    let font = font_loader[font_id].as_mut().unwrap();
     let units_per_em = font.ttf_font.units_per_em;
     let glyph_width = font.owned_font_face.with_ref(|face| {
         let glyph = font.ttf_font.get_glyph_by_id(face, glyph_id as usize).unwrap();
@@ -1444,14 +1504,13 @@ fn shape<'a>(
     is_secret: bool,
     string: &str,
     font_ids: &[usize],
-    font_atlas: &mut CxFontAtlas,
-    shape_cache: &'a mut CxShapeCache,
-) -> Cow<'a, [font_atlas::GlyphInfo]> {
-    shape_cache.shape(
+    font_loader: &mut FontLoader,
+    text_shaper: &'a mut TextShaper,
+) -> &'a [GlyphInfo] {
+    text_shaper.get_or_shape_text(
+        font_loader,
         is_secret,
-        Direction::LeftToRight,
         string,
         font_ids,
-        font_atlas
     )
 }

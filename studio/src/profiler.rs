@@ -11,9 +11,9 @@ use {
 };
 
 live_design!{
-    import makepad_draw::shader::std::*;
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*;
+    use link::shaders::*;
+    use link::widgets::*;
+    use link::theme::*;
     
     ProfilerEventChart = {{ProfilerEventChart}}{
         height: Fill, width: Fill,
@@ -48,11 +48,11 @@ live_design!{
                 line_spacing: (THEME_FONT_LINE_SPACING),
                 font_size: (THEME_FONT_SIZE_P)
             }
-            color: (THEME_COLOR_TEXT_DEFAULT_DARK)
+            color: (THEME_COLOR_TEXT_D)
         }
     }
     
-    Profiler = {{Profiler}}{
+    pub Profiler = {{Profiler}}{
         height: Fill, width: Fill
         <ProfilerEventChart>{ }
     }

@@ -6,16 +6,16 @@ use crate::{
 //use std::fs::File;
 //use std::io::prelude::*;
 live_design! {
-    import makepad_widgets::base::*
-    import makepad_widgets::theme_desktop_dark::*
-    import makepad_example_ironfish::app_desktop::AppDesktop
-    import makepad_example_ironfish::app_mobile::AppMobile
+    use link::widgets::*
+    use link::theme::*
+    use makepad_example_ironfish::app_desktop::AppDesktop
+    use makepad_example_ironfish::app_mobile::AppMobile
 
-    import makepad_audio_graph::mixer::Mixer;
-    import makepad_audio_graph::instrument::Instrument;
-    import makepad_synth_ironfish::ironfish::IronFish;
+    use makepad_audio_graph::mixer::Mixer;
+    use makepad_audio_graph::instrument::Instrument;
+    use makepad_synth_ironfish::ironfish::IronFish;
     
-    import makepad_draw::shader::std::*;
+    use makepad_draw::shader::std::*;
 /*
     BlurStage = <ViewBase> {
         optimize: Texture,
@@ -93,12 +93,12 @@ live_design! {
             }
 
             fn pixel(self) -> vec4{
-                let col = sample2d_rt(self.image, self.o0) ;
-                col +=  (sample2d_rt(self.image, self.o1a) + sample2d_rt(self.image, self.o1b)) * self.g1;
-                col +=  (sample2d_rt(self.image, self.o2a) + sample2d_rt(self.image, self.o2b)) * self.g2 ;
-                col +=  (sample2d_rt(self.image, self.o3a) + sample2d_rt(self.image, self.o3b)) * self.g3 ;
-                col +=  (sample2d_rt(self.image, self.o4a) + sample2d_rt(self.image, self.o4b)) * self.g4 ;
-                col +=  (sample2d_rt(self.image, self.o5a) + sample2d_rt(self.image, self.o5b)) * self.g5 ;
+                let col = sample2d(self.image, self.o0) ;
+                col +=  (sample2d(self.image, self.o1a) + sample2d(self.image, self.o1b)) * self.g1;
+                col +=  (sample2d(self.image, self.o2a) + sample2d(self.image, self.o2b)) * self.g2 ;
+                col +=  (sample2d(self.image, self.o3a) + sample2d(self.image, self.o3b)) * self.g3 ;
+                col +=  (sample2d(self.image, self.o4a) + sample2d(self.image, self.o4b)) * self.g4 ;
+                col +=  (sample2d(self.image, self.o5a) + sample2d(self.image, self.o5b)) * self.g5 ;
                 col = col * self.gaussscale;
 
                 return col ;
@@ -135,12 +135,12 @@ live_design! {
 
             fn pixel(self) -> vec4{
                 
-                let shadow = sample2d_rt(self.image, self.oShadow);
-                let main = sample2d_rt(self.image, self.o0);
+                let shadow = sample2d(self.image, self.oShadow);
+                let main = sample2d(self.image, self.o0);
 
                 let col =  (vec4(0.0,0.0,0.0,self.shadowopacity)  * shadow.a ) * ( 1 - main.a) + main;
 
-                //col +=  (sample2d_rt(self.image, self.o0) )*0.3;
+                //col +=  (sample2d(self.image, self.o0) )*0.3;
                 
 
                 return col;

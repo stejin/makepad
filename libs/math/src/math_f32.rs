@@ -23,6 +23,7 @@ pub const V0F0:Vec4 = Vec4{x:0.0,y:1.0,z:0.0,w:1.0};
 pub const V00F:Vec4 = Vec4{x:0.0,y:0.0,z:1.0,w:1.0};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
+#[repr(C)]
 pub struct Mat4 {
     pub v: [f32; 16],
 }
@@ -39,28 +40,67 @@ pub enum Vec2Index{
     Y
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Default, PartialEq, Debug)]
-pub struct Transform {
+pub struct Pose {
     pub orientation: Quat,
     pub position: Vec3
 }
 
-impl Transform {
+impl Pose {
+    pub fn transform_vec3(&self, v:&Vec3)->Vec3{
+        let r0 = self.orientation.rotate_vec3(v);
+        r0 + self.position
+    }
+    pub fn multiply(a:&Pose, b:&Pose)->Self{
+        Self{
+            orientation: Quat::multiply(&b.orientation, &a.orientation),
+            position: a.transform_vec3(&b.position)
+        }
+    }
+    pub fn invert(&self)->Self{
+        let orientation = self.orientation.invert();
+        let neg_pos = self.position.scale(-1.0);
+        Self{
+            orientation,
+            position: orientation.rotate_vec3(&neg_pos),
+        }
+    }
+    
     pub fn to_mat4(&self) -> Mat4 {
+        
         let q = self.orientation;
-        let t = self.position;
+        let t = self.position;/*
         Mat4 {v: [
-            (1.0 - 2.0 * q.b * q.b - 2.0 * q.c * q.c),
-            (2.0 * q.a * q.b - 2.0 * q.c * q.d),
-            (2.0 * q.a * q.c + 2.0 * q.b * q.d),
+            (1.0 - 2.0 * q.y * q.y - 2.0 * q.z * q.z),
+            (2.0 * q.x * q.y - 2.0 * q.z * q.w),
+            (2.0 * q.x * q.z + 2.0 * q.y * q.w),
+            t.x,
+            (2.0 * q.x * q.y + 2.0 * q.z * q.w),
+            (1.0 - 2.0 * q.x * q.x - 2.0 * q.z * q.z),
+            (2.0 * q.y * q.z - 2.0 * q.x * q.w),
+            t.y,
+            (2.0 * q.x * q.z - 2.0 * q.y * q.w),
+            (2.0 * q.y * q.z + 2.0 * q.x * q.w),
+            (1.0 - 2.0 * q.x * q.x - 2.0 * q.y * q.y),
+            t.z,
             0.0,
-            (2.0 * q.a * q.b + 2.0 * q.c * q.d),
-            (1.0 - 2.0 * q.a * q.a - 2.0 * q.c * q.c),
-            (2.0 * q.b * q.c - 2.0 * q.a * q.d),
             0.0,
-            (2.0 * q.a * q.c - 2.0 * q.b * q.d),
-            (2.0 * q.b * q.c + 2.0 * q.a * q.d),
-            (1.0 - 2.0 * q.a * q.a - 2.0 * q.b * q.b),
+            0.0,
+            1.0
+        ]}*/
+        Mat4 {v: [
+            (1.0 - 2.0 * q.y * q.y - 2.0 * q.z * q.z),
+            (2.0 * q.x * q.y + 2.0 * q.z * q.w),
+            (2.0 * q.x * q.z - 2.0 * q.y * q.w),
+            0.0,
+            (2.0 * q.x * q.y - 2.0 * q.z * q.w),
+            (1.0 - 2.0 * q.x * q.x - 2.0 * q.z * q.z),
+            (2.0 * q.y * q.z + 2.0 * q.x * q.w),
+            0.0,
+            (2.0 * q.x * q.z + 2.0 * q.y * q.w),
+            (2.0 * q.y * q.z - 2.0 * q.x * q.w),
+            (1.0 - 2.0 * q.x * q.x - 2.0 * q.y * q.y),
             0.0,
             t.x,
             t.y,
@@ -69,21 +109,22 @@ impl Transform {
         ]}
     }
     
-    pub fn from_lerp(a: Transform, b: Transform, f: f32) -> Self {
-        Transform {
+    pub fn from_lerp(a: Pose, b: Pose, f: f32) -> Self {
+        Pose {
             orientation: Quat::from_slerp(a.orientation, b.orientation, f),
             position: Vec3::from_lerp(a.position, b.position, f)
         }
     }
     
-    pub fn from_slerp_orientation(a: Transform, b: Transform, f: f32) -> Self {
-        Transform {
+    pub fn from_slerp_orientation(a: Pose, b: Pose, f: f32) -> Self {
+        Pose {
             orientation: Quat::from_slerp(a.orientation, b.orientation, f),
             position: b.position
         }
     }
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Vec2 {
     pub x: f32,
@@ -197,9 +238,9 @@ impl fmt::Display for Vec3 {
     }
 }
 
-pub fn vec2(x: f32, y: f32) -> Vec2 {Vec2 {x, y}}
-pub fn vec3(x: f32, y: f32, z: f32) -> Vec3 {Vec3 {x, y, z}}
-pub fn vec4(x: f32, y: f32, z: f32, w: f32) -> Vec4 {Vec4 {x, y, z, w}}
+pub const fn vec2(x: f32, y: f32) -> Vec2 {Vec2 {x, y}}
+pub const fn vec3(x: f32, y: f32, z: f32) -> Vec3 {Vec3 {x, y, z}}
+pub const fn vec4(x: f32, y: f32, z: f32, w: f32) -> Vec4 {Vec4 {x, y, z, w}}
 
 const TORAD: f32 = 0.017453292;
 const TODEG: f32 = 57.29578;
@@ -209,6 +250,7 @@ pub fn vec2(x:f32, y:f32)->Vec2{
     Vec2{x:x, y:y}
 }*/
 
+#[repr(C)]
 #[derive(Clone, Copy, Default, PartialEq, Debug)]
 pub struct Vec3 {
     pub x: f32,
@@ -233,11 +275,11 @@ impl Vec3 {
         self.z = 0.0;
     }
     
-    pub fn all(x: f32) -> Vec3 {
+    pub const fn all(x: f32) -> Vec3 {
         Vec3 {x, y: x, z: x}
     }
     
-    pub fn to_vec2(&self) -> Vec2 {
+    pub const fn to_vec2(&self) -> Vec2 {
         Vec2 {x: self.x, y: self.y}
     }
     
@@ -313,8 +355,7 @@ impl Plane {
     }
 }
 
-
-
+#[repr(C)]
 #[derive(Clone, Copy, Default, Debug,PartialEq)]
 pub struct Vec4 {
     pub x: f32,
@@ -342,11 +383,11 @@ impl Vec4 {
     pub const B: Vec4 = Vec4 {x: 0.0, y: 0.0, z: 1.0, w: 1.0};
 
     
-    pub fn all(v: f32) -> Self {
+    pub const fn all(v: f32) -> Self {
         Self {x: v, y: v, z: v, w: v}
     }
     
-    pub fn to_vec3(&self) -> Vec3 {
+    pub const fn to_vec3(&self) -> Vec3 {
         Vec3 {x: self.x, y: self.y, z: self.z}
     }
     
@@ -426,11 +467,11 @@ impl Vec4 {
         (r<<24)|(g<<16)|(b<<8)|a
     }
 
-    pub fn xy(&self) -> Vec2 {
+    pub const fn xy(&self) -> Vec2 {
         Vec2{x:self.x, y:self.y}
     }
 
-    pub fn zw(&self) -> Vec2 {
+    pub const fn zw(&self) -> Vec2 {
         Vec2{x:self.z, y:self.w}
     }
 
@@ -443,21 +484,57 @@ impl From<(DVec2,DVec2)> for Vec4{
 }
 
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub struct CameraFov {
+    pub angle_left: f32,
+    pub angle_right: f32,
+    pub angle_up: f32,
+    pub angle_down: f32,
+}
+
+#[repr(C)]
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Quat {
-    pub a: f32,
-    pub b: f32,
-    pub c: f32,
-    pub d: f32
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32
 }
 
 impl Quat {
+    pub fn multiply(a:&Quat, b:&Quat)->Self{
+        Self{
+            x:(b.w * a.x) + (b.x * a.w) + (b.y * a.z) - (b.z * a.y),
+            y:(b.w * a.y) - (b.x * a.z) + (b.y * a.w) + (b.z * a.x),
+            z:(b.w * a.z) + (b.x * a.y) - (b.y * a.x) + (b.z * a.w),
+            w:(b.w * a.w) - (b.x * a.x) - (b.y * a.y) - (b.z * a.z)
+        }
+    }
+        
+    pub fn invert(&self)->Self{
+        Self{
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+            w: self.w,
+        }
+    }
+        
+    pub fn rotate_vec3(&self, v:&Vec3)->Vec3{
+        let q = Quat{x:v.x, y:v.y, z:v.z, w:0.0};
+        let aq = Quat::multiply(&q, self);
+        let ainv = self.invert();
+        let aqainv = Quat::multiply(&ainv, &aq);
+        Vec3{x: aqainv.x, y: aqainv.y, z: aqainv.z}
+    }
+    
     pub fn dot(&self, other: Quat) -> f32 {
-        self.a * other.a + self.b * other.b + self.c * other.c + self.d * other.d
+        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
     }
     
     pub fn neg(&self) -> Quat {
-        Quat {a: -self.a, b: -self.b, c: -self.c, d: -self.d}
+        Quat {x: -self.x, y: -self.y, z: -self.z, w: -self.w}
     }
     
     pub fn get_angle_with(&self, other: Quat) -> f32 {
@@ -484,10 +561,10 @@ impl Quat {
         };
         // calculate final values
         (Quat {
-            a: scale0 * n.a + scale1 * m.a,
-            b: scale0 * n.b + scale1 * m.b,
-            c: scale0 * n.c + scale1 * m.c,
-            d: scale0 * m.d + scale1 * m.d
+            x: scale0 * n.x + scale1 * m.x,
+            y: scale0 * n.y + scale1 * m.y,
+            z: scale0 * n.z + scale1 * m.z,
+            w: scale0 * m.w + scale1 * m.w
         }).normalized()
     }
     
@@ -498,10 +575,10 @@ impl Quat {
     pub fn normalized(&mut self) -> Quat {
         let len = self.length();
         Quat {
-            a: self.a / len,
-            b: self.b / len,
-            c: self.c / len,
-            d: self.d / len,
+            x: self.x / len,
+            y: self.y / len,
+            z: self.z / len,
+            w: self.w / len,
         }
     }
     
@@ -514,7 +591,7 @@ pub fn vec4(x:f32, y:f32, z:f32, w:f32)->Vec4{
 
 
 impl Mat4 {
-    pub fn identity() -> Mat4 {
+    pub const fn identity() -> Mat4 {
         Mat4 {v: [
             1.0,
             0.0,
@@ -535,7 +612,26 @@ impl Mat4 {
         ]}
     }
     
-    
+    pub fn transpose(&self) -> Mat4 {
+        Mat4 {v: [
+            self.v[0],
+            self.v[4],
+            self.v[8],
+            self.v[12],
+            self.v[1],
+            self.v[5],
+            self.v[9],
+            self.v[13],
+            self.v[2],
+            self.v[6],
+            self.v[10],
+            self.v[14],
+            self.v[3],
+            self.v[7],
+            self.v[11],
+            self.v[15],
+        ]}
+    }
     
     pub fn txyz_s_ry_rx_txyz(t1: Vec3, s: f32, ry: f32, rx: f32, t2: Vec3) -> Mat4 {
         
@@ -660,7 +756,64 @@ impl Mat4 {
         ]}
     }
     
-    pub fn translation(x: f32, y: f32, z: f32) -> Mat4 {
+    pub fn from_camera_fov(fov:&CameraFov, near: f32, far: f32) -> Mat4 {
+        let tan_left = fov.angle_left.tan();
+        let tan_right = fov.angle_right.tan();
+        let tan_down = fov.angle_down.tan();
+        let tan_up = fov.angle_up.tan();
+        
+        let tan_height = tan_up - tan_down;
+        let tan_width = tan_right - tan_left;
+        
+        if far <= near{
+            Mat4 {v: [
+                2.0 / tan_width,
+                0.0,
+                0.0,
+                0.0,
+                
+                0.0,
+                2.0 / tan_height,
+                0.0,
+                0.0,
+                
+                (tan_right + tan_left) / tan_width,
+                (tan_up + tan_down) / tan_height,
+                -1.0,
+                -1.0,
+                
+                0.0,
+                0.0,
+                - 2.0 * near,
+                0.0,
+            ]}
+        }
+        else{
+            Mat4 {v: [
+                2.0 / tan_width,
+                0.0,
+                0.0,
+                0.0,
+                                
+                0.0,
+                2.0 / tan_height,
+                0.0,
+                0.0,
+                                
+                (tan_right + tan_left) / tan_width,
+                (tan_up + tan_down) / tan_height,
+                -(far + near) / (far - near),
+                -1.0,
+                                
+                0.0,
+                0.0,
+                -(far * 2.0 * near)/ (far - near),
+                0.0,
+            ]}
+        }
+    }
+    
+    pub const fn translation(x: f32, y: f32, z: f32) -> Mat4 {
         Mat4 {v: [
             1.0,
             0.0,
@@ -682,7 +835,29 @@ impl Mat4 {
         
     }
     
-    pub fn scaled_translation(s: f32, x: f32, y: f32, z: f32) -> Mat4 {
+    pub const fn scaled_translation(sx: f32, sy:f32, sz:f32,  x: f32, y: f32, z: f32) -> Mat4 {
+        Mat4 {v: [
+            sx,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            sy,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            sz,
+            0.0,
+            x,
+            y,
+            z,
+            1.0
+        ]}
+        
+    }
+        
+    pub const fn scale(s: f32) -> Mat4 {
         Mat4 {v: [
             s,
             0.0,
@@ -696,14 +871,13 @@ impl Mat4 {
             0.0,
             s,
             0.0,
-            x,
-            y,
-            z,
+            0.0,
+            0.0,
+            0.0,
             1.0
         ]}
-        
+                
     }
-    
     pub fn rotation(rx: f32, ry: f32, rz: f32) -> Mat4 {
         const TORAD: f32 = 0.017453292;
         let cx = f32::cos(rx * TORAD);
@@ -785,6 +959,7 @@ impl Mat4 {
         // this is probably stupid. Programmed JS for too long.
         let a = &a.v;
         let b = &b.v;
+        #[inline]
         fn d(i: &[f32; 16], x: usize, y: usize) -> f32 {i[x + 4 * y]}
         Mat4 {
             v: [

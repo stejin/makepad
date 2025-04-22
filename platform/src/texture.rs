@@ -9,7 +9,7 @@ use {
 };
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Texture(Rc<PoolId>);
 
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -107,12 +107,21 @@ pub enum TextureFormat {
     VecRGu8{width:usize, height:usize, data:Option<Vec<u8>>, unpack_row_length:Option<usize>, updated: TextureUpdated},
     VecRf32{width:usize, height:usize, data:Option<Vec<f32>>, updated: TextureUpdated},
     DepthD32{size:TextureSize, initial: bool},
+    XrDepth,
     RenderBGRAu8{size:TextureSize, initial: bool},
     RenderRGBAf16{size:TextureSize, initial: bool},
     RenderRGBAf32{size:TextureSize, initial: bool},
+    
     SharedBGRAu8{width:usize, height:usize, id:crate::cx_stdin::PresentableImageId, initial: bool},
     #[cfg(any(target_os = "android", target_os = "linux"))]
     VideoRGB,
+}
+
+#[derive(Debug, Default, Clone)] 
+pub struct TextureAnimation {
+    pub width: usize,
+    pub height: usize,
+    pub num_frames: usize
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -161,14 +170,21 @@ impl TextureUpdated {
     }
 
     pub fn update(self, dirty_rect: Option<RectUsize>) -> Self {
-        match dirty_rect {
+        let new = match dirty_rect {
             Some(dirty_rect) => match self {
                 TextureUpdated::Empty => TextureUpdated::Partial(dirty_rect),
-                TextureUpdated::Partial(rect) => TextureUpdated::Partial(rect.union(dirty_rect)),
+                TextureUpdated::Partial(rect) => 
+                TextureUpdated::Partial(rect.union(dirty_rect)),
                 TextureUpdated::Full => TextureUpdated::Full,
             },
             None => TextureUpdated::Full,
+        };
+        if let TextureUpdated::Partial(p) = new{
+            if p.size == SizeUsize::new(0,0){
+                return TextureUpdated::Empty
+            }
         }
+        new
     }
 }
 
@@ -342,6 +358,13 @@ impl TextureFormat{
         }
         false
     }
+    
+    pub fn is_xr(&self) -> bool {
+        match self{
+            Self::XrDepth=>true,
+            _=>false
+        }
+    }
 
     pub fn vec_width_height(&self)->Option<(usize,usize)>{
         match self{
@@ -502,6 +525,14 @@ impl Texture {
         texture
     }
     
+    pub fn set_animation(&self, cx: &mut Cx, animation: Option<TextureAnimation>) {
+        cx.textures[self.texture_id()].animation = animation;
+    }
+        
+    pub fn animation<'a>(&self,cx: &'a mut Cx) -> &'a Option<TextureAnimation> {
+        &cx.textures[self.texture_id()].animation
+    }
+        
     pub fn get_format<'a>(&self, cx: &'a mut Cx) -> &'a mut TextureFormat {
         &mut cx.textures[self.texture_id()].format
     }
@@ -575,6 +606,7 @@ impl Texture {
 pub struct CxTexture {
     pub (crate) format: TextureFormat,
     pub (crate) alloc: Option<TextureAlloc>,
+    pub (crate) animation: Option<TextureAnimation>,
     pub os: CxOsTexture,
     pub previous_platform_resource: Option<CxOsTexture>,
 }

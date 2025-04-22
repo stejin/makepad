@@ -358,7 +358,7 @@ impl Egl {
         let egl_config = egl_config.unwrap();
         
         let ctx_attribs = [
-            egl_sys::EGL_CONTEXT_CLIENT_VERSION,
+            egl_sys::EGL_CONTEXT_MAJOR_VERSION,
             2,
             egl_sys::EGL_NONE
         ];
@@ -380,7 +380,7 @@ impl Egl {
             return None;
         }
         
-        gl_sys::load_with(|s| {
+        (gl.glload_with)(|s| {
             let s = CString::new(s).unwrap();
             unsafe {(libegl.eglGetProcAddress.unwrap())(s.as_ptr())}
         });

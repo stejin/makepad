@@ -9,9 +9,119 @@ use crate::{
     WindowAction,
 };
 
-live_design! {
-    StackNavigationViewBase = {{StackNavigationView}} {}
-    StackNavigationBase = {{StackNavigation}} {}
+live_design!{
+    link widgets;
+    use link::widgets::*;
+    use link::theme::*;
+    use makepad_draw::shader::std::*;
+    
+    pub StackNavigationViewBase = {{StackNavigationView}} {}
+    pub StackNavigationBase = {{StackNavigation}} {}
+    
+    // StackView DSL begin
+    
+    HEADER_HEIGHT = 80.0
+    
+    pub StackViewHeader = <View> {
+        width: Fill, height: (HEADER_HEIGHT),
+        padding: {bottom: 10., top: 50.}
+        show_bg: true
+        draw_bg: {
+            color: (THEME_COLOR_APP_CAPTION_BAR)
+        }
+        
+        content = <View> {
+            width: Fill, height: Fit,
+            flow: Overlay,
+            
+            title_container = <View> {
+                width: Fill, height: Fit,
+                align: {x: 0.5, y: 0.5}
+                
+                title = <H4> {
+                    width: Fit, height: Fit,
+                    margin: 0,
+                    text: "Stack View Title"
+                }
+            }
+            
+            button_container = <View> {
+                left_button = <Button> {
+                    width: Fit, height: 68,
+                    icon_walk: {width: 10, height: 68}
+                    draw_bg: {
+                        fn pixel(self) -> vec4 {
+                            let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                            return sdf.result
+                        }
+                    }
+                    draw_icon: {
+                        svg_file: dep("crate://self/resources/icons/back.svg"),
+                        color: (THEME_COLOR_TEXT);
+                        brightness: 0.8;
+                    }
+                }
+            }
+        }
+    }
+    
+    pub StackNavigationView = <StackNavigationViewBase> {
+        visible: false
+        width: Fill, height: Fill,
+        flow: Overlay
+        
+        show_bg: true
+        draw_bg: {
+            color: (THEME_COLOR_WHITE)
+        }
+        
+        // Empty slot to place a generic full-screen background
+        background = <View> {
+            width: Fill, height: Fill,
+            visible: false
+        }
+        
+        body = <View> {
+            width: Fill, height: Fill,
+            flow: Down,
+            
+            // THEME_SPACE between body and header can be adjusted overriding this margin
+            margin: {top: (HEADER_HEIGHT)},
+        }
+        
+        header = <StackViewHeader> {}
+        
+        offset: 4000.0
+        
+        animator: {
+            slide = {
+                default: hide,
+                hide = {
+                    redraw: true
+                    ease: ExpDecay {d1: 0.80, d2: 0.97}
+                    from: {all: Forward {duration: 5.0}}
+                    // Large enough number to cover several screens,
+                    // but we need a way to parametrize it
+                    apply: {offset: 4000.0}
+                }
+                
+                show = {
+                    redraw: true
+                    ease: ExpDecay {d1: 0.82, d2: 0.95}
+                    from: {all: Forward {duration: 0.5}}
+                    apply: {offset: 0.0}
+                }
+            }
+        }
+    }
+    
+    pub StackNavigation = <StackNavigationBase> {
+        width: Fill, height: Fill
+        flow: Overlay
+        
+        root_view = <View> {}
+    }
+    
 }
 
 #[derive(Clone, DefaultNone, Eq, Hash, PartialEq, Debug)]
@@ -60,11 +170,11 @@ impl Widget for StackNavigationView {
         if self.animator_handle_event(cx, event).must_redraw() {
             self.view.redraw(cx);
         }
+        self.view.handle_event(cx, event, scope);
 
         self.handle_stack_view_closure_request(cx, event, scope);
         self.trigger_action_post_opening_if_done(cx);
         self.finish_closure_animation_if_done(cx);
-        self.view.handle_event(cx, event, scope);
     }
 
     fn draw_walk(&mut self, cx:&mut Cx2d, scope:&mut Scope, walk:Walk) -> DrawStep{
@@ -79,15 +189,6 @@ impl Widget for StackNavigationView {
     }
 }
 
-impl WidgetMatchEvent for StackNavigationView {
-    fn handle_actions(&mut self, cx: &mut Cx, actions: &Actions, _scope: &mut Scope) {
-        let left_button_clicked = self.button(id!(left_button)).clicked(&actions);
-        if left_button_clicked {
-            self.hide_stack_view(cx);
-        }
-    }
-}
-
 impl StackNavigationView {
     fn hide_stack_view(&mut self, cx: &mut Cx) {
         self.animator_play(cx, id!(slide.hide));
@@ -98,21 +199,17 @@ impl StackNavigationView {
         );
     }
 
-    fn handle_stack_view_closure_request(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
-        // This will invoke WidgetMatchEvent::handle_actions() on the widget.
-        // If the back button was clicked, it will be handled there.
-        self.widget_match_event(cx, event, scope);
-
-        // Clicking the "back" button on the mouse must also hide the active stack view.
-        if self.state == StackNavigationViewState::Active {
-            let back_mouse_button_released = match event {
-                Event::MouseUp(mouse) => mouse.button == 3, // the "back" button on the mouse
-                _ => false,
-            };
-
-            // TODO: in the future, a swipe right gesture on touchscreen, or two-finger swipe on trackpad
-
-            if back_mouse_button_released {
+    fn handle_stack_view_closure_request(&mut self, cx: &mut Cx, event: &Event, _scope: &mut Scope) {
+        // Hide the active stack view if:
+        // * the back navigation button/gesture occurred,
+        // * the left_button was clicked,
+        // * the "back" button on the mouse was clicked.
+        // TODO: in the future, handle a swipe right gesture on touchscreen, or two-finger swipe on trackpad
+        if matches!(self.state, StackNavigationViewState::Active) {
+            if event.back_pressed()
+                || matches!(event, Event::Actions(actions) if self.button(id!(left_button)).clicked(&actions))
+                || matches!(event, Event::MouseUp(mouse) if mouse.button.is_back())
+            {
                 self.hide_stack_view(cx);
             }
         }
@@ -155,7 +252,7 @@ impl StackNavigationView {
 }
 
 impl StackNavigationViewRef {
-    pub fn show(&mut self, cx: &mut Cx, root_width: f64) {
+    pub fn show(&self, cx: &mut Cx, root_width: f64) {
         if let Some(mut inner) = self.borrow_mut() {
             inner.apply_over(cx, live! {offset: (root_width), visible: true});
             inner.offset_to_hide = root_width;
@@ -180,7 +277,7 @@ impl StackNavigationViewRef {
         }
     }
 
-    pub fn set_offset_to_hide(&mut self, offset_to_hide: f64) {
+    pub fn set_offset_to_hide(&self, offset_to_hide: f64) {
         if let Some(mut inner) = self.borrow_mut() {
             inner.offset_to_hide = offset_to_hide;
         }
@@ -227,7 +324,7 @@ impl Widget for StackNavigation {
         }
 
         // Leaving this to the final step, so that the active stack view can handle the event first.
-        // It is releveant when the active stack view is animating out and want to handle
+        // It is relevant when the active stack view is animating out and wants to handle
         // the StackNavigationTransitionAction::HideEnd action.
         self.widget_match_event(cx, event, scope);
     }
@@ -270,7 +367,7 @@ impl WidgetMatchEvent for StackNavigation {
             if let WindowAction::WindowGeomChange(ce) = action.as_widget_action().cast() {
                 self.screen_width = ce.new_geom.inner_size.x * ce.new_geom.dpi_factor;
                 if let ActiveStackView::Active(stack_view_id) = self.active_stack_view {
-                    let mut stack_view_ref = self.stack_navigation_view(&[stack_view_id]);
+                    let stack_view_ref = self.stack_navigation_view(&[stack_view_id]);
                     stack_view_ref.set_offset_to_hide(self.screen_width);
                 }
             }
@@ -287,7 +384,7 @@ impl WidgetMatchEvent for StackNavigation {
 impl StackNavigation {
     pub fn show_stack_view_by_id(&mut self, stack_view_id: LiveId, cx: &mut Cx) {
         if let ActiveStackView::None = self.active_stack_view {
-            let mut stack_view_ref = self.stack_navigation_view(&[stack_view_id]);
+            let stack_view_ref = self.stack_navigation_view(&[stack_view_id]);
             stack_view_ref.show(cx, self.screen_width);
             self.active_stack_view = ActiveStackView::Active(stack_view_id);
 
@@ -325,13 +422,13 @@ impl StackNavigation {
 }
 
 impl StackNavigationRef {
-    pub fn show_stack_view_by_id(&mut self, stack_view_id: LiveId, cx: &mut Cx) {
+    pub fn show_stack_view_by_id(&self, stack_view_id: LiveId, cx: &mut Cx) {
         if let Some(mut inner) = self.borrow_mut() {
             inner.show_stack_view_by_id(stack_view_id, cx);
         }
     }
 
-    pub fn handle_stack_view_actions(&mut self, cx: &mut Cx, actions: &Actions) {
+    pub fn handle_stack_view_actions(&self, cx: &mut Cx, actions: &Actions) {
         for action in actions {
             if let StackNavigationAction::NavigateTo(stack_view_id) = action.as_widget_action().cast() {
                 self.show_stack_view_by_id(stack_view_id, cx);
@@ -340,10 +437,10 @@ impl StackNavigationRef {
         }
     }
 
-    pub fn set_title(&self, stack_view_id: LiveId, title: &str) {
+    pub fn set_title(&self, cx:&mut Cx, stack_view_id: LiveId, title: &str) {
         if let Some(inner) = self.borrow_mut() {
             let stack_view_ref = inner.stack_navigation_view(&[stack_view_id]);
-            stack_view_ref.label(id!(title)).set_text(title);
+            stack_view_ref.label(id!(title)).set_text(cx, title);
         }
     }
 }

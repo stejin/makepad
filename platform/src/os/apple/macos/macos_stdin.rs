@@ -70,6 +70,7 @@ impl Cx {
         for &pass_id in &passes_todo {
             self.passes[pass_id].set_time(time as f32);
             match self.passes[pass_id].parent.clone() {
+                CxPassParent::Xr => {}
                 CxPassParent::Window(window_id) => {
                     if let Some(swapchain) = &mut stdin_windows[window_id.id()].swapchain{
                         
@@ -168,10 +169,11 @@ impl Cx {
                         dvec2(e.x, e.y),
                         e.time
                     );
-                    // lets log the window_id we mousedowned on
+                    // store the window_id we mousedowned on
                     let (window_id,pos) = self.windows.window_id_contains(dvec2(e.x, e.y));
-                    self.fingers.mouse_down(e.button, window_id);
-                    self.call_event_handler(&Event::MouseDown(e.into_event(window_id, pos)));
+                    let mouse_down_event = e.into_event(window_id, pos);
+                    self.fingers.mouse_down(mouse_down_event.button, window_id);
+                    self.call_event_handler(&Event::MouseDown(mouse_down_event));
                 }
                 HostToStdin::MouseMove(e) => {
                     let (window_id, pos) = if let Some((_, window_id)) = self.fingers.first_mouse_button{
@@ -185,14 +187,15 @@ impl Cx {
                     self.fingers.switch_captures();
                 }
                 HostToStdin::MouseUp(e) => {
-                    let button = e.button;
                     let (window_id, pos) = if let Some((_, window_id)) = self.fingers.first_mouse_button{
                         (window_id, self.windows[window_id].window_geom.position)
                     }
                     else{
                         self.windows.window_id_contains(dvec2(e.x, e.y))
                     };
-                    self.call_event_handler(&Event::MouseUp(e.into_event(window_id, pos)));
+                    let mouse_up_event = e.into_event(window_id, pos);
+                    let button = mouse_up_event.button;
+                    self.call_event_handler(&Event::MouseUp(mouse_up_event));
                     self.fingers.mouse_up(button);
                     self.fingers.cycle_hover_area(live_id!(mouse).into());
                 }
@@ -271,6 +274,9 @@ impl Cx {
                     if SignalToUI::check_and_clear_ui_signal() {
                         self.handle_media_signals();
                         self.call_event_handler(&Event::Signal);
+                    }
+                    if SignalToUI::check_and_clear_action_signal() {
+                        self.handle_action_receiver();
                     }
                     let events = self.os.stdin_timers.get_dispatch();
                     for event in  events{

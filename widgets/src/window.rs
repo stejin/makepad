@@ -10,7 +10,95 @@ use crate::{
 };
 
 live_design!{
-    WindowBase = {{Window}} {demo:false}
+    link widgets;
+    use link::widgets::*;
+    use link::theme::*;
+    use makepad_draw::shader::std::*;
+    
+    pub WindowBase = {{Window}} {demo:false}
+    pub Window = <WindowBase> {
+        pass: { clear_color: (THEME_COLOR_BG_APP) }
+        flow: Down
+        nav_control: <NavControl> {}
+        caption_bar = <SolidView> {
+            visible: false,
+            
+            flow: Right
+            
+            draw_bg: {color: (THEME_COLOR_APP_CAPTION_BAR)}
+            height: 27,
+            caption_label = <View> {
+                width: Fill, height: Fill,
+                align: {x: 0.5, y: 0.5},
+                label = <Label> {text: "Makepad", margin: {left: 100}}
+            }
+            windows_buttons = <View> {
+                visible: false,
+                width: Fit, height: Fit,
+                min = <DesktopButton> {draw_bg: {button_type: WindowsMin}}
+                max = <DesktopButton> {draw_bg: {button_type: WindowsMax}}
+                close = <DesktopButton> {draw_bg: {button_type: WindowsClose}}
+            }
+            web_fullscreen = <View> {
+                visible: false,
+                width: Fit, height: Fit,
+                fullscreen = <DesktopButton> {draw_bg: {button_type: Fullscreen}}
+            }
+            web_xr = <View> {
+                visible: false,
+                width: Fit, height: Fit,
+                xr_on = <DesktopButton> {draw_bg: {button_type: XRMode}}
+            }
+        }
+        
+        window_menu = <WindowMenu> {
+            main = Main{items:[app]}
+            app = Sub { name:"Makepad", items:[quit] }
+            quit = Item {
+                name:"Quit",
+                shift: false,
+                key: KeyQ,
+                enabled: true
+            }
+        }
+        body = <KeyboardView> {
+            width: Fill, height: Fill,
+            keyboard_min_shift: 30,
+        }
+        
+        cursor: Default
+        mouse_cursor_size: vec2(20, 20),
+        draw_cursor: {
+            uniform border_size: 1.5
+            uniform color: (THEME_COLOR_CURSOR)
+            uniform border_color: (THEME_COLOR_CURSOR_BORDER)
+            
+            fn get_color(self) -> vec4 {
+                return self.color
+            }
+            
+            fn get_border_color(self) -> vec4 {
+                return self.border_color
+            }
+            
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size)
+                sdf.move_to(1.0, 1.0);
+                sdf.line_to(self.rect_size.x - 1.0, self.rect_size.y * 0.5)
+                sdf.line_to(self.rect_size.x * 0.5, self.rect_size.y - 1.0)
+                sdf.close_path();
+                sdf.fill_keep(self.get_color())
+                if self.border_size > 0.0 {
+                    sdf.stroke(self.get_border_color(), self.border_size)
+                }
+                return sdf.result
+            }
+        }
+        window: {
+            inner_size: vec2(1024, 768)
+        }
+    }
+    
 }
 
 #[derive(Live, Widget)]
@@ -67,7 +155,7 @@ impl LiveHook for Window {
         // check if we are ar/vr capable
         if cx.xr_capabilities().vr_supported {
             // lets show a VR button
-            self.view(id!(web_xr)).set_visible(true);
+            self.view(id!(web_xr)).set_visible(cx, true);
             log!("VR IS SUPPORTED");
         }
        
@@ -80,8 +168,8 @@ impl LiveHook for Window {
         match cx.os_type() {
             OsType::Windows => {
                 if !cx.in_makepad_studio(){
-                    self.view(id!(caption_bar)).set_visible(true);
-                    self.view(id!(windows_buttons)).set_visible(true);
+                    self.view(id!(caption_bar)).set_visible(cx, true);
+                    self.view(id!(windows_buttons)).set_visible(cx, true);
                 }
             }
             OsType::Macos => {
@@ -131,7 +219,8 @@ impl Window {
 
         self.main_draw_list.begin_always(cx);
         
-        cx.begin_pass_sized_turtle(Layout::flow_down());
+        let size = cx.current_pass_size();
+        cx.begin_sized_turtle(size, Layout::flow_down());
         
         self.overlay.begin(cx);
         
@@ -180,6 +269,12 @@ impl Window {
         self.main_draw_list.end(cx);
         cx.end_pass(&self.pass);
     }
+    pub fn resize(&self, cx: &mut Cx, size: DVec2) {
+        self.window.resize(cx, size);
+    }
+    pub fn reposition(&self, cx: &mut Cx, size: DVec2) {
+        self.window.reposition(cx, size);
+    }
 }
 
 impl WindowRef{
@@ -191,10 +286,28 @@ impl WindowRef{
             dvec2(0.0,0.0)
         }
     }
+    pub fn resize(&self, cx: &mut Cx, size: DVec2) {
+        if let Some(inner) = self.borrow() {
+            inner.resize(cx, size);
+        }
+    }
+
+    pub fn reposition(&self, cx: &mut Cx, size: DVec2) {
+        if let Some(inner) = self.borrow() {
+            inner.reposition(cx, size);
+        }
+    }
 }
 
 impl Widget for Window {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
+        if let Event::Draw(e) = event {
+            let mut cx_draw = CxDraw::new(cx, e);
+            let cx = &mut Cx2d::new(&mut cx_draw);
+            self.draw_all(cx, scope);
+            return
+        }
+        
         let uid = self.widget_uid();
         
         self.debug_view.handle_event(cx, event);
@@ -221,15 +334,13 @@ impl Widget for Window {
             Event::WindowGeomChange(ev) => {
                 if ev.window_id == self.window.window_id() {
                     match cx.os_type() {
-                        OsType::Macos => {
+                        OsType::Windows | OsType::Macos => {
                             if self.hide_caption_on_fullscreen{
                                 if ev.new_geom.is_fullscreen && !ev.old_geom.is_fullscreen {
-                                    self.view(id!(caption_bar)).set_visible(false);
-                                    self.redraw(cx);
+                                    self.view(id!(caption_bar)).set_visible(cx, false);
                                 }
                                 else if !ev.new_geom.is_fullscreen && ev.old_geom.is_fullscreen {
-                                    self.view(id!(caption_bar)).set_visible(true);
-                                    self.redraw(cx);
+                                    self.view(id!(caption_bar)).set_visible(cx, true);
                                 };
                             }
                         }
@@ -243,7 +354,7 @@ impl Widget for Window {
             Event::WindowDragQuery(dq) => {
                 if dq.window_id == self.window.window_id() {
 
-                    if self.view(id!(caption_bar)).is_visible() {
+                    if self.view(id!(caption_bar)).visible() {
                         let size = self.window.get_inner_size(cx);
                     
                         if dq.abs.y < 25. {
@@ -289,7 +400,6 @@ impl Widget for Window {
                 }
             }
             if self.desktop_button(id!(windows_buttons.close)).clicked(&actions) {
-                println!("CLOSE");
                 self.window.close(cx);
             }
             if self.desktop_button(id!(web_xr.xr_on)).clicked(&actions) {
@@ -298,8 +408,8 @@ impl Widget for Window {
         }
                 
         if let Event::ClearAtlasses = event {
-            Cx2d::reset_fonts_atlas(cx);
-            Cx2d::reset_icon_atlas(cx);
+            CxDraw::reset_fonts_atlas(cx);
+            CxDraw::reset_icon_atlas(cx);
         }
         
         if let Event::MouseMove(ev) = event {
@@ -327,6 +437,30 @@ impl Widget for Window {
             self.draw_state.end();
             self.end(cx);
         }
+        
+        DrawStep::done()
+    }
+    
+    fn draw_3d(&mut self, cx: &mut Cx3d, scope:&mut Scope)->DrawStep{
+        // lets create a Cx2d in which we can draw. we dont support stepping here
+        let cx = &mut Cx2d::new(cx.cx);
+        
+        self.main_draw_list.begin_always(cx);
+        
+        let size = dvec2(2000.0,1000.0);
+        cx.begin_sized_turtle(size, Layout::flow_down());
+                
+        self.overlay.begin(cx);
+        
+        self.view.draw_walk_all(cx, scope, Walk::default());
+        
+        self.debug_view.draw(cx);
+                        
+        self.main_draw_list.set_view_transform(cx, &Mat4::scaled_translation(0.0002,-0.0002,-0.0002,-0.25,0.25,-0.5));
+        
+        cx.end_pass_sized_turtle();
+                
+        self.main_draw_list.end(cx);
         
         DrawStep::done()
     }

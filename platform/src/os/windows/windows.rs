@@ -60,6 +60,7 @@ impl Cx {
                 cx.win32_event_callback(event, &mut d3d11_cx, &mut d3d11_windows)
             }
         }));
+        // the signal poll timer
         get_win32_app_global().start_timer(0, 0.008, true);
         cx.borrow_mut().call_event_handler(&Event::Startup);
         cx.borrow_mut().redraw_all();
@@ -205,12 +206,12 @@ impl Cx {
                 // send MouseUp
                 self.call_event_handler(&Event::MouseUp(MouseUpEvent {
                     abs: dvec2(-100000.0, -100000.0),
-                    button: 0,
+                    button: MouseButton::PRIMARY,
                     window_id: CxWindowPool::id_zero(),
                     modifiers: Default::default(),
                     time: 0.0
                 }));
-                self.fingers.mouse_up(0);
+                self.fingers.mouse_up(MouseButton::PRIMARY);
                 self.fingers.cycle_hover_area(live_id!(mouse).into());
             }
             Win32Event::KeyDown(e) => {
@@ -235,7 +236,10 @@ impl Cx {
                     self.handle_media_signals();
                     self.call_event_handler(&Event::Signal);
                 }
-                self.handle_action_receiver();
+                if SignalToUI::check_and_clear_action_signal() {
+                    self.handle_action_receiver();
+                }
+
                 if self.handle_live_edit() {
                     self.call_event_handler(&Event::LiveEdit);
                     self.redraw_all();
@@ -261,6 +265,7 @@ impl Cx {
         for pass_id in &passes_todo {
             self.passes[*pass_id].set_time(get_win32_app_global().time_now() as f32);
             match self.passes[*pass_id].parent.clone() {
+                CxPassParent::Xr => {}
                 CxPassParent::Window(window_id) => {
                     if let Some(window) = d3d11_windows.iter_mut().find( | w | w.window_id == window_id) {
                         //let dpi_factor = window.window_geom.dpi_factor;                        
@@ -270,10 +275,10 @@ impl Cx {
                 }
                 CxPassParent::Pass(_) => {
                     //let dpi_factor = self.get_delegated_dpi_factor(parent_pass_id);
-                    self.draw_pass_to_magic_texture(*pass_id, d3d11_cx);
+                    self.draw_pass_to_texture(*pass_id, d3d11_cx, None);
                 },
                 CxPassParent::None => {
-                    self.draw_pass_to_magic_texture(*pass_id, d3d11_cx);
+                    self.draw_pass_to_texture(*pass_id, d3d11_cx, None);
                 }
             }
         }
@@ -314,6 +319,7 @@ impl Cx {
                     });
                 },
                 CxOsOp::CloseWindow(window_id) => {
+                    self.call_event_handler(&Event::WindowClosed(WindowClosedEvent { window_id }));
                     if let Some(index) = d3d11_windows.iter().position( | w | w.window_id == window_id) {
                         self.windows[window_id].is_created = false;
                         d3d11_windows[index].win32_window.close_window();
@@ -328,11 +334,23 @@ impl Cx {
                         window.win32_window.minimize();
                     }
                 },
+                CxOsOp::Deminiaturize(_window_id) => todo!(),
+                CxOsOp::HideWindow(_window_id) => todo!(),
                 CxOsOp::MaximizeWindow(window_id) => {
                     if let Some(window) = d3d11_windows.iter_mut().find( | w | w.window_id == window_id) {
                         window.win32_window.maximize();
                     }
                 },
+                CxOsOp::ResizeWindow(window_id, size) => {
+                    if let Some(window) = d3d11_windows.iter_mut().find( | w | w.window_id == window_id) {
+                        window.win32_window.set_inner_size(size);
+                    }
+                }
+                CxOsOp::RepositionWindow(window_id, pos) => {
+                    if let Some(window) = d3d11_windows.iter_mut().find( | w | w.window_id == window_id) {
+                        window.win32_window.set_position(pos);
+                    }
+                }
                 CxOsOp::RestoreWindow(window_id) => {
                     if let Some(window) = d3d11_windows.iter_mut().find( | w | w.window_id == window_id) {
                         window.win32_window.restore();
@@ -340,12 +358,6 @@ impl Cx {
                 },
                 CxOsOp::Quit=>{
                     ret = EventFlow::Exit
-                }
-                CxOsOp::FullscreenWindow(_window_id) => {
-                    todo!()
-                },
-                CxOsOp::NormalizeWindow(_window_id) => {
-                    todo!()
                 }
                 CxOsOp::SetTopmost(window_id, is_topmost) => {
                     if d3d11_windows.len() == 0 {
@@ -356,24 +368,10 @@ impl Cx {
                         window.win32_window.set_topmost(is_topmost);
                     }
                 }
-                CxOsOp::ShowClipboardActions(_) => {
-                },
                 CxOsOp::CopyToClipboard(content) => {
                     unsafe {
                         Win32Window::copy_to_clipboard(&content);
                     }
-                },
-                CxOsOp::XrStartPresenting => {
-                    //todo!()
-                },
-                CxOsOp::XrStopPresenting => {
-                    //todo!()
-                },
-                CxOsOp::ShowTextIME(_area, _pos) => {
-                    //todo!()
-                }
-                CxOsOp::HideTextIME => {
-                    //todo!()
                 },
                 CxOsOp::SetCursor(cursor) => {
                     get_win32_app_global().set_mouse_cursor(cursor);
@@ -387,29 +385,15 @@ impl Cx {
                 CxOsOp::StartDragging(dragged_item) => {
                     get_win32_app_global().start_dragging(dragged_item);
                 },
-                CxOsOp::UpdateMacosMenu(_menu) => {
-                },
                 CxOsOp::HttpRequest {request_id, request} => {
                     use crate::os::windows::http::WindowsHttpSocket;
                     WindowsHttpSocket::open(request_id, request, self.os.network_response.sender.clone());
 
                     //todo!("HttpRequest not implemented yet on windows, we'll get there");
                 },
-                CxOsOp::CancelHttpRequest {request_id:_} => {
-                    todo!();
+                e=>{
+                    crate::error!("Not implemented on this platform: CxOsOp::{:?}", e);
                 }
-                CxOsOp::PrepareVideoPlayback(_, _, _, _, _) => todo!(),
-                CxOsOp::BeginVideoPlayback(_) => todo!(),
-                CxOsOp::PauseVideoPlayback(_) => todo!(),
-                CxOsOp::ResumeVideoPlayback(_) => todo!(),
-                CxOsOp::MuteVideoPlayback(_) => todo!(),
-                CxOsOp::UnmuteVideoPlayback(_) => todo!(),
-                CxOsOp::CleanupVideoPlaybackResources(_) => todo!(),
-                CxOsOp::UpdateVideoSurfaceTexture(_) => todo!(),
-                CxOsOp::SaveFileDialog(_) =>  todo!(),
-                CxOsOp::SelectFileDialog(_) =>  todo!(),
-                CxOsOp::SaveFolderDialog(_) =>  todo!(),
-                CxOsOp::SelectFolderDialog(_) =>  todo!(),
             }
         }
         if geom_changes.len()>0{

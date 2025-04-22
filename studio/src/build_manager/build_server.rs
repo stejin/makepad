@@ -84,7 +84,7 @@ impl BuildConnection {
         let path = shared.read().unwrap().path.clone();
 
         let http = format!("{}/{}", http, cmd_id.0);
-        let mut env = vec![("MAKEPAD_STUDIO_HTTP", http.as_str()), ("MAKEPAD", "lines")];
+        let mut env = vec![("RUST_BACKTRACE","1"),("MAKEPAD_STUDIO_HTTP", http.as_str()), ("MAKEPAD", "lines")];
 
         let args: Vec<String> = match &what.target {
             BuildTarget::ReleaseStudio => vec![
@@ -188,6 +188,17 @@ impl BuildConnection {
             BuildTarget::Android => vec![
                 "makepad".into(),
                 "android".into(),
+                "--variant=default".into(),
+                "run".into(),
+                "-p".into(),
+                what.binary.clone(),
+                "--release".into(),
+                "--message-format=json".into(),
+            ],
+            BuildTarget::Quest => vec![
+                "makepad".into(),
+                "android".into(),
+                "--variant=quest".into(),
                 "run".into(),
                 "-p".into(),
                 what.binary.clone(),

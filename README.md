@@ -171,6 +171,19 @@ cargo run -p makepad-example-simple
 
 And there should be a desktop application window now running (may need to click on the icon on MacOS's Dock to show it)
 
+### Building for the Linux direct target
+
+To build and run for the Linux direct target (which bypasses X11), first install the following dependencies:
+```shell
+sudo apt-get install libinput-dev libgbm-dev libdrm-dev
+```
+
+and then run the same cargo command with the `MAKEPAD` environment variable set:
+```shell
+MAKEPAD=linux_direct cargo run -p makepad-example-simple
+```
+
+
 ## 4. Android Build
 
 ### Install Android toolchain (First time)
@@ -285,7 +298,7 @@ cargo makepad wasm install-toolchain
 cargo makepad wasm run -p makepad-example-simple --release
 ```
 
-### Cross-origin headers for WASM for browsers
+### Cross-origin headers for WASM in browsers
 
 For WASM to work in browsers, your web server must
 
@@ -318,6 +331,43 @@ For WASM to work in browsers, your web server must
      [gzuidhof/coi-serviceworker#14](https://github.com/gzuidhof/coi-serviceworker/issues/14).
   6. If this works well, incorporate it to Makepad's `tools/cargo_makepad/src/wasm/compile.rs` and
      `platform/src/os/web/` and create a pull request.
+
+### Using `wasm-bindgen` compatibility
+
+By default, Makepad uses it's own bridge. Web crates outside of Makepad
+usually depend on `wasm-bindgen` for web integration so they will fail
+at runtime if added to your project.
+
+However, we can build with opt-in `wasm-bindgen` support to solve this
+issue.
+
+To enable wasm-bindgen integration you should build like this:
+
+1. Ensure wasm-bindgen CLI is installed.
+
+```bash
+cargo install -f wasm-bindgen-cli
+```
+
+2. Add `wasm-bindgen` dependency to your `Cargo.toml` file.
+
+```bash
+cargo add wasm-bindgen
+```
+
+3. Ensure you are using the crate somewhere like in `main.rs`.
+
+```rust
+use wasm_bindgen::prelude::*;
+```
+
+> **Note:** If you forget this, you may see a compile error like `failed to find __wbindgen_malloc`.
+
+4. Now, run with the `--bindgen` option.
+
+```bash
+cargo makepad wasm --bindgen run -p makepad-example-hello-widgets --release
+```
 ---
 
 ## Makepad Commands Quick Reference
@@ -343,7 +393,7 @@ cargo makepad wasm install-toolchain
 
 ### Android
 
-Command for installing the app onto an iOS Simulator.
+Command for installing the app onto an Android Simulator.
 
 ```bash
 cargo makepad android run -p makepad-example-simple --release

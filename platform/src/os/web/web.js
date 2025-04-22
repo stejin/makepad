@@ -458,8 +458,6 @@ export class WasmWebBrowser extends WasmBridge {
             context_ptr
         };
         if (typeof this.exports.__wbindgen_start !== 'undefined') {
-            // ret.tls_ptr = this.exports.__stack_alloc.value;
-            ret.stack_ptr = this.exports.__stack_pointer.value;
             ret.wasm_bindgen = true;
         } else {
             let tls_size = this.exports.__tls_size.value;
@@ -502,8 +500,9 @@ export class WasmWebBrowser extends WasmBridge {
     
     start_signal_poll() {
         this.poll_timer = window.setInterval(e => {
-            if (this.exports.wasm_check_signal() == 1) {
-                this.to_wasm.ToWasmSignal();
+            let flags = this.exports.wasm_check_signal();
+            if (flags != 0) {
+                this.to_wasm.ToWasmSignal({flags});
                 this.do_wasm_pump();
             }
         }, 0.016 * 1000.0);
@@ -1302,6 +1301,8 @@ let web_cursor_map = [
     "nwse-resize", //NwseResize=>21,
     "col-resize", //ColResize=>22,
     "row-resize", //RowResize=>23,
+    "grab", //Grab=>24
+    "grabbing", //Grabbing=>25    
 ]
 
 //var firefox_logo_key = false;

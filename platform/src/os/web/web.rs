@@ -183,8 +183,14 @@ impl Cx {
                 }
                 
                 live_id!(ToWasmSignal) =>{
-                    self.handle_media_signals();
-                    self.call_event_handler(&Event::Signal);
+                    let tw = ToWasmSignal::read_to_wasm(&mut to_wasm);
+                    if tw.flags & 1 != 0{
+                        self.handle_media_signals();
+                        self.call_event_handler(&Event::Signal);
+                    }
+                    if tw.flags & 2 != 0{
+                        self.handle_action_receiver();
+                    }
                 }
                 
                 live_id!(ToWasmTimerFired) => {
@@ -360,8 +366,8 @@ impl Cx {
         
         self.handle_platform_ops();
         self.handle_media_signals();
-        
-        if self.any_passes_dirty() || self.need_redrawing() || self.new_next_frames.len() != 0 {
+
+        if self.any_passes_dirty() || self.need_redrawing() || self.new_next_frames.len() != 0 || self.demo_time_repaint{
             self.os.from_wasm(FromWasmRequestAnimationFrame {});
         }
         
@@ -378,6 +384,7 @@ impl Cx {
         for pass_id in &passes_todo {
             self.passes[*pass_id].set_time(time as f32);
             match self.passes[*pass_id].parent.clone() {
+                CxPassParent::Xr => {}
                 CxPassParent::Window(_) => {
                     //et dpi_factor = self.os.window_geom.dpi_factor;
                     self.draw_pass_to_canvas(*pass_id);
@@ -410,23 +417,11 @@ impl Cx {
                     window.window_geom = self.os.window_geom.clone();
                     window.is_created = true;
                 },
-                CxOsOp::Quit=>{}
-                CxOsOp::CloseWindow(_window_id) => {
-                },
-                CxOsOp::MinimizeWindow(_window_id) => {
-                },
-                CxOsOp::MaximizeWindow(_window_id) => {
-                },
-                CxOsOp::RestoreWindow(_window_id) => {
-                },
                 CxOsOp::FullscreenWindow(_window_id) => {
                     self.os.from_wasm(FromWasmFullScreen {});
                 },
                 CxOsOp::NormalizeWindow(_window_id) => {
                     self.os.from_wasm(FromWasmNormalScreen {});
-                }
-                CxOsOp::SetTopmost(_window_id, _is_topmost) => {
-                    todo!()
                 }
                 CxOsOp::XrStartPresenting => {
                     self.os.from_wasm(FromWasmXrStartPresenting {});
@@ -441,8 +436,6 @@ impl Cx {
                 CxOsOp::HideTextIME => {
                     self.os.from_wasm(FromWasmHideTextIME {});
                 },
-                CxOsOp::ShowClipboardActions(_) =>{
-                }
                 CxOsOp::CopyToClipboard(_) =>{
                     crate::error!("Clipboard actions not supported in web")
                 }
@@ -460,10 +453,6 @@ impl Cx {
                     self.os.from_wasm(FromWasmStopTimer {
                         id: timer_id as f64,
                     });
-                },
-                CxOsOp::StartDragging(_dragged_item) => {
-                }
-                CxOsOp::UpdateMacosMenu(_menu) => {
                 },
                 CxOsOp::HttpRequest{request_id, request} => {
                     let headers = request.get_headers_string();
@@ -484,6 +473,9 @@ impl Cx {
                         request_id_hi: request_id.hi(),
                     });
                 },
+                e=>{
+                    crate::error!("Not implemented on this platform: CxOsOp::{:?}", e);
+                }
                 /*
                 CxOsOp::WebSocketOpen{request_id, request}=>{
                     let headers = request.get_headers_string();
@@ -510,18 +502,6 @@ impl Cx {
                         data
                     });
                 },*/
-                CxOsOp::PrepareVideoPlayback(_, _, _, _, _) => todo!(),
-                CxOsOp::BeginVideoPlayback(_) => todo!(),
-                CxOsOp::PauseVideoPlayback(_) => todo!(),
-                CxOsOp::ResumeVideoPlayback(_) => todo!(),
-                CxOsOp::MuteVideoPlayback(_) => todo!(),
-                CxOsOp::UnmuteVideoPlayback(_) => todo!(),
-                CxOsOp::CleanupVideoPlaybackResources(_) => todo!(),
-                CxOsOp::UpdateVideoSurfaceTexture(_) => todo!(),
-                CxOsOp::SaveFileDialog(_) => todo!(),
-                CxOsOp::SelectFileDialog(_) => todo!(),
-                CxOsOp::SaveFolderDialog(_) => todo!(),
-                CxOsOp::SelectFolderDialog(_) => todo!(),    
             }
         }
     }
@@ -628,6 +608,7 @@ impl CxOsApi for Cx {
         });
     }
     fn default_window_size(&self)->DVec2{self.os.window_geom.inner_size}
+    
     /*
     fn start_midi_input(&mut self) {
         self.platform.from_wasm(FromWasmStartMidiInput {
@@ -762,12 +743,14 @@ pub unsafe extern "C" fn wasm_get_js_message_bridge(cx_ptr: u32) -> u32 {
 #[export_name = "wasm_check_signal"]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn wasm_check_signal() -> u32 {
+    let mut x = 0;
     if SignalToUI::check_and_clear_ui_signal(){
-        1
+        x |= 1
     }
-    else{
-        0
+    if SignalToUI::check_and_clear_action_signal(){
+        x |= 2
     }
+    x
 }
 
 #[export_name = "wasm_init_panic_hook"]

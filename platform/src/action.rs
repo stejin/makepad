@@ -1,5 +1,6 @@
 use crate::generate_any_trait_api;
 use crate::cx::Cx;
+use crate::thread::SignalToUI;
 use std::any::{TypeId};
 use std::fmt::Debug;
 use std::fmt;
@@ -10,7 +11,7 @@ use std::sync::{
 };
 
 
-pub (crate) static ACTION_SENDER_GLOBAL: Mutex<Option<Sender<ActionSendSync>>> = Mutex::new(None);
+pub (crate) static ACTION_SENDER_GLOBAL: Mutex<Option<Sender<ActionSend>>> = Mutex::new(None);
 
 pub trait ActionTrait: 'static {
     fn debug_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
@@ -30,7 +31,7 @@ impl Debug for dyn ActionTrait {
         self.debug_fmt(f)
     }
 }
-pub type ActionSendSync = Box<dyn ActionTrait + Send + Sync>;
+pub type ActionSend = Box<dyn ActionTrait + Send>;
 pub type Action = Box<dyn ActionTrait>;
 pub type ActionsBuf = Vec<Action>;
 pub type Actions = [Action];
@@ -89,21 +90,32 @@ impl Cx{
         self.handle_actions();
     }
     
-    pub fn post_action(action:impl ActionTrait + Send + Sync){
+    /// Enqueues an action from a background thread context.
+    ///
+    /// This will produce a bare action, *not* a widget action,
+    /// so you cannot use `as_widget_action()` when handling this action.
+    pub fn post_action(action:impl ActionTrait + Send){
         ACTION_SENDER_GLOBAL.lock().unwrap().as_mut().unwrap().send(Box::new(action)).unwrap();
+        SignalToUI::set_action_signal();
     }
     
     pub fn action(&mut self, action: impl ActionTrait){
         self.new_actions.push(Box::new(action));
     }
-    
+
+    /// Adds the given `actions` back into the set of existing queued actions.
+    ///
+    /// This is useful when you want to allow other widgets elsewhere in the UI tree
+    /// to receive the given `actions`, e.g., after you have previously captured them
+    /// using `capture_actions()`.
     pub fn extend_actions(&mut self, actions: ActionsBuf){
         self.new_actions.extend(actions);
     }
     
-    pub fn map_actions<F, G, R>(&mut self, f: F, g:G) -> R where
-    F: FnOnce(&mut Cx) -> R,
-    G: FnOnce(&mut Cx, ActionsBuf)->ActionsBuf,
+    pub fn map_actions<F, G, R>(&mut self, f: F, g:G) -> R
+    where
+        F: FnOnce(&mut Cx) -> R,
+        G: FnOnce(&mut Cx, ActionsBuf)->ActionsBuf,
     {
         let start = self.new_actions.len();
         let r = f(self);
@@ -116,9 +128,10 @@ impl Cx{
         r
     }
     
-    pub fn mutate_actions<F, G, R>(&mut self, f: F, g:G) -> R where
-    F: FnOnce(&mut Cx) -> R,
-    G: FnOnce(&mut [Action]),
+    pub fn mutate_actions<F, G, R>(&mut self, f: F, g:G) -> R
+    where
+        F: FnOnce(&mut Cx) -> R,
+        G: FnOnce(&mut [Action]),
     {
         let start = self.new_actions.len();
         let r = f(self);
@@ -129,8 +142,18 @@ impl Cx{
         r
     }
 
-    pub fn capture_actions<F>(&mut self, f: F) -> ActionsBuf where
-    F: FnOnce(&mut Cx),
+    /// Captures the actions emitted by the given closure `f` and returns them.
+    ///
+    /// This allows you to handle the actions directly before they are delivered
+    /// to other widgets in the UI tree, enabling you to optionally prevent some or all
+    /// of the actions from being delivered to all other widgets.
+    ///
+    /// If you *do* want some or all of the returned `actions` to be delivered
+    /// to other widgets in the UI tree, you can call `extend_actions()` to enqueue them
+    /// back into the set of existing actions.
+    pub fn capture_actions<F>(&mut self, f: F) -> ActionsBuf
+    where
+        F: FnOnce(&mut Cx),
     {
         let mut actions = Vec::new();
         std::mem::swap(&mut self.new_actions, &mut actions);

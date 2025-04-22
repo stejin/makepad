@@ -11,11 +11,11 @@ use {
 };
 
 live_design!{
-    import makepad_code_editor::code_view::CodeView;
-    import makepad_widgets::base::*;
-    import makepad_draw::shader::std::*;
-        
-    import makepad_widgets::theme_desktop_dark::*;
+    use link::shaders::*;
+    use link::widgets::*;
+    use link::theme::*;
+    
+    use makepad_code_editor::code_view::CodeView;
 
     User = <RoundedView> {
         height: Fit,
@@ -183,7 +183,7 @@ live_design!{
         }
     }
     
-    AiChatView = {{AiChatView}}{
+    pub AiChatView = {{AiChatView}}{
         flow: Down,
         height: Fill, width: Fill,
         spacing: (THEME_SPACE_1),
@@ -201,13 +201,13 @@ live_design!{
                 auto_run = <CheckBoxCustom> {
                     text: "Auto run",
                     align: { y: 0.5 }
-                    draw_check: { check_type: None }
+                    draw_bg: { check_type: None }
                     spacing: (THEME_SPACE_1),
                     padding: <THEME_MSPACE_V_2> {}
                     icon_walk: { width: 10. }
                     draw_icon: {
                         color: (THEME_COLOR_D_4),
-                        color_active: (STUDIO_PALETTE_6),
+                        //color_active: (STUDIO_PALETTE_6),
                         svg_file: dep("crate://self/resources/icons/icon_auto.svg"),
                     }
                 }
@@ -333,7 +333,7 @@ impl AiChatView{
                         cx.action(AppAction::RedrawAiChat{chat_id});
                         cx.action(AppAction::SaveAiChat{chat_id});
                     }
-                    if message_input.escape(actions){
+                    if message_input.escaped(actions){
                         cx.action(AppAction::CancelAiGeneration{chat_id});
                     }
                     
@@ -423,7 +423,7 @@ impl Widget for AiChatView {
                     .map(|(index, _)| index).unwrap_or(0);
                 }
                 
-                self.view.check_box(id!(auto_run)).set_selected(cx, doc.auto_run);
+                self.view.check_box(id!(auto_run)).set_active(cx, doc.auto_run);
                 
                 let history_len = doc.file.history.len(); 
                 self.view.label(id!(slot)).set_text_with(|v| fmt_over!(v, "{}/{}", self.history_slot+1, history_len));
@@ -438,8 +438,8 @@ impl Widget for AiChatView {
                                 Some(AiChatMessage::Assistant(val))=>{
                                     let item = list.item(cx, item_id, live_id!(Assistant));
                                     // alright we got the assistant. lets set the markdown stuff
-                                    item.widget(id!(md)).set_text(&val);
-                                    item.view(id!(busy)).set_visible(
+                                    item.widget(id!(md)).set_text(cx, &val);
+                                    item.view(id!(busy)).set_visible(cx, 
                                         item_id + 1 == doc.file.history[self.history_slot].messages.len() && 
                                         doc.in_flight.is_some()
                                     );
@@ -453,29 +453,29 @@ impl Widget for AiChatView {
                                     let dd = item.drop_down(id!(model_dropdown));
                                     // ok how do we set these dropdown labels without causing memory changes
                                     let mut i = data.ai_chat_manager.models.iter();
-                                    dd.set_labels_with(|label|{i.next().map(|m| label.push_str(&m.name));});
+                                    dd.set_labels_with(cx, |label|{i.next().map(|m| label.push_str(&m.name));});
                                     if let Some(pos) = data.ai_chat_manager.models.iter().position(|b| b.name == val.model){
-                                        dd.set_selected_item(pos);
+                                        dd.set_selected_item(cx, pos);
                                     }
                                     
                                     
                                     let dd = item.drop_down(id!(context_dropdown));
                                     let mut i = data.ai_chat_manager.contexts.iter();
-                                    dd.set_labels_with(|label|{i.next().map(|m| label.push_str(&m.name));});
+                                    dd.set_labels_with(cx, |label|{i.next().map(|m| label.push_str(&m.name));});
                                     
                                     if let Some(pos) = data.ai_chat_manager.contexts.iter().position(|ctx| ctx.name == val.base_context){
-                                        dd.set_selected_item(pos);
+                                        dd.set_selected_item(cx, pos);
                                     }
                                     
                                     let dd = item.drop_down(id!(project_dropdown));
                                     let mut i = data.ai_chat_manager.projects.iter();
-                                    dd.set_labels_with(|label|{i.next().map(|m| label.push_str(&m.name));});
+                                    dd.set_labels_with(cx, |label|{i.next().map(|m| label.push_str(&m.name));});
                                                                         
                                     if let Some(pos) = data.ai_chat_manager.projects.iter().position(|ctx| ctx.name == val.base_context){
-                                        dd.set_selected_item(pos);
+                                        dd.set_selected_item(cx, pos);
                                     }
                                     
-                                    item.widget(id!(message_input)).set_text(&val.message);
+                                    item.widget(id!(message_input)).set_text(cx, &val.message);
                                     item.draw_all_unscoped(cx);
                                 }
                                 _=>()

@@ -4,10 +4,10 @@ use std::{env, str, time::Duration, thread};
 use serialport::SerialPort;
 
 live_design!{
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*;
-    import makepad_draw::shader::std::*;
-    import crate::app_ui::AppUI;
+    use makepad_widgets::base::*;
+    use makepad_widgets::theme_desktop_dark::*;
+    use makepad_draw::shader::std::*;
+    use crate::app_ui::AppUI;
     App = {{App}} { 
         ui: <Root> {
             <Window> {
@@ -48,7 +48,7 @@ impl App {
         let name_input = self.ui.text_input(id!(name_input));
         let message = message_input.text();
         let name = name_input.text();
-        message_input.set_text_and_redraw(cx, "");
+        message_input.set_text(cx, "");
         message_input.set_cursor(0,0);
         // lets send it on the serial port
         if let Some(send_port) = &mut self.send_port{

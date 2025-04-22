@@ -2,16 +2,32 @@ use crate::makepad_draw::*;
 
 
 live_design!{
-    import makepad_draw::shader::std::*;
+    link widgets;
+    use link::theme::*;
+    use makepad_draw::shader::std::*;
+        
+    pub NavControlBase = {{NavControl}} {}
+    pub NavControl = <NavControlBase> {
+        draw_focus: {
+            fn pixel(self) -> vec4 {
+                return #000f
+            }
+        }
+        draw_text: {
+            text_style: {
+                font_size: 6
+            },
+            color: (THEME_COLOR_TEXT)
+        }
+    }
     
-    NavControlBase = {{NavControl}} {}
 }
 
 #[derive(Live, LiveHook, LiveRegister)]
 pub struct NavControl {
     #[live] draw_list: DrawList2d,
     #[live] draw_focus: DrawQuad,
-    #[live] draw_text: DrawText,
+    #[live] draw_text: DrawText2,
     #[rust] _recent_focus: Area,
 }
 
@@ -36,7 +52,7 @@ impl NavControl {
                 KeyCode::Tab => {
                     if ke.modifiers.shift {
                         let mut prev_area = Area::Empty;
-                        if let Some((prev_area, scroll_stack)) = Cx2d::iterate_nav_stops(cx, root, | cx, stop | {
+                        if let Some((prev_area, scroll_stack)) = CxDraw::iterate_nav_stops(cx, root, | cx, stop | {
                             if cx.has_key_focus(stop.area) {
                                 return Some(prev_area);
                             }
@@ -51,7 +67,7 @@ impl NavControl {
                     }
                     else {
                         let mut next_stop = false;
-                        if let Some((next_area, scroll_stack)) = Cx2d::iterate_nav_stops(cx, root, | cx, stop | {
+                        if let Some((next_area, scroll_stack)) = CxDraw::iterate_nav_stops(cx, root, | cx, stop | {
                             if next_stop {
                                 return Some(stop.area)
                             }

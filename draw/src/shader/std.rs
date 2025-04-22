@@ -7,18 +7,19 @@ pub use {
 };
 
 live_design!{
+    link shaders;
     
-    PI = 3.141592653589793
-    E = 2.718281828459045
-    LN2 = 0.6931471805599453
-    LN10 = 2.302585092994046
-    LOG2E = 1.4426950408889634
-    LOG10E = 0.4342944819032518
-    SQRT1_2 = 0.70710678118654757
-    TORAD = 0.017453292519943295
-    GOLDEN = 1.618033988749895
+    pub PI = 3.141592653589793
+    pub E = 2.718281828459045
+    pub LN2 = 0.6931471805599453
+    pub LN10 = 2.302585092994046
+    pub LOG2E = 1.4426950408889634
+    pub LOG10E = 0.4342944819032518
+    pub SQRT1_2 = 0.70710678118654757
+    pub TORAD = 0.017453292519943295
+    pub GOLDEN = 1.618033988749895
     
-    GaussShadow = {
+    pub GaussShadow = {
         // ported from https://madebyevan.com/shaders/fast-rounded-rectangle-shadows/
         // License: CC0 (http://creativecommons.org/publicdomain/zero/1.0/)
         fn gaussian(x:float, sigma:float )->float{
@@ -83,7 +84,7 @@ live_design!{
         }
     }
     
-    Math = {
+    pub Math = {
         fn rotate_2d(v: vec2, a: float) -> vec2 {
             let ca = cos(a);
             let sa = sin(a);
@@ -95,7 +96,7 @@ live_design!{
         }
     }
     
-    Pal = {
+    pub Pal = {
         
         fn premul(v: vec4) -> vec4 {
             return vec4(v.x * v.w, v.y * v.w, v.z * v.w, v.w);
@@ -154,7 +155,7 @@ live_design!{
         }
     }
     
-    Sdf2d = struct {
+    pub Sdf2d = struct {
         field pos: vec2
         field result: vec4
         field last_pos: vec2
@@ -305,6 +306,69 @@ live_design!{
             self.old_shape = self.shape;
             self.shape = min(self.shape, self.dist);
         }
+
+        // A distance function for an arc with round caps
+        fn arc_round_caps(
+            inout self,
+            // The x-coordinate of the center of the arc
+            x: float,
+            // The y-coordinate of the center of the arc
+            y: float,
+            // The radius of the the arc
+            radius: float,
+            // The start angle of the arc, in radians
+            start_angle: float,
+            // The end angle of the arc, in radians
+            end_angle: float,
+            // The thickness of the arc
+            thickness: float
+        ) {
+            let p = self.pos - vec2(x, y);
+            let half_angle = (end_angle - start_angle) / 2.0;
+            let p = Math::rotate_2d(p, -start_angle - half_angle);
+            p.x = abs(p.x);
+            let sin_half_angle = sin(half_angle);
+            let cos_half_angle = cos(half_angle);
+            let dist_to_arc = abs(length(p) - radius) - 0.5 * thickness;
+            let cap_center = vec2(sin_half_angle, cos_half_angle) * radius;
+            let dist_to_cap = length(p - cap_center) - 0.5 * thickness;
+            if cos_half_angle * p.x < sin_half_angle * p.y {
+                self.dist = dist_to_arc;
+            } else {
+                self.dist = dist_to_cap;
+            }
+            self.old_shape = self.shape;
+            self.shape = min(self.shape, self.dist);
+        }
+
+        // A distance function for an arc with flat caps
+        fn arc_flat_caps(
+            inout self,
+            // The x-coordinate of the center of the arc
+            x: float,
+            // The y-coordinate of the center of the arc
+            y: float,
+            // The radius of the arc
+            radius: float,
+            // The start angle of the arc, in radians
+            start_angle: float,
+            // The end angle of the arc, in radians
+            end_angle: float,
+            // The thickness of the arc
+            thickness: float
+        ) {
+            let p = self.pos - vec2(x, y);
+            let half_angle = (end_angle - start_angle) / 2.0;
+            let p = Math::rotate_2d(p, -start_angle - half_angle);
+            p.x = abs(p.x);
+            let p = Math::rotate_2d(p, half_angle);
+            let dist_to_arc = abs(length(p) - radius) - thickness * 0.5;
+            let dist_y_to_cap = max(0.0, abs(radius - p.y) - thickness * 0.5);
+            let dist_to_cap =  sign(p.x) * length(vec2(p.x, dist_y_to_cap));
+            self.dist = max(dist_to_arc, dist_to_cap);
+            self.old_shape = self.shape;
+            self.shape = min(self.shape, self.dist);
+        }
          
         fn arc2(inout self, x: float, y: float, r: float, s:float, e:float)->vec4{
             let c = self.pos - vec2(x, y);
@@ -335,6 +399,7 @@ live_design!{
             self.old_shape = self.shape;
             self.shape = min(self.shape, self.dist);
         }
+        
         fn box_y(inout self, x: float, y: float, w: float, h: float, r_top: float, r_bottom: float) {
             let size = vec2(0.5 * w, 0.5 * h);
             let p_r = self.pos - vec2(x, y);

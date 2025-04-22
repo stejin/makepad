@@ -143,12 +143,10 @@ impl Cx {
     ) {
         // tad ugly otherwise the borrow checker locks 'self' and we can't recur
         let draw_items_len = self.draw_lists[draw_list_id].draw_items.len();
-        //self.views[view_id].set_clipping_uniforms();
-        self.draw_lists[draw_list_id].uniform_view_transform(&Mat4::identity());
         
         {
             let draw_list = &mut self.draw_lists[draw_list_id];
-            draw_list.os.view_uniforms.update_with_f32_constant_data(d3d11_cx, draw_list.draw_list_uniforms.as_slice());
+            draw_list.os.draw_list_uniforms.update_with_f32_constant_data(d3d11_cx, draw_list.draw_list_uniforms.as_slice());
         }
         
         for draw_item_id in 0..draw_items_len {
@@ -173,8 +171,11 @@ impl Cx {
                 if sh.os_shader_id.is_none() { // shader didnt compile somehow
                     continue;
                 }
+                if sh.mapping.uses_time {
+                    self.demo_time_repaint = true;
+                }
                 let shp = &self.draw_shaders.os_shaders[sh.os_shader_id.unwrap()];
-                
+
                 if draw_call.instance_dirty {
                     draw_call.instance_dirty = false;
                     if draw_item.instances.as_ref().unwrap().len() == 0 {
@@ -185,10 +186,10 @@ impl Cx {
                 }
                 
                 // update the zbias uniform if we have it.
-                draw_call.draw_uniforms.set_zbias(*zbias);
+                draw_call.draw_call_uniforms.set_zbias(*zbias);
                 *zbias += zbias_step;
                 
-                draw_item.os.draw_uniforms.update_with_f32_constant_data(d3d11_cx, draw_call.draw_uniforms.as_slice());
+                draw_item.os.draw_call_uniforms.update_with_f32_constant_data(d3d11_cx, draw_call.draw_call_uniforms.as_slice());
                 
                 if draw_call.uniforms_dirty {
                     draw_call.uniforms_dirty = false;
@@ -247,9 +248,9 @@ impl Cx {
                     }
                     buffer_slot(d3d11_cx, 0, &shp.live_uniforms.buffer);
                     buffer_slot(d3d11_cx, 1, &shp.const_table_uniforms.buffer);
-                    buffer_slot(d3d11_cx, 2, &draw_item.os.draw_uniforms.buffer);
+                    buffer_slot(d3d11_cx, 2, &draw_item.os.draw_call_uniforms.buffer);
                     buffer_slot(d3d11_cx, 3, &self.passes[pass_id].os.pass_uniforms.buffer);
-                    buffer_slot(d3d11_cx, 4, &draw_list.os.view_uniforms.buffer);
+                    buffer_slot(d3d11_cx, 4, &draw_list.os.draw_list_uniforms.buffer);
                     buffer_slot(d3d11_cx, 5, &draw_item.os.user_uniforms.buffer);
                 }
                 
@@ -309,7 +310,7 @@ impl Cx {
         let dpi_factor = self.passes[pass_id].dpi_factor.unwrap();
         
         let pass_rect = self.get_pass_rect(pass_id, dpi_factor).unwrap();
-        self.passes[pass_id].set_matrix(pass_rect.pos, pass_rect.size);
+        self.passes[pass_id].set_ortho_matrix(pass_rect.pos, pass_rect.size);
         self.passes[pass_id].paint_dirty = false;
 
         self.passes[pass_id].set_dpi_factor(dpi_factor);
@@ -432,30 +433,18 @@ impl Cx {
         //println!("{}", (Cx::profile_time_ns() - time1)as f64 / 1000.0);
     }
     
-    pub fn draw_pass_to_texture(&mut self, pass_id: PassId,  d3d11_cx: &D3d11Cx,texture_id: TextureId) {
+    pub fn draw_pass_to_texture(&mut self, pass_id: PassId,  d3d11_cx: &D3d11Cx,texture_id: Option<TextureId>) {
         // let time1 = Cx::profile_time_ns();
         let draw_list_id = self.passes[pass_id].main_draw_list_id.unwrap();
         
-        let render_target_view = self.textures[texture_id].os.render_target_view.clone();
-        self.setup_pass_render_targets(pass_id, &render_target_view, d3d11_cx);
-        
-        let mut zbias = 0.0;
-        let zbias_step = self.passes[pass_id].zbias_step;
-        self.render_view(
-            pass_id,
-            draw_list_id,
-            &mut zbias,
-            zbias_step,
-            &d3d11_cx,
-        );
-    }
-    
-    pub fn draw_pass_to_magic_texture(&mut self, pass_id: PassId,  d3d11_cx: &D3d11Cx) {
-        // let time1 = Cx::profile_time_ns();
-        let draw_list_id = self.passes[pass_id].main_draw_list_id.unwrap();
-        
-        self.setup_pass_render_targets(pass_id, &None, d3d11_cx);
-        
+        if let Some(texture_id) = texture_id{
+            let render_target_view = self.textures[texture_id].os.render_target_view.clone();
+            self.setup_pass_render_targets(pass_id, &render_target_view, d3d11_cx);
+        }
+        else{
+            self.setup_pass_render_targets(pass_id, &None, d3d11_cx);
+        }
+            
         let mut zbias = 0.0;
         let zbias_step = self.passes[pass_id].zbias_step;
         self.render_view(
@@ -694,13 +683,13 @@ impl D3d11Cx {
 }
 
 #[derive(Clone, Default)]
-pub struct CxOsView {
-    pub view_uniforms: D3d11Buffer
+pub struct CxOsDrawList {
+    pub draw_list_uniforms: D3d11Buffer
 }
 
 #[derive(Default, Clone)]
 pub struct CxOsDrawCall {
-    pub draw_uniforms: D3d11Buffer,
+    pub draw_call_uniforms: D3d11Buffer,
     pub user_uniforms: D3d11Buffer,
     pub inst_vbuf: D3d11Buffer
 }

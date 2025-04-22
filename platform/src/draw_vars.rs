@@ -79,11 +79,11 @@ pub const fn shader_enum(i: u32) -> u32 {
     i
 }
 
-pub const DRAW_CALL_USER_UNIFORMS: usize = 16;
+pub const DRAW_CALL_USER_UNIFORMS: usize = 192;
 pub const DRAW_CALL_TEXTURE_SLOTS: usize = 4;
 pub const DRAW_CALL_VAR_INSTANCES: usize = 32;
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct DrawVars {
     pub area: Area,
@@ -95,6 +95,22 @@ pub struct DrawVars {
     pub user_uniforms: [f32; DRAW_CALL_USER_UNIFORMS],
     pub texture_slots: [Option<Texture>; DRAW_CALL_TEXTURE_SLOTS],
     pub var_instances: [f32; DRAW_CALL_VAR_INSTANCES]
+}
+
+impl Default for DrawVars{
+    fn default()->Self{
+        Self{
+            area: Default::default(),
+            var_instance_start: Default::default(),
+            var_instance_slots: Default::default(),
+            options: Default::default(),
+            draw_shader: Default::default(),
+            geometry_id: Default::default(),
+            user_uniforms: [0f32; DRAW_CALL_USER_UNIFORMS],
+            texture_slots: Default::default(),
+            var_instances: [0f32; DRAW_CALL_VAR_INSTANCES]
+        }
+    }
 }
 
 impl LiveHookDeref for DrawVars{}
@@ -201,6 +217,7 @@ impl DrawVars {
                 else if live_type == LiveType::of::<Vec2>() {Some(ShaderTy::Vec2)}
                 else if live_type == LiveType::of::<Vec3>() {Some(ShaderTy::Vec3)}
                 else if live_type == LiveType::of::<Vec4>() {Some(ShaderTy::Vec4)}
+                else if live_type == LiveType::of::<Mat4>() {Some(ShaderTy::Mat4)}
                 else {None}
             }
             // ok ! we have to compile it
@@ -369,7 +386,7 @@ impl DrawVars {
                 let stride = sh.mapping.instances.total_slots;
                 let instances = &mut draw_item.instances.as_mut().unwrap()[inst.instance_offset..];
                 let inst_slice = self.as_slice();
-                
+                let mut uniform_updated = false;
                 let mut node_iter = nodes.first_child(index);
                 while let Some(node_index) = node_iter {
                     let id = nodes[node_index].id;
@@ -387,6 +404,8 @@ impl DrawVars {
                     }
                     for input in &sh.mapping.user_uniforms.inputs {
                         if input.id == id {
+                            // if we are updating a uniform, make sure we redraw
+                            uniform_updated = true;
                             for i in 0..input.slots {
                                 draw_call.user_uniforms[input.offset + i] = self.user_uniforms[input.offset + i]
                             }
@@ -397,6 +416,11 @@ impl DrawVars {
                 }
                 // DONE!
                 cx.passes[draw_list.pass_id.unwrap()].paint_dirty = true;
+                if uniform_updated{
+                    // not calling redraw when uniforms change might cause
+                    // incorrect drawcall splitting, so we have to. Unfortunately.
+                    self.area.redraw(cx);
+                }
             }
         }
     }
@@ -436,6 +460,37 @@ impl DrawVars {
         }
     }
     
+    pub fn update_instance_area_value(&mut self, cx: &mut Cx,  id: &[LiveId]) {
+        if let Some(draw_shader) = self.draw_shader {
+            if let Some(inst) = self.area.valid_instance(cx) {
+                if draw_shader.draw_shader_generation != cx.draw_shaders.generation {
+                    return;
+                }
+                let sh = &cx.draw_shaders[draw_shader.draw_shader_id];
+                let draw_list = &mut cx.draw_lists[inst.draw_list_id];
+                let draw_item = &mut draw_list.draw_items[inst.draw_item_id];
+                let draw_call = draw_item.kind.draw_call_mut().unwrap();
+                                
+                let repeat = inst.instance_count;
+                let stride = sh.mapping.instances.total_slots;
+                let instances = &mut draw_item.instances.as_mut().unwrap()[inst.instance_offset..];
+                let slice = self.as_slice();
+                for input in &sh.mapping.instances.inputs {
+                    if input.id == id[0] {
+                        for j in 0..repeat {
+                            for k in 0..input.slots{
+                                instances[input.offset + k + j * stride] = slice[input.offset + k];
+                            }
+                        }
+                    }
+                }
+                draw_call.instance_dirty = true;
+                cx.passes[draw_list.pass_id.unwrap()].paint_dirty = true;
+            }
+        }
+    }
+        
+    /*
     pub fn update_area_with_value(&mut self, cx: &mut Cx, id: LiveId, v: &[f32], start: usize, count: usize) {
         if let Some(draw_shader) = self.draw_shader {
             if let Some(inst) = self.area.valid_instance(cx) {
@@ -453,7 +508,6 @@ impl DrawVars {
                 
                 cx.passes[draw_list.pass_id.unwrap()].paint_dirty = true;
                 
-                // lets iterate the /*
                 for input in &sh.mapping.live_instances.inputs {
                     if input.id == id {
                         for j in start..(start + repeat) {
@@ -476,7 +530,7 @@ impl DrawVars {
                 }
             }
         }
-    }
+    }*/
     
     pub fn get_instance(&self, cx: &mut Cx, inst: &[LiveId], value: &mut [f32]){
         if let Some(draw_shader) = self.draw_shader {

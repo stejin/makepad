@@ -8,6 +8,7 @@ use {
     },
     self::super::super::{
         egl_sys,
+        gl_sys::LibGl,
         x11::xlib_event::*,
         x11::xlib_app::*,
         x11::x11_sys,
@@ -18,10 +19,10 @@ use {
         makepad_math::dvec2,
         makepad_live_id::*,
         thread::SignalToUI,
-        event::Event,
+        event::*,
         pass::CxPassParent,
         cx::{Cx, OsType,LinuxWindowParams}, 
-        os::cx_stdin::{PollTimers},
+        os::cx_stdin::PollTimers,
         gpu_info::GpuPerformance,
         os::cx_native::EventFlow,
     }
@@ -236,6 +237,7 @@ impl Cx {
         for pass_id in &passes_todo {
             self.passes[*pass_id].set_time(get_xlib_app_global().time_now() as f32);
             match self.passes[*pass_id].parent.clone() {
+                CxPassParent::Xr => {}
                 CxPassParent::Window(window_id) => {
                     if let Some(window) = opengl_windows.iter_mut().find( | w | w.window_id == window_id) {
                         //let dpi_factor = window.window_geom.dpi_factor;
@@ -245,10 +247,10 @@ impl Cx {
                 }
                 CxPassParent::Pass(_) => {
                     //let dpi_factor = self.get_delegated_dpi_factor(parent_pass_id);
-                    self.draw_pass_to_magic_texture(*pass_id);
+                    self.draw_pass_to_texture(*pass_id, None);
                 },
                 CxPassParent::None => {
-                    self.draw_pass_to_magic_texture(*pass_id);
+                    self.draw_pass_to_texture(*pass_id, None);
                 }
             }
         }
@@ -272,6 +274,7 @@ impl Cx {
                     window.is_created = true;
                 },
                 CxOsOp::CloseWindow(window_id) => {
+                    self.call_event_handler(&Event::WindowClosed(WindowClosedEvent { window_id }));
                     if let Some(index) = opengl_windows.iter().position( | w | w.window_id == window_id) {
                         self.windows[window_id].is_created = false;
                         opengl_windows[index].xlib_window.close_window();
@@ -289,6 +292,8 @@ impl Cx {
                         window.xlib_window.minimize();
                     }
                 },
+                CxOsOp::Deminiaturize(_window_id) => todo!(),
+                CxOsOp::HideWindow(_window_id) => todo!(),
                 CxOsOp::MaximizeWindow(window_id) => {
                     if let Some(window) = opengl_windows.iter_mut().find( | w | w.window_id == window_id) {
                         window.xlib_window.maximize();
@@ -297,6 +302,16 @@ impl Cx {
                 CxOsOp::RestoreWindow(window_id) => {
                     if let Some(window) = opengl_windows.iter_mut().find( | w | w.window_id == window_id) {
                         window.xlib_window.restore();
+                    }
+                },
+                CxOsOp::ResizeWindow(window_id, size) => {
+                    if let Some(window) = opengl_windows.iter_mut().find( | w | w.window_id == window_id) {
+                        window.xlib_window.set_inner_size(size);
+                    }
+                },
+                CxOsOp::RepositionWindow(window_id, size) => {
+                    if let Some(window) = opengl_windows.iter_mut().find( | w | w.window_id == window_id) {
+                        window.xlib_window.set_position(size);
                     }
                 },
                 CxOsOp::ShowClipboardActions(_) =>{
@@ -308,27 +323,6 @@ impl Cx {
                         }
                     }
                 }
-                CxOsOp::FullscreenWindow(_window_id) => {
-                    todo!()
-                },
-                CxOsOp::NormalizeWindow(_window_id) => {
-                    todo!()
-                }
-                CxOsOp::SetTopmost(_window_id, _is_topmost) => {
-                    todo!()
-                }
-                CxOsOp::XrStartPresenting => {
-                    //todo!()
-                },
-                CxOsOp::XrStopPresenting => {
-                    //todo!()
-                },
-                CxOsOp::ShowTextIME(_area, _pos) => {
-                    //todo!()
-                }
-                CxOsOp::HideTextIME => {
-                    //todo!()
-                },
                 CxOsOp::SetCursor(cursor) => {
                     xlib_app.set_mouse_cursor(cursor);
                 },
@@ -338,29 +332,20 @@ impl Cx {
                 CxOsOp::StopTimer(timer_id) => {
                     xlib_app.stop_timer(timer_id);
                 },
-                CxOsOp::StartDragging(_dragged_item) => {
+                CxOsOp::ShowTextIME(area, pos) => {
+                    let pos = area.clipped_rect(self).pos + pos;
+                    opengl_windows.iter_mut().for_each(|w| {
+                        w.xlib_window.set_ime_spot(pos);
+                    });
                 },
-                CxOsOp::UpdateMacosMenu(_menu) => {
+                CxOsOp::HideTextIME => {
+                    opengl_windows.iter_mut().for_each(|w| {
+                        w.xlib_window.set_ime_spot(dvec2(0.0,0.0));
+                    });
                 },
-                CxOsOp::HttpRequest{request_id:_, request:_} => {
-                    todo!()
-                },
-                CxOsOp::CancelHttpRequest {request_id:_} => {
-                    todo!();
+                e=>{
+                    crate::error!("Not implemented on this platform: CxOsOp::{:?}", e);
                 }
-                CxOsOp::PrepareVideoPlayback(_, _, _, _, _) => todo!(),
-                CxOsOp::BeginVideoPlayback(_) => todo!(),
-                CxOsOp::PauseVideoPlayback(_) => todo!(),
-                CxOsOp::ResumeVideoPlayback(_) => todo!(),
-                CxOsOp::MuteVideoPlayback(_) => todo!(),
-                CxOsOp::UnmuteVideoPlayback(_) => todo!(),
-                CxOsOp::CleanupVideoPlaybackResources(_) => todo!(),
-                CxOsOp::UpdateVideoSurfaceTexture(_) => todo!(),
-
-                CxOsOp::SaveFileDialog(_) => todo!(),
-                CxOsOp::SelectFileDialog(_) => todo!(),
-                CxOsOp::SaveFolderDialog(_) => todo!(),
-                CxOsOp::SelectFolderDialog(_) => todo!(),
             }
         }
         ret
@@ -403,3 +388,8 @@ pub struct CxOs {
     pub(super) opengl_cx: Option<OpenglCx>,
 }
 
+impl CxOs{
+    pub(crate) fn gl(&self)->&LibGl{
+        &self.opengl_cx.as_ref().unwrap().libgl
+    }
+}

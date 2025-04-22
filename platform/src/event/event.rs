@@ -1,5 +1,7 @@
 use {
     std::{
+        rc::Rc,
+        cell::Cell,
         collections::{HashSet, HashMap}
     },
     crate::{
@@ -129,7 +131,7 @@ pub enum Event {
     /// The application has lost focus and is no longer the active window receiving user input.
     AppLostFocus,
     NextFrame(NextFrameEvent),
-    XRUpdate(XRUpdateEvent),
+    XrUpdate(XrUpdateEvent),
 
     WindowDragQuery(WindowDragQueryEvent),
     WindowCloseRequested(WindowCloseRequestedEvent),
@@ -138,11 +140,41 @@ pub enum Event {
     VirtualKeyboard(VirtualKeyboardEvent),
     ClearAtlasses,
 
+    /// The raw event that occurs when the user presses a mouse button down.
+    ///
+    /// Do not match upon or handle this event directly; instead, use the family of
+    /// `hit`` functions ([`Event::hits()`]) and handle the returned [`Hit::FingerDown`].
     MouseDown(MouseDownEvent),
+    /// The raw event that occurs when the user moves the mouse.
+    ///
+    /// Do not match upon or handle this event directly; instead, use the family of
+    /// `hit` functions ([`Event::hits()`]) and handle the returned [`Hit`].
     MouseMove(MouseMoveEvent),
+    /// The raw event that occurs when the user releases a previously-pressed mouse button.
+    ///
+    /// Do not match upon or handle this event directly; instead, use the family of
+    /// `hit` functions ([`Event::hits()`]) and handle the returned [`Hit::FingerUp`].
     MouseUp(MouseUpEvent),
+    /// The raw event that occurs when the user moves the mouse outside of the window.
+    ///
+    /// Do not match upon or handle this event directly; instead, use the family of
+    /// `hit` functions ([`Event::hits()`]) and handle the returned [`Hit::FingerOverOut`].
     MouseLeave(MouseLeaveEvent),
+    /// The raw event that occurs when the user touches the screen.
+    ///
+    /// Do not match upon or handle this event directly; instead, use the family of
+    /// `hit` functions ([`Event::hits()`]) and handle the returned [`Hit`].
     TouchUpdate(TouchUpdateEvent),
+    /// The raw event that occurs when the user finishes a long press touch/click.
+    ///
+    /// Do not match upon or handle this event directly; instead, use the family of
+    /// `hit` functions ([`Event::hits()`]) and handle the returned [`Hit::FingerLongPress`].
+    LongPress(LongPressEvent),
+    /// The raw event that occurs when the user scrolls, e.g.,
+    /// by using the mouse wheel or a touch flick.
+    ///
+    /// Do not match upon or handle this event directly; instead use the family of
+    /// `hit` functions ([`Event::hits()`]) and handle the returned [`Hit::FingerScroll`].
     Scroll(ScrollEvent), // this is the MouseWheel / touch scroll event sent by the OS
 
     Timer(TimerEvent),
@@ -175,7 +207,16 @@ pub enum Event {
     VideoDecodingError(VideoDecodingErrorEvent),
     TextureHandleReady(TextureHandleReadyEvent),
     
-    BackPressed,
+    /// The "go back" navigational button or gesture was performed.
+    ///
+    /// Tip: use the [`Event::consume_back_pressed()`] method to handle this event
+    /// instead of matching on it directly.
+    ///
+    /// Once a widget has handled this event, it should set the `handled` flag to `true`
+    /// to ensure that a single "go back" action is not handled multiple times.
+    BackPressed {
+        handled: Cell<bool>,
+    },
     #[cfg(target_arch = "wasm32")]
     ToWasmMsg(ToWasmMsgEvent),
     
@@ -216,44 +257,45 @@ impl Event{
             20=>"MouseMove",
             21=>"MouseUp",
             22=>"TouchUpdate",
-            23=>"Scroll",
+            23=>"LongPress",
+            24=>"Scroll",
 
-            24=>"Timer",
+            25=>"Timer",
 
-            25=>"Signal",
-            26=>"Trigger",
-            27=>"MacosMenuCommand",
-            28=>"KeyFocus",
-            29=>"KeyFocusLost",
-            30=>"KeyDown",
-            31=>"KeyUp",
-            32=>"TextInput",
-            33=>"TextCopy",
-            34=>"TextCut",
+            26=>"Signal",
+            27=>"Trigger",
+            28=>"MacosMenuCommand",
+            29=>"KeyFocus",
+            30=>"KeyFocusLost",
+            31=>"KeyDown",
+            32=>"KeyUp",
+            33=>"TextInput",
+            34=>"TextCopy",
+            35=>"TextCut",
 
-            35=>"Drag",
-            36=>"Drop",
-            37=>"DragEnd",
+            36=>"Drag",
+            37=>"Drop",
+            38=>"DragEnd",
 
-            38=>"AudioDevices",
-            39=>"MidiPorts",
-            40=>"VideoInputs",
-            41=>"NetworkResponses",
+            39=>"AudioDevices",
+            40=>"MidiPorts",
+            41=>"VideoInputs",
+            42=>"NetworkResponses",
 
-            42=>"VideoPlaybackPrepared",
-            43=>"VideoTextureUpdated",
-            44=>"VideoPlaybackCompleted",
-            45=>"VideoDecodingError",
-            46=>"VideoPlaybackResourcesReleased",
-            47=>"TextureHandleReady",
-            48=>"MouseLeave",
-            49=>"Actions",
-            50=>"BackPressed",
+            43=>"VideoPlaybackPrepared",
+            44=>"VideoTextureUpdated",
+            45=>"VideoPlaybackCompleted",
+            46=>"VideoDecodingError",
+            47=>"VideoPlaybackResourcesReleased",
+            48=>"TextureHandleReady",
+            49=>"MouseLeave",
+            50=>"Actions",
+            51=>"BackPressed",
 
             #[cfg(target_arch = "wasm32")]
-            51=>"ToWasmMsg",
+            52=>"ToWasmMsg",
             
-            52=>"DesignerPick",            
+            53=>"DesignerPick",
             _=>panic!()
         }
     }
@@ -274,7 +316,7 @@ impl Event{
             Self::AppGotFocus=>9,
             Self::AppLostFocus=>10,
             Self::NextFrame(_)=>11,
-            Self::XRUpdate(_)=>12,
+            Self::XrUpdate(_)=>12,
 
             Self::WindowDragQuery(_)=>13,
             Self::WindowCloseRequested(_)=>14,
@@ -287,49 +329,65 @@ impl Event{
             Self::MouseMove(_)=>20,
             Self::MouseUp(_)=>21,
             Self::TouchUpdate(_)=>22,
-            Self::Scroll(_)=>23,
+            Self::LongPress(_)=>23,
+            Self::Scroll(_)=>24,
 
-            Self::Timer(_)=>24,
+            Self::Timer(_)=>25,
 
-            Self::Signal=>25,
-            Self::Trigger(_)=>26,
-            Self::MacosMenuCommand(_)=>27,
-            Self::KeyFocus(_)=>28,
-            Self::KeyFocusLost(_)=>29,
-            Self::KeyDown(_)=>30,
-            Self::KeyUp(_)=>31,
-            Self::TextInput(_)=>32,
-            Self::TextCopy(_)=>33,
-            Self::TextCut(_)=>34,
+            Self::Signal=>26,
+            Self::Trigger(_)=>27,
+            Self::MacosMenuCommand(_)=>28,
+            Self::KeyFocus(_)=>29,
+            Self::KeyFocusLost(_)=>30,
+            Self::KeyDown(_)=>31,
+            Self::KeyUp(_)=>32,
+            Self::TextInput(_)=>33,
+            Self::TextCopy(_)=>34,
+            Self::TextCut(_)=>35,
 
-            Self::Drag(_)=>35,
-            Self::Drop(_)=>36,
-            Self::DragEnd=>37,
+            Self::Drag(_)=>36,
+            Self::Drop(_)=>37,
+            Self::DragEnd=>38,
 
-            Self::AudioDevices(_)=>38,
-            Self::MidiPorts(_)=>39,
-            Self::VideoInputs(_)=>40,
-            Self::NetworkResponses(_)=>41,
+            Self::AudioDevices(_)=>39,
+            Self::MidiPorts(_)=>40,
+            Self::VideoInputs(_)=>41,
+            Self::NetworkResponses(_)=>42,
 
-            Self::VideoPlaybackPrepared(_)=>42,
-            Self::VideoTextureUpdated(_)=>43,
-            Self::VideoPlaybackCompleted(_)=>44,
-            Self::VideoDecodingError(_)=>45,
-            Self::VideoPlaybackResourcesReleased(_)=>46,
-            Self::TextureHandleReady(_)=>47,
-            Self::MouseLeave(_)=>48,
-            Self::Actions(_)=>49,
-            Self::BackPressed=>50,
+            Self::VideoPlaybackPrepared(_)=>43,
+            Self::VideoTextureUpdated(_)=>44,
+            Self::VideoPlaybackCompleted(_)=>45,
+            Self::VideoDecodingError(_)=>46,
+            Self::VideoPlaybackResourcesReleased(_)=>47,
+            Self::TextureHandleReady(_)=>48,
+            Self::MouseLeave(_)=>49,
+            Self::Actions(_)=>50,
+            Self::BackPressed{..}=>51,
             
             #[cfg(target_arch = "wasm32")]
-            Self::ToWasmMsg(_)=>51,
+            Self::ToWasmMsg(_)=>52,
             
-            Self::DesignerPick(_) =>52,
+            Self::DesignerPick(_) =>53,
         }
+    }
+
+    /// A convenience function to check if the event is a [`BackPressed`] event
+    /// that has not yet been handled, and then mark it as handled.
+    ///
+    /// Returns `true` if the event was a [`BackPressed`] event that wasn't already handled.
+    pub fn back_pressed(&self) -> bool {
+        if let Self::BackPressed { handled } = self {
+            if !handled.get() {
+                handled.set(true);
+                return true;
+            }
+        }
+        false
     }
 }
 
 
+#[derive(Debug)]
 pub enum Hit{
     KeyFocus(KeyFocusEvent),
     KeyFocusLost(KeyFocusEvent),
@@ -347,10 +405,9 @@ pub enum Hit{
     FingerHoverOver(FingerHoverEvent),
     FingerHoverOut(FingerHoverEvent),
     FingerUp(FingerUpEvent),
+    FingerLongPress(FingerLongPressEvent),
     
     DesignerPick(DesignerPickEvent),
-
-    BackPressed,
 
     Nothing
 }
@@ -368,7 +425,6 @@ impl Event{
         match self{
             Self::MouseDown(_)|
             Self::MouseMove(_)|
-            Self::MouseUp(_)|
             Self::TouchUpdate(_)|
             Self::Scroll(_)=>true,
             _=>false
@@ -392,6 +448,7 @@ pub struct DrawEvent {
     pub draw_lists: Vec<DrawListId>,
     pub draw_lists_and_children: Vec<DrawListId>,
     pub redraw_all: bool,
+    pub xr_state: Option<Rc<XrState>>
 }
 
 impl DrawEvent{
@@ -412,7 +469,12 @@ impl DrawEvent{
                 if vw == draw_list_id {
                     return true
                 }
-                next = cx.draw_lists[vw].codeflow_parent_id;
+                if let Some(n) = cx.draw_lists.checked_index(vw){
+                    next = n.codeflow_parent_id;
+                }
+                else{ // a drawlist in our redraw lists was reused
+                    break;
+                }
             }
         }
         // figure out if areas are in some way a parent of view_id, then redraw
@@ -422,7 +484,12 @@ impl DrawEvent{
                 if vw == *check_draw_list_id {
                     return true
                 }
-                next = cx.draw_lists[vw].codeflow_parent_id;
+                if let Some(n) = cx.draw_lists.checked_index(vw){
+                    next = n.codeflow_parent_id;
+                }
+                else{ // a drawlist in our redraw lists was reused
+                    break;
+                }
             }
         }
         false

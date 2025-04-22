@@ -1,17 +1,19 @@
 use crate::makepad_widgets::*;
 
 live_design!{
-    import makepad_draw::shader::std::*;
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*;
-    import makepad_studio::studio_editor::StudioCodeEditor;
-    import makepad_studio::ai_chat::ai_chat_view::AiChatView;
-    import makepad_studio::studio_file_tree::StudioFileTree;
-    import makepad_studio::run_view::RunView;
-    import makepad_studio::log_list::LogList;
-    import makepad_studio::run_list::RunList;
-    import makepad_studio::profiler::Profiler;
-
+    use link::theme::*;
+    use link::widgets::*;
+    use link::shaders::*;
+    use makepad_widgets::designer_theme::*;
+    use makepad_studio::studio_editor::StudioCodeEditor;
+    use makepad_studio::ai_chat::ai_chat_view::AiChatView;
+    use makepad_studio::studio_file_tree::StudioFileTree;
+    use makepad_studio::run_view::RunView;
+    use makepad_studio::log_list::LogList;
+    use makepad_studio::run_list::RunList;
+    use makepad_studio::profiler::Profiler;
+    use makepad_studio::search::Search;
+    
     ICO_SEARCH = dep("crate://self/resources/icons/Icon_Search.svg")
 
     Logo = <Button> {
@@ -30,7 +32,7 @@ live_design!{
         }
     }
 
-    IconTab = <Tab> {
+    IconTab = <TabFlat> {
         closeable: false
         icon_walk: { width: 15., height: 15. }
     }
@@ -65,7 +67,7 @@ live_design!{
         <CheckBoxCustom> {
             text:""
             // text:"Apps"
-            draw_check: { check_type: None }
+            draw_bg: { check_type: None }
             icon_walk: {width: 11., margin: {top: 1.75, right: 3. }}
             padding: { right: 0, left: 0.}
             draw_icon: {
@@ -77,7 +79,7 @@ live_design!{
         <CheckBoxCustom> {
             text:""
             // text:"Designer"
-            draw_check: { check_type: None }
+            draw_bg: { check_type: None }
             icon_walk: {width: 12., margin: {top: 1.0 }}
             padding: { right: 0, left: 0.}
             draw_icon: {
@@ -90,7 +92,7 @@ live_design!{
             text:""
             // text:"Editor"
             width: 13.
-            draw_check: { check_type: None }
+            draw_bg: { check_type: None }
             icon_walk: {width: 6., margin: {top: 0.5, left: 3. }}
             padding: { right: 0., left: 0.}
             draw_icon: {
@@ -102,7 +104,7 @@ live_design!{
         <CheckBoxCustom> {
             text:""
             // text:"Scene"
-            draw_check: { check_type: None }
+            draw_bg: { check_type: None }
             icon_walk: {width: 11.5, margin: {top: 1.5 } }
             padding: { right: 5., left: 0.}
             draw_icon: {
@@ -113,7 +115,7 @@ live_design!{
         }
     }
 
-    AppUI =  <Window> {
+    pub AppUI =  <Window> {
         margin: 5.
         caption_bar = { margin: {left: -100}, visible: true, caption_label = {label = {text: "Makepad"}} 
         preset_1 = <Button>{text:"A"}
@@ -171,7 +173,7 @@ live_design!{
 
             line = Line,
         }
-        body = {dock = <Dock> {
+        body = {dock = <DockFlat> {
             width: Fill, height: Fill,
             tab_bar:{
                 OutlineFirstTab = <IconTab> {
@@ -443,6 +445,7 @@ live_design!{
             }
             
             EditFirst = <RectView> {
+                draw_bg: {color: (THEME_COLOR_BG_CONTAINER)}
                 <View> {
                     width: Fill, height: Fill,
                     align: { x: 0., y: 0. }
@@ -462,6 +465,7 @@ live_design!{
                 }
             }
             OutlineFirst = <RectView> {
+                draw_bg: {color: (THEME_COLOR_BG_CONTAINER)}
                 <View> {
                     width: Fill, height: Fill,
                     align: { x: 0.5, y: 0.5 }
@@ -475,6 +479,7 @@ live_design!{
                 }
             }
             DesignFirst = <RectView> {
+                draw_bg: {color: (THEME_COLOR_BG_CONTAINER)}
                 <View> {
                     width: Fill, height: Fill
                     flow: Down
@@ -487,6 +492,7 @@ live_design!{
                 }
             }
             AiFirst = <RectView> {
+                draw_bg: {color: (THEME_COLOR_BG_CONTAINER)}
                 <View> {
                     width: Fill, height: Fill
                     flow: Down
@@ -499,6 +505,7 @@ live_design!{
                 }
             }
             RunFirst = <RectView> {
+                draw_bg: {color: (THEME_COLOR_BG_CONTAINER)}
                 <View> {
                     width: Fill, height: Fill,
                     flow: Down
@@ -522,64 +529,13 @@ live_design!{
                             margin: 0.,
                             padding: <THEME_MSPACE_1> {}
                         }
-                        <CheckBoxToggle> { text: "Release", }
-                        <CheckBoxToggle> { text: "Debug"}
+                        <Toggle> { text: "Release", }
+                        <Toggle> { text: "Debug"}
                     }
                 }
                 <RunList> {}
             }
-            Search = <RectView> {
-            flow: Down,
-                <DockToolbar> {
-                    content = {
-                        spacing: (THEME_SPACE_2)
-                        align: { y: 0.5 }
-                        <TextInput> {
-                            width: Fill,
-                            empty_message: "Search",
-                        }
-
-                        <CheckBoxCustom> {
-                            padding: 0.
-                            text: ""
-                            draw_check: { check_type: None }
-                            icon_walk: {width: 14.}
-                            draw_icon: {
-                                color: (THEME_COLOR_D_3),
-                                color_active: (THEME_COLOR_U_5),
-                                svg_file: dep("crate://self/resources/icons/icon_search_case_sensitive.svg"),
-                            }
-                        }
-                        <CheckBoxCustom> {
-                            padding: 0.
-                            text:""
-                            draw_check: { check_type: None }
-                            icon_walk: {width: 16.}
-                            draw_icon: {
-                                color: (THEME_COLOR_D_3),
-                                color_active: (THEME_COLOR_U_5),
-                                svg_file: dep("crate://self/resources/icons/icon_search_full_word.svg"),
-                            }
-                        }
-                        <CheckBoxCustom> {
-                            padding: 0.
-                            text:""
-                            draw_check: { check_type: None }
-                            icon_walk: {width: 12.}
-                            draw_icon: {
-                                color: (THEME_COLOR_D_3),
-                                color_active: (THEME_COLOR_U_5),
-                                svg_file: dep("crate://self/resources/icons/icon_search_regex.svg"),
-                            }
-                        }
-                    }
-                }
-                <View> {
-                    flow: Down
-                    margin: <THEME_MSPACE_2> {}
-                    <P> { text: "this does not work yet." }
-                }
-            }
+            Search = <Search> {}
             RunView = <RunView> {}
             StudioFileTree = <View> {
                 flow: Down,
@@ -593,17 +549,17 @@ live_design!{
                             flow: Right,
                             spacing: 0.,
                             <ButtonFlat> {
-                                width: 32.
+                                width: 25.
                                 text: ""
-                                icon_walk: { width: 14. }
+                                icon_walk: { width: 12. }
                                 draw_icon: {
                                     svg_file: dep("crate://self/resources/icons/icon_filetree_folder_create.svg"),
                                 }
                             }
                             <ButtonFlat> {
-                                width: 32.
+                                width: 25.
                                 text: ""
-                                icon_walk: { width: 11. }
+                                icon_walk: { width: 9.5 }
                                 draw_icon: {
                                     svg_file: dep("crate://self/resources/icons/icon_filetree_file_create.svg"),
                                 }
@@ -612,7 +568,7 @@ live_design!{
                         <Vr> {}
                         <TextInput> {
                             width: Fill,
-                            empty_message: "Filter",
+                            empty_text: "Filter",
                         }
                     }
                 }
@@ -631,7 +587,7 @@ live_design!{
                                 margin: {left: (THEME_SPACE_1)}
                                 text:"Error"
                                 align: { y: 0.5 }
-                                draw_check: { check_type: None }
+                                draw_bg: { check_type: None }
                                 spacing: (THEME_SPACE_1),
                                 icon_walk: {width: 7.}
                                 draw_icon: {
@@ -643,7 +599,7 @@ live_design!{
                             <CheckBoxCustom> {
                                 text:"Warning"
                                 align: { y: 0.5 }
-                                draw_check: { check_type: None }
+                                draw_bg: { check_type: None }
                                 spacing: (THEME_SPACE_1),
                                 icon_walk: {width: 7.}
                                 draw_icon: {
@@ -655,7 +611,7 @@ live_design!{
                             <CheckBoxCustom> {
                                 text:"Log"
                                 align: { y: 0.5 }
-                                draw_check: { check_type: None }
+                                draw_bg: { check_type: None }
                                 spacing: (THEME_SPACE_1),
                                 icon_walk: {width: 7.}
                                 draw_icon: {
@@ -667,7 +623,7 @@ live_design!{
                             <CheckBoxCustom> {
                                 text:"Wait"
                                 align: { y: 0.5 }
-                                draw_check: { check_type: None }
+                                draw_bg: { check_type: None }
                                 spacing: (THEME_SPACE_1),
                                 icon_walk: {width: 7.}
                                 draw_icon: {
@@ -679,7 +635,7 @@ live_design!{
                             <CheckBoxCustom> {
                                 text:"Panic"
                                 align: { y: 0.5 }
-                                draw_check: { check_type: None }
+                                draw_bg: { check_type: None }
                                 spacing: (THEME_SPACE_1),
                                 icon_walk: {width: 7.}
                                 draw_icon: {
@@ -693,7 +649,7 @@ live_design!{
                         <Filler> {}
                         <TextInput> {
                             width: 200.
-                            empty_message: "Filter",
+                            empty_text: "Filter",
                         }
                     }
                 }

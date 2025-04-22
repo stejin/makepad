@@ -5,14 +5,65 @@ use crate::{
 };
 
 live_design!{
-    SlidesViewBase = {{SlidesView}} {
+    link widgets;
+    use link::theme::*;
+    use link::widgets::*;
+    use makepad_draw::shader::std::*;
+    
+    pub SlidesViewBase = {{SlidesView}} {
+    }
+    
+    pub SlidesView = <SlidesViewBase> {
+        anim_speed: 0.9
+    }
+    
+    pub Slide = <RoundedView> {
+        width: Fill, height: Fill,
+        flow: Down, spacing: 10,
+        align: { x: 0.0, y: 0.5 }
+        padding: 50.
+        draw_bg: {
+            color: (THEME_COLOR_SLIDES_BG),
+            border_radius: (THEME_CONTAINER_CORNER_RADIUS)
+        }
+        title = <H1> {
+            text: "SlideTitle",
+            draw_text: {
+                color: (THEME_COLOR_TEXT)
+            }
+        }
+    }
+    
+    pub SlideChapter = <Slide> {
+        width: Fill, height: Fill,
+        flow: Down,
+        align: {x: 0.0, y: 0.5}
+        spacing: 10,
+        padding: 50,
+        draw_bg: {
+            color: (THEME_COLOR_SLIDES_CHAPTER),
+            border_radius: (THEME_CONTAINER_CORNER_RADIUS)
+        }
+        title = <H1> {
+            text: "SlideTitle",
+            draw_text: {
+                color: (THEME_COLOR_TEXT)
+            }
+        }
+    }
+    
+    pub SlideBody = <H2> {
+        text: "Body of the slide"
+        draw_text: {
+            color: (THEME_COLOR_TEXT)
+        }
     }
 }
 
 #[derive(Live, LiveRegisterWidget, WidgetRef, WidgetSet)]
 pub struct SlidesView {
     #[layout] layout: Layout,
-     #[rust] area: Area,
+    #[rust] area: Area,
     #[walk] walk: Walk,
     #[rust] children: ComponentMap<LiveId, WidgetRef>,
     #[rust] draw_order: Vec<LiveId>,

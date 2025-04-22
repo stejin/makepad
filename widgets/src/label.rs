@@ -7,7 +7,203 @@ use {
 };
 
 live_design!{
-    LabelBase = {{Label}} {}
+    link widgets;
+    use link::theme::*;
+    
+    pub LabelBase = {{Label}} {}
+    pub Label = <LabelBase> {
+        width: Fit, height: Fit,
+        draw_text: {
+            color: (THEME_COLOR_TEXT),
+            text_style: <THEME_FONT_REGULAR> {},
+            wrap: Word
+        }
+    }
+
+    pub LabelGradientX = <Label> {
+        width: Fit, height: Fit,
+        draw_text: {
+            uniform color_1: #f00,
+            uniform color_2: #ff0
+
+            fn get_color(self) ->vec4{
+                return mix(self.color_1, self.color_2, self.pos.y)
+            }
+        }
+    }
+    
+    pub LabelGradientY = <Label> {
+        width: Fit, height: Fit,
+        draw_text: {
+            uniform color_1: #f00,
+            uniform color_2: #ff0
+
+            fn get_color(self) ->vec4{
+                return mix(self.color_1, self.color_2, self.pos.x)
+            }
+        }
+    }
+    
+    pub H1 = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_1 * 0.25)}
+        draw_text: {
+            wrap: Word
+            text_style: <THEME_FONT_BOLD> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_1)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H1"
+    }
+    
+    pub H1italic = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_1 * 0.25)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD_ITALIC> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_1)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H1"
+    }
+    
+    pub H2 = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_2 * 0.25)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_2)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H2"
+    }
+    
+    pub H2italic = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_2 * 0.25)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD_ITALIC> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_2)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H2"
+    }
+    
+    pub H3 = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_3 * 0.25)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_3)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H3"
+    }
+    
+    pub H3italic = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_3 * 0.25)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD_ITALIC> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_3)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H3"
+    }
+    
+    pub H4 = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_4 * 0.25)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_4)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H4"
+    }
+    
+    pub H4italic = <Label> {
+        width: Fill,
+        margin: {top: (THEME_FONT_SIZE_4 * 0.25)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD_ITALIC> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_4)
+            }
+            color: (THEME_COLOR_TEXT_HL)
+        }
+        text: "Headline H4"
+    }
+    
+    pub P = <Label> {
+        width: Fill,
+        margin: 0.,
+        padding: 0.,
+        margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+        draw_text: {
+            text_style: <THEME_FONT_REGULAR> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        text: "Paragraph"
+    }
+    
+    pub Pbold = <Label> {
+        width: Fill,
+        margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        text: "Paragraph"
+    }
+    
+    pub Pitalic = <Label> {
+        width: Fill,
+        margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+        draw_text: {
+            text_style: <THEME_FONT_ITALIC> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        text: "Paragraph"
+    }
+    
+    pub Pbolditalic = <Label> {
+        width: Fill,
+        margin: {top: (THEME_SPACE_2 * 0.25), bottom: (THEME_FONT_SIZE_P * 0.5)}
+        draw_text: {
+            text_style: <THEME_FONT_BOLD_ITALIC> {
+                line_spacing: (THEME_FONT_LINE_SPACING),
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        text: "Paragraph"
+    }
+
+    
 }
 
 #[derive(Clone, Debug, DefaultNone)]
@@ -20,10 +216,13 @@ pub enum LabelAction {
 
 #[derive(Live, LiveHook, Widget)]
 pub struct Label {
-    #[redraw] #[live] draw_text: DrawText,
+    #[redraw] #[live] draw_text: DrawText2,
+    
     #[walk] walk: Walk,
     #[live] align: Align,
+    #[live(Flow::RightWrap)] flow: Flow,
     #[live] padding: Padding,
+    
     #[rust] area: Area,
     //margin: Margin,
     #[live] text: ArcStringMut,
@@ -39,11 +238,14 @@ impl Widget for Label {
 
     fn draw_walk(&mut self, cx: &mut Cx2d, _scope: &mut Scope, walk:Walk)->DrawStep{
         let walk = walk.with_add_padding(self.padding);
-        cx.begin_turtle(walk, Layout::default());
+        cx.begin_turtle(walk, Layout{
+            flow: self.flow,
+            ..Default::default()
+        });
         // here we need to check if the text is empty, if so we need to set it to a space
         // or the text draw will not work(seems like lazy drawtext bug)
         let _ = self.text.as_ref().is_empty().then(|| {
-            let _ = self.set_text(" ");
+            let _ = self.set_text(cx, " ");
         });
         self.draw_text.draw_walk(cx, walk, self.align, self.text.as_ref());
         cx.end_turtle_with_area(&mut self.area);
@@ -54,8 +256,9 @@ impl Widget for Label {
         self.text.as_ref().to_string()
     }
     
-    fn set_text(&mut self, v:&str){
+    fn set_text(&mut self, cx:&mut Cx, v:&str){
         self.text.as_mut_empty().push_str(v);
+        self.redraw(cx);
     }
 
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {

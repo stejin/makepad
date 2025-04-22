@@ -3,7 +3,7 @@ use {
     crate::{
         makepad_live_id::*,
         makepad_wasm_bridge::*,
-        makepad_math::{dvec2, DVec2, Vec3, Quat, Transform},
+        makepad_math::{dvec2, DVec2, Vec3, Quat, Pose},
         cx::{OsType, XrCapabilities, WebParams},
         window::CxWindowPool,
         area::Area,
@@ -14,6 +14,7 @@ use {
             XRUpdateEvent,
             KeyCode,
             KeyModifiers,
+            MouseButton,
             MouseDownEvent,
             MouseMoveEvent,
             MouseUpEvent,
@@ -138,6 +139,7 @@ pub struct ToWasmTimerFired {
 
 #[derive(ToWasm)]
 pub struct ToWasmSignal {
+    pub flags:u32
 }
 
 #[derive(ToWasm)]
@@ -229,6 +231,16 @@ pub struct WMouse {
     pub time: f64,
 }
 
+/// Convert a raw Web mouse button code to a Makepad `MouseButton`.
+fn wmouse_to_mouse_button(button: u32) -> MouseButton {
+    match button {
+        0 => MouseButton::PRIMARY,
+        1 => MouseButton::MIDDLE,
+        2 => MouseButton::SECONDARY,
+        n => MouseButton::from_raw_button(n as usize),
+    }
+}
+
 #[derive(ToWasm)]
 pub struct ToWasmMouseDown {
     pub mouse: WMouse,
@@ -238,7 +250,7 @@ impl From<ToWasmMouseDown> for MouseDownEvent {
     fn from(v:ToWasmMouseDown) -> Self {
         Self {
             abs: dvec2(v.mouse.x, v.mouse.y),
-            button: v.mouse.button as usize,
+            button: wmouse_to_mouse_button(v.mouse.button),
             window_id: CxWindowPool::id_zero(),
             modifiers: unpack_key_modifier(v.mouse.modifiers),
             handled: Cell::new(Area::Empty),
@@ -275,7 +287,7 @@ impl From<ToWasmMouseUp> for MouseUpEvent {
     fn from(v:ToWasmMouseUp) -> Self {
         Self {
             abs: dvec2(v.mouse.x, v.mouse.y),
-            button: v.mouse.button as usize,
+            button: wmouse_to_mouse_button(v.mouse.button),
             window_id: CxWindowPool::id_zero(),
             modifiers: unpack_key_modifier(v.mouse.modifiers),
             time: v.mouse.time
@@ -521,7 +533,7 @@ pub struct WQuat {
 
 impl Into<Quat> for WQuat {
     fn into(self) -> Quat {
-        Quat {a: self.a, b: self.b, c: self.c, d: self.d}
+        Quat {x: self.a, y: self.b, z: self.c, w: self.d}
     }
 }
 
@@ -537,9 +549,9 @@ pub struct WXRTransform {
     pub position: WVec3,
 }
 
-impl Into<Transform> for WXRTransform {
-    fn into(self) -> Transform {
-        Transform {
+impl Into<Pose> for WXRTransform {
+    fn into(self) -> Pose {
+        Pose {
             orientation: self.orientation.into(),
             position: self.position.into()
         }
@@ -581,7 +593,7 @@ impl Into<XRInput> for WXRInput {
 #[derive(ToWasm)]
 pub struct ToWasmXRUpdate {
     pub time: f64,
-    pub head_transform: WXRTransform,
+    pub head_pose: WXRTransform,
     pub inputs: Vec<WXRInput>,
 }
 
@@ -589,7 +601,7 @@ impl ToWasmXRUpdate {
     pub fn into_xrupdate_event(self, last_inputs: Option<Vec<XRInput >>) -> XRUpdateEvent {
         XRUpdateEvent {
             time: self.time,
-            head_transform: self.head_transform.into(),
+            head_pose: self.head_pose.into(),
             inputs: self.inputs.into_iter().map( | v | v.into()).collect(),
             last_inputs
         }

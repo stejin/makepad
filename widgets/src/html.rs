@@ -9,23 +9,236 @@ use crate::{
 const BULLET: &str = "•";
 
 live_design!{
-    import makepad_widgets::link_label::LinkLabelBase;
-
-    HtmlLinkBase = {{HtmlLink}} {
-        link = {
-            draw_text = {
+    link widgets;
+    use link::theme::*;
+    use makepad_draw::shader::std::*;
+     
+    pub HtmlLinkBase = {{HtmlLink}} {
+        /*link = {
+            draw_text:{
                 // other blue hyperlink colors: #1a0dab, // #0969da  // #0c50d1
                 color: #1a0dab
             }
-        }
+        }*/
     }
 
-    HtmlBase = {{Html}} {
+    pub HtmlBase = {{Html}} {
         // ok so we can use one drawtext
         // change to italic, change bold (SDF), strikethrough
         ul_markers: ["•", "-"],
         ol_markers: [Numbers, LowerAlpha, LowerRoman],
         ol_separator: ".",
+    }
+    
+    pub HtmlLink = <HtmlLinkBase> {
+        width: Fit, height: Fit,
+        align: {x: 0., y: 0.}
+        
+        color: #x0000EE,
+        hover_color: #x00EE00,
+        pressed_color: #xEE0000,
+                
+        // instance hovered: 0.0
+        // instance pressed: 0.0
+        
+        animator: {
+            hover = {
+                default: off,
+                off = {
+                    redraw: true,
+                    from: {all: Forward {duration: 0.01}}
+                    apply: {
+                        hovered: 0.0,
+                        pressed: 0.0,
+                    }
+                }
+                
+                on = {
+                    redraw: true,
+                    from: {
+                        all: Forward {duration: 0.1}
+                        pressed: Forward {duration: 0.01}
+                    }
+                    apply: {
+                        hovered: [{time: 0.0, value: 1.0}],
+                        pressed: [{time: 0.0, value: 1.0}],
+                    }
+                }
+                
+                pressed = {
+                    redraw: true,
+                    from: {all: Forward {duration: 0.01}}
+                    apply: {
+                        hovered: [{time: 0.0, value: 1.0}],
+                        pressed: [{time: 0.0, value: 1.0}],
+                    }
+                }
+            }
+        }
+    }
+    
+    pub Html = <HtmlBase> {
+        width: Fill, height: Fit,
+        flow: RightWrap,
+        width:Fill,
+        height:Fit,
+        padding: <THEME_MSPACE_1> {}
+        
+        font_size: (THEME_FONT_SIZE_P),
+        font_color: (THEME_COLOR_TEXT),
+        
+        draw_normal: {
+            text_style: <THEME_FONT_REGULAR> {
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        
+        draw_italic: {
+            text_style: <THEME_FONT_ITALIC> {
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        
+        draw_bold: {
+            text_style: <THEME_FONT_BOLD> {
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        
+        draw_bold_italic: {
+            text_style: <THEME_FONT_BOLD_ITALIC> {
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        
+        draw_fixed: {
+            text_style: <THEME_FONT_CODE> {
+                font_size: (THEME_FONT_SIZE_P)
+            }
+            color: (THEME_COLOR_TEXT)
+        }
+        
+        code_layout: {
+            flow: RightWrap,
+            padding: <THEME_MSPACE_2> { left: (THEME_SPACE_3), right: (THEME_SPACE_3) }
+        }
+        code_walk: { width: Fill, height: Fit }
+        
+        quote_layout: {
+            flow: RightWrap,
+            padding: <THEME_MSPACE_2> { left: (THEME_SPACE_3), right: (THEME_SPACE_3) }
+        }
+        quote_walk: { width: Fill, height: Fit, }
+        
+        list_item_layout: {
+            flow: RightWrap,
+            //padding: <THEME_MSPACE_1> {}
+        }
+        list_item_walk: {
+            height: Fit, width: Fill,
+        }
+        
+        inline_code_padding: <THEME_MSPACE_1> {},
+        inline_code_margin: <THEME_MSPACE_1> {},
+        
+        sep_walk: {
+            width: Fill, height: 4.
+            margin: <THEME_MSPACE_V_1> {}
+        }
+        
+        a = <HtmlLink> {}
+        
+        draw_block:{
+            line_color: (THEME_COLOR_TEXT)
+            sep_color: (THEME_COLOR_DIVIDER)
+            quote_bg_color: (THEME_COLOR_BG_HIGHLIGHT)
+            quote_fg_color: (THEME_COLOR_TEXT)
+            code_color: (THEME_COLOR_BG_HIGHLIGHT)
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                match self.block_type {
+                    FlowBlockType::Quote => {
+                        sdf.box(
+                            0.,
+                            0.,
+                            self.rect_size.x,
+                            self.rect_size.y,
+                            2.
+                        );
+                        sdf.fill(self.quote_bg_color)
+                        sdf.box(
+                            THEME_SPACE_1,
+                            THEME_SPACE_1,
+                            THEME_SPACE_1,
+                            self.rect_size.y - THEME_SPACE_2,
+                            1.5
+                        );
+                        sdf.fill(self.quote_fg_color);
+                        return sdf.result;
+                    }
+                    FlowBlockType::Sep => {
+                        sdf.box(
+                            0.,
+                            1.,
+                            self.rect_size.x-1,
+                            self.rect_size.y-2.,
+                            2.
+                        );
+                        sdf.fill(self.sep_color);
+                        return sdf.result;
+                    }
+                    FlowBlockType::Code => {
+                        sdf.box(
+                            0.,
+                            0.,
+                            self.rect_size.x,
+                            self.rect_size.y,
+                            2.
+                        );
+                        sdf.fill(self.code_color);
+                        return sdf.result;
+                    }
+                    FlowBlockType::InlineCode => {
+                        sdf.box(
+                            1.,
+                            1.,
+                            self.rect_size.x-2.,
+                            self.rect_size.y-2.,
+                            2.
+                        );
+                        sdf.fill(self.code_color);
+                        return sdf.result;
+                    }
+                    FlowBlockType::Underline => {
+                        sdf.box(
+                            0.,
+                            self.rect_size.y-2,
+                            self.rect_size.x,
+                            2.0,
+                            0.5
+                        );
+                        sdf.fill(self.line_color);
+                        return sdf.result;
+                    }
+                    FlowBlockType::Strikethrough => {
+                        sdf.box(
+                            0.,
+                            self.rect_size.y * 0.45,
+                            self.rect_size.x,
+                            2.0,
+                            0.5
+                        );
+                        sdf.fill(self.line_color);
+                        return sdf.result;
+                    }
+                }
+                return #f00
+            }
+        }
     }
 }
 
@@ -130,15 +343,18 @@ impl Html {
                 tf.ignore_newlines.push(false);
                 tf.combine_spaces.push(false);
                 tf.begin_quote(cx);
+                trim_whitespace_in_text = TrimWhitespaceInText::Trim;
             }
             some_id!(br) => {
                 cx.turtle_new_line();
+                trim_whitespace_in_text = TrimWhitespaceInText::Trim;
             }
             some_id!(hr)
             | some_id!(sep) => {
                 cx.turtle_new_line();
                 tf.sep(cx);
                 cx.turtle_new_line();
+                trim_whitespace_in_text = TrimWhitespaceInText::Trim;
             }
             some_id!(u) => tf.underline.push(),
             some_id!(del)
@@ -331,7 +547,6 @@ impl Html {
 
 impl Widget for Html {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
-        // log!("HTML WIDGET EVENT: {:?}", event);
         self.text_flow.handle_event(cx, event, scope);
     }
     
@@ -365,13 +580,14 @@ impl Widget for Html {
         self.body.as_ref().to_string()
     }
     
-    fn set_text(&mut self, v:&str){
+    fn set_text(&mut self, cx:&mut Cx, v:&str){
         self.body.set(v);
         let mut errors = Some(Vec::new());
         self.doc = parse_html(self.body.as_ref(), &mut errors, InternLiveId::No);
         if errors.as_ref().unwrap().len()>0{
             log!("HTML parser returned errors {:?}", errors)
         }
+        self.redraw(cx);
     }
 } 
 
@@ -397,7 +613,7 @@ fn handle_custom_widget(
     // log!("FOUND CUSTOM WIDGET! template: {template:?}, id: {id:?}, attrs: {attrs:?}");
 
     if let Some(item) = tf.item_with_scope(cx, &mut scope_with_attrs, id, template) {
-        item.set_text(node.find_text().unwrap_or(""));
+        item.set_text(cx, node.find_text().unwrap_or(""));
         let mut draw_scope = Scope::with_data(tf);
         item.draw_all(cx, &mut draw_scope);
     }
@@ -412,11 +628,15 @@ pub enum HtmlLinkAction {
         url: String,
         key_modifiers: KeyModifiers,
     },
+    SecondaryClicked {
+        url: String,
+        key_modifiers: KeyModifiers,
+    },
     None,
 }
 
 #[derive(Live, Widget)]
-struct HtmlLink {
+pub struct HtmlLink {
     #[animator] animator: Animator,
 
     // TODO: this is unusued; just here to invalidly satisfy the area provider.
@@ -486,11 +706,24 @@ impl Widget for HtmlLink {
 
         for area in self.drawn_areas.clone().into_iter() {
             match event.hits(cx, area) {
-                Hit::FingerDown(_fe) => {
-                    if self.grab_key_focus {
-                        cx.set_key_focus(self.area());
+                Hit::FingerDown(fe) => {
+                    if fe.is_primary_hit() {
+                        if self.grab_key_focus {
+                            cx.set_key_focus(self.area());
+                        }
+                        self.animator_play(cx, id!(hover.pressed));
                     }
-                    self.animator_play(cx, id!(hover.pressed));
+                    // Fire a secondary click action on a right-click *down* event.
+                    else if fe.mouse_button().is_some_and(|mb| mb.is_secondary()) {
+                        cx.widget_action(
+                            self.widget_uid(),
+                            &scope.path,
+                            HtmlLinkAction::SecondaryClicked {
+                                url: self.url.clone(),
+                                key_modifiers: fe.modifiers,
+                            },
+                        );
+                    }
                 }
                 Hit::FingerHoverIn(_) => {
                     cx.set_cursor(MouseCursor::Hand);
@@ -499,24 +732,36 @@ impl Widget for HtmlLink {
                 Hit::FingerHoverOut(_) => {
                     self.animator_play(cx, id!(hover.off));
                 }
-                Hit::FingerUp(fe) => {
-                    if fe.is_over {
+                Hit::FingerLongPress(_) => {
+                    cx.widget_action(
+                        self.widget_uid(),
+                        &scope.path,
+                        HtmlLinkAction::SecondaryClicked {
+                            url: self.url.clone(),
+                            key_modifiers: Default::default(),
+                        },
+                    );
+                }
+                Hit::FingerUp(fu) => {
+                    if fu.is_over {
+                        cx.set_cursor(MouseCursor::Hand);
+                        self.animator_play(cx, id!(hover.on));
+                    } else {
+                        self.animator_play(cx, id!(hover.off));
+                    }
+
+                    if fu.is_over
+                        && fu.is_primary_hit()
+                        && fu.was_tap()
+                    {
                         cx.widget_action(
                             self.widget_uid(),
                             &scope.path,
                             HtmlLinkAction::Clicked {
                                 url: self.url.clone(),
-                                key_modifiers: fe.modifiers,
+                                key_modifiers: fu.modifiers,
                             },
                         );
-
-                        if fe.device.has_hovers() {
-                            self.animator_play(cx, id!(hover.on));
-                        } else {
-                            self.animator_play(cx, id!(hover.off));
-                        }
-                    } else {
-                        self.animator_play(cx, id!(hover.off));
                     }
                 }
                 _ => (),
@@ -569,11 +814,27 @@ impl Widget for HtmlLink {
         self.text.as_ref().to_string()
     }
 
-    fn set_text(&mut self, v: &str) {
+    fn set_text(&mut self, cx:&mut Cx, v: &str) {
         self.text.as_mut_empty().push_str(v);
+        self.redraw(cx);
     }
 }
 
+impl HtmlLinkRef {
+    pub fn set_url(&mut self, url: &str) {
+        if let Some(mut inner) = self.borrow_mut() {
+            inner.url = url.to_string();
+        }
+    }
+
+    pub fn url(&self) -> Option<String> {
+        if let Some(inner) = self.borrow() {
+            Some(inner.url.clone())
+        } else {
+            None
+        }
+    }
+}
 
 /// The format and metadata of a list at a given nesting level.
 #[derive(Debug)]

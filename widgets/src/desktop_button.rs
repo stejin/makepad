@@ -8,10 +8,188 @@ use {
 };
 
 live_design!{
-    import makepad_draw::shader::std::*;
+    link widgets;
+    use link::theme::*;
+    use makepad_draw::shader::std::*;
     
-    DrawDesktopButton = {{DrawDesktopButton}} {}
-    DesktopButtonBase = {{DesktopButton}} {}
+    pub DrawDesktopButton = {{DrawDesktopButton}} {}
+    pub DesktopButtonBase = {{DesktopButton}} {}
+    
+    pub DesktopButton = <DesktopButtonBase> {
+        draw_bg: {
+            uniform color: (THEME_COLOR_TEXT)
+            uniform color_hover: (THEME_COLOR_TEXT_HOVER)
+            uniform color_down: (THEME_COLOR_TEXT_DOWN)
+
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                sdf.aa *= 3.0;
+                let sz = 4.5;
+                let c = self.rect_size * vec2(0.5, 0.5);
+                
+                // WindowsMin
+                match self.button_type {
+                    DesktopButtonType::WindowsMin => {
+                        sdf.move_to(c.x - sz, c.y);
+                        sdf.line_to(c.x + sz, c.y);
+                        sdf.stroke(
+                            mix(
+                                self.color,
+                                mix(
+                                    self.color_hover,
+                                    self.color_down,
+                                    self.down
+                                ), 
+                                self.hover
+                            ),
+                            0.5 + 0.5 * self.dpi_dilate
+                        );
+                        return sdf.result;
+                    }
+                    DesktopButtonType::WindowsMax => {
+                        sdf.rect(c.x - sz, c.y - sz, 2. * sz, 2. * sz);
+                        sdf.stroke(
+                            mix(
+                                self.color,
+                                mix(
+                                    self.color_hover,
+                                    self.color_down,
+                                    self.down
+                                ), 
+                                self.hover
+                            ),
+                            0.5 + 0.5 * self.dpi_dilate
+                        );
+                        return sdf.result;
+                    }
+                    DesktopButtonType::WindowsMaxToggled => {
+                        let sz = 5.;
+                        sdf.rect(c.x - sz + 1., c.y - sz - 1., 2. * sz, 2. * sz);
+                        sdf.stroke(#f, 0.5 + 0.5 * self.dpi_dilate);
+                        sdf.rect(c.x - sz - 1., c.y - sz + 1., 2. * sz, 2. * sz);
+                        sdf.stroke(
+                            mix(
+                                self.color,
+                                mix(
+                                    self.color_hover,
+                                    self.color_down,
+                                    self.down
+                                ), 
+                                self.hover
+                            ),
+                            0.5 + 0.5 * self.dpi_dilate
+                        );
+                        return sdf.result;
+                    }
+                    DesktopButtonType::WindowsClose => {
+                        sdf.move_to(c.x - sz, c.y - sz);
+                        sdf.line_to(c.x + sz, c.y + sz);
+                        sdf.move_to(c.x - sz, c.y + sz);
+                        sdf.line_to(c.x + sz, c.y - sz);
+                        sdf.stroke(
+                            mix(
+                                self.color,
+                                mix(
+                                    self.color_hover,
+                                    self.color_down,
+                                    self.down
+                                ), 
+                                self.hover
+                            ),
+                            0.5 + 0.5 * self.dpi_dilate
+                        );
+                        return sdf.result;
+                    }
+                    DesktopButtonType::XRMode => {
+                        let w = 12.;
+                        let h = 8.;
+                        sdf.box(c.x - w, c.y - h, 2. * w, 2. * h, 2.);
+                        // subtract 2 eyes
+                        sdf.circle(c.x - 5.5, c.y, 3.5);
+                        sdf.subtract();
+                        sdf.circle(c.x + 5.5, c.y, 3.5);
+                        sdf.subtract();
+                        sdf.circle(c.x, c.y + h - 0.75, 2.5);
+                        sdf.subtract();
+                        sdf.fill(
+                            mix(
+                                self.color,
+                                mix(
+                                    self.color_hover,
+                                    self.color_down,
+                                    self.down
+                                ), 
+                                self.hover
+                            )
+
+                        ); //, 0.5 + 0.5 * dpi_dilate);
+                        
+                        return sdf.result;
+                    }
+                    DesktopButtonType::Fullscreen => {
+                        sz = 8.;
+                        sdf.rect(c.x - sz, c.y - sz, 2. * sz, 2. * sz);
+                        sdf.rect(c.x - sz + 1.5, c.y - sz + 1.5, 2. * (sz - 1.5), 2. * (sz - 1.5));
+                        sdf.subtract();
+                        sdf.rect(c.x - sz + 4., c.y - sz - 2., 2. * (sz - 4.), 2. * (sz + 2.));
+                        sdf.subtract();
+                        sdf.rect(c.x - sz - 2., c.y - sz + 4., 2. * (sz + 2.), 2. * (sz - 4.));
+                        sdf.subtract();
+                        sdf.fill(
+                            mix(
+                                self.color,
+                                mix(
+                                    self.color_hover,
+                                    self.color_down,
+                                    self.down
+                                ), 
+                                self.hover
+                            )
+
+                        ); //, 0.5 + 0.5 * dpi_dilate);
+                        
+                        return sdf.result;
+                    }
+                }
+                return #f00;
+            }
+        }
+        animator: {
+            hover = {
+                default: off,
+                off = {
+                    from: {all: Forward {duration: 0.1}}
+                    apply: {
+                        draw_bg: {down: 0.0, hover: 0.0}
+                    }
+                }
+                
+                on = {
+                    from: {
+                        all: Forward {duration: 0.1}
+                        state_down: Snap
+                    }
+                    apply: {
+                        draw_bg: {
+                            down: 0.0,
+                            hover: 1.0,
+                        }
+                    }
+                }
+                
+                down = {
+                    from: {all: Snap}
+                    apply: {
+                        draw_bg: {
+                            down: 1.0,
+                            hover: 1.0,
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
 } 
 
 #[derive(Live, Widget)]
@@ -19,6 +197,7 @@ pub struct DesktopButton {
     #[animator] animator: Animator,
     #[walk] walk: Walk,
     #[redraw] #[live] draw_bg: DrawDesktopButton,
+
 }
 
 impl Widget for DesktopButton{
@@ -29,7 +208,7 @@ impl Widget for DesktopButton{
         match event.hits(cx, self.draw_bg.area()) {
             Hit::FingerDown(fe) => {
                 cx.widget_action(uid, &scope.path, ButtonAction::Pressed(fe.modifiers));
-                self.animator_play(cx, id!(hover.pressed));
+                self.animator_play(cx, id!(hover.down));
             },
             Hit::FingerHoverIn(_) => {
                 cx.set_cursor(MouseCursor::Hand);
@@ -37,6 +216,9 @@ impl Widget for DesktopButton{
             }
             Hit::FingerHoverOut(_) => {
                 self.animator_play(cx, id!(hover.off));
+            }
+            Hit::FingerLongPress(_) => {
+                cx.widget_action(uid, &scope.path, ButtonAction::LongPressed);
             }
             Hit::FingerUp(fe) => if fe.is_over {
                 cx.widget_action(uid, &scope.path, ButtonAction::Clicked(fe.modifiers));
@@ -78,7 +260,7 @@ pub enum DesktopButtonType {
 pub struct DrawDesktopButton {
     #[deref] draw_super: DrawQuad,
     #[live] hover: f32,
-    #[live] pressed: f32,
+    #[live] down: f32,
     #[live] button_type: DesktopButtonType
 }
 

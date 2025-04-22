@@ -11,7 +11,6 @@ use {
             Vec3,
             Vec4
         },
-        span::TextSpan,
         live_registry::LiveScopeTarget,
         makepad_live_tokenizer::{LiveId},
         live_ptr::{LiveModuleId, LivePtr},
@@ -26,46 +25,21 @@ pub struct LiveNode { // 48 bytes. Don't really see ways to compress
     pub value: LiveValue,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct LiveDesignInfoIndex(u32);
-
-
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
-pub struct LiveDesignInfo{
-    pub span: TextSpan,
-    pub dx: f64,
-    pub dy: f64,
-    pub dw: f64,
-    pub dh: f64
+#[derive(Clone, Debug, PartialEq)]
+pub struct LiveFont {
+    pub path: Arc<String>,
+    pub ascender_fudge: f32,
+    pub descender_fudge: f32
 }
 
-impl LiveDesignInfo{
-    pub fn to_string(&self)->String{
-        format!("dx:{:.1} dy:{:.1} dw:{:.1} dh:{:.1}", self.dx, self.dy, self.dw, self.dh)
+impl LiveFont{
+    pub fn to_live_id(&self)->LiveId{
+        LiveId::seeded().str_append(self.path.as_str())
+        .bytes_append(&self.ascender_fudge.to_be_bytes())
+        .bytes_append(&self.descender_fudge.to_be_bytes())
     }
 }
-
-impl LiveDesignInfoIndex{
-    pub fn from_usize(val: usize)->Self{
-        Self(val as u32)
-    }
-    
-    pub fn invalid()->Self{
-        Self(u32::MAX)
-    }
-    
-    pub fn is_invalid(&self)->bool{
-        self.0 == u32::MAX
-    }
-    
-    pub fn index(&self)->usize{
-        if self.is_invalid(){
-            panic!()
-        }
-        return self.0 as usize
-    }
-}
-
+ 
 #[derive(Clone, Debug, PartialEq)]
 pub enum LiveValue {
     None,
@@ -74,6 +48,7 @@ pub enum LiveValue {
     String(Arc<String>),
     InlineString(InlineString),
     Dependency(Arc<String>),
+    Font(LiveFont),
     Bool(bool),
     Int64(i64),
     Uint64(u64),
@@ -94,15 +69,15 @@ pub enum LiveValue {
      // enum thing
     BareEnum (LiveId),
     // tree items
-    Root{id_resolve:Box<HashMap<LiveId,LiveScopeTarget>>},
+    Root(Box<LiveNodeRoot>),//{id_resolve:Box<HashMap<LiveId,LiveScopeTarget>>},
     Array,
     Expr,// {expand_index: Option<u32>},
     TupleEnum (LiveId),
     NamedEnum (LiveId),
     Object,
-    Clone{clone:LiveId, design_info:LiveDesignInfoIndex},
-    Deref{live_type: LiveType, clone:LiveId, design_info:LiveDesignInfoIndex},
-    Class {live_type: LiveType, class_parent: LivePtr, design_info:LiveDesignInfoIndex},
+    Clone{clone:LiveId},
+    Deref{live_type: LiveType, clone:LiveId},
+    Class {live_type: LiveType, class_parent: LivePtr},
     Close,
     
     // shader code and other DSLs
@@ -114,7 +89,13 @@ pub enum LiveValue {
     Import (Box<LiveImport>),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LiveNodeRoot{
+    pub locals: HashMap<LiveId,LiveScopeTarget>,
+    pub exports: HashMap<LiveId, usize>
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LiveImport{
     pub module_id: LiveModuleId,
     pub import_id: LiveId,
@@ -249,7 +230,7 @@ impl LiveIdAsProp for LiveId {
     fn as_instance(&self) -> LiveProp {LiveProp(*self, LivePropType::Instance)}
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LiveNodeOrigin(u64);
 
 impl fmt::Debug for LiveNodeOrigin {
@@ -602,6 +583,7 @@ impl LiveValue {
 
     pub fn is_single_node(&self) -> bool {
         self.is_value_type() || match self {
+            Self::None=> true,
             Self::Id(_) |
             Self::IdPath(_) |
             Self::BareEnum(_) => true,
@@ -746,6 +728,7 @@ impl LiveValue {
             
             Self::DSL {..} => 31,
             Self::Import {..} => 32,
+            Self::Font {..} => 33,
             //Self::Registry {..} => 30,
         }
     }

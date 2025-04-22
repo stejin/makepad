@@ -7,7 +7,7 @@ use {
             apple::ios_app::IosApp,
             apple::apple_util::nsstring_to_string,
             apple::apple_sys::*,
-            apple::ios_app::get_ios_app_global,
+            apple::ios_app::with_ios_app,
         },
     }
 };
@@ -23,7 +23,7 @@ pub fn define_ios_app_delegate() -> *const Class {
         _: ObjcId,
         _: ObjcId,
     ) -> BOOL {
-        get_ios_app_global().did_finish_launching_with_options();
+        with_ios_app(|app| app.did_finish_launching_with_options());
         YES
     }
     
@@ -40,7 +40,7 @@ pub fn define_ios_app_delegate() -> *const Class {
 
 pub fn define_mtk_view() -> *const Class {
     let mut decl = ClassDecl::new("MakepadView", class!(MTKView)).unwrap();
-    extern fn yes(_: &Object, _: Sel) -> BOOL {
+    extern "C" fn yes(_: &Object, _: Sel) -> BOOL {
         YES
     }
     
@@ -60,7 +60,7 @@ pub fn define_mtk_view() -> *const Class {
                     touch_id as u64
                 };
                 let p: NSPoint = msg_send![ios_touch, locationInView: this];
-                get_ios_app_global().update_touch(uid, dvec2(p.x, p.y), state);
+                with_ios_app(|app| app.update_touch(uid, dvec2(p.x, p.y), state));
             }
         }
     }
@@ -134,13 +134,52 @@ pub fn define_mtk_view_delegate() -> *const Class {
     return decl.register();
 }
 
+/// Defines a class that acts as the target "receiver" for the long press gesture recognizer's
+/// "gesture recognized" action.
+pub fn define_gesture_recognizer_handler() -> *const Class {
+    let mut decl = ClassDecl::new("LongPressGestureRecognizerHandler", class!(NSObject)).unwrap();
+
+    extern "C" fn handle_long_press_gesture(_this: &Object, _: Sel, gesture_recognizer: ObjcId, _: ObjcId) {
+        unsafe {
+            let state: i64 = msg_send![gesture_recognizer, state];
+            // One might expect that we want to trigger on the "Recognized" or "Ended" state,
+            // but that state is not triggered until the user lifts their finger.
+            // We want to trigger on the "Began" state, which occurs only once the user has long-pressed
+            // for a long-enough time interval to trigger the gesture (without having to lift their finger).
+            if state == 1 { // UIGestureRecognizerStateBegan
+                let view: ObjcId = msg_send![gesture_recognizer, view];
+                let location_in_view: NSPoint = msg_send![gesture_recognizer, locationInView: view];
+                // There's no way to get the touch event's UID from within a default gesture recognizer
+                // (we'd have to fully implement our own). Since UID isn't used for long presses,
+                // this isn't worth the effort.
+                let uid = 0;
+                IosApp::send_long_press(location_in_view, uid);
+            }
+            // Note: in `did_finish_launching_with_options()`, we set gesture recognizer's `cancelTouchesInView` property
+            // to `NO`, which means that the gesture recognizer will still allow Makepad's MTKView
+            // to continue receiving touch events even after the long-press gesture has been recognized.
+            // Thus, we don't need to handle the UIGestureRecognizerStateChanged or UIGestureRecognizerStateEnded
+            // states here, as they'll be handled by the `on_touch` function above, as normal.
+        }
+    }
+
+    unsafe {
+        decl.add_method(
+            sel!(handleLongPressGesture: gestureRecognizer:),
+            handle_long_press_gesture as extern "C" fn(&Object, Sel, ObjcId, ObjcId),
+        );
+    }
+
+    return decl.register();
+}
+
 pub fn define_ios_timer_delegate() -> *const Class {
     
-    extern fn received_timer(_this: &Object, _: Sel, nstimer: ObjcId) {
+    extern "C" fn received_timer(_this: &Object, _: Sel, nstimer: ObjcId) {
         IosApp::send_timer_received(nstimer);
     }
     
-    extern fn received_live_resize(_this: &Object, _: Sel, _nstimer: ObjcId) {
+    extern "C" fn received_live_resize(_this: &Object, _: Sel, _nstimer: ObjcId) {
         IosApp::send_paint_event();
     }
     
@@ -149,8 +188,8 @@ pub fn define_ios_timer_delegate() -> *const Class {
     
     // Add callback methods
     unsafe {
-        decl.add_method(sel!(receivedTimer:), received_timer as extern fn(&Object, Sel, ObjcId));
-        decl.add_method(sel!(receivedLiveResize:), received_live_resize as extern fn(&Object, Sel, ObjcId));
+        decl.add_method(sel!(receivedTimer:), received_timer as extern "C" fn(&Object, Sel, ObjcId));
+        decl.add_method(sel!(receivedLiveResize:), received_live_resize as extern "C" fn(&Object, Sel, ObjcId));
     }
     
     return decl.register();
@@ -203,17 +242,17 @@ pub fn define_textfield_delegate() -> *const Class {
     extern "C" fn keyboard_will_hide(_: &Object, _: Sel, notif: ObjcId) {
         let height = get_height_delta(notif);
         let (duration, ease) = get_curve_duration(notif);
-        let time = get_ios_app_global().time_now();
-        get_ios_app_global().queue_virtual_keyboard_event(VirtualKeyboardEvent::WillHide {
+        let time = with_ios_app(|app| app.time_now());
+        with_ios_app(|app| app.queue_virtual_keyboard_event(VirtualKeyboardEvent::WillHide {
             time,
             ease,
             height: -height,
             duration
-        });
+        }));
     }
     
     extern "C" fn keyboard_did_hide(_: &Object, _: Sel, _notif: ObjcId) {
-        let time = get_ios_app_global().time_now();
+        let time = with_ios_app(|app| app.time_now());
         IosApp::send_virtual_keyboard_event(VirtualKeyboardEvent::DidHide {
             time,
         });
@@ -221,7 +260,7 @@ pub fn define_textfield_delegate() -> *const Class {
     extern "C" fn keyboard_will_show(_: &Object, _: Sel, notif: ObjcId) {
         let height = get_height_delta(notif);
         let (duration, ease) = get_curve_duration(notif);
-        let time = get_ios_app_global().time_now();
+        let time = with_ios_app(|app| app.time_now());
         IosApp::send_virtual_keyboard_event(VirtualKeyboardEvent::WillShow {
             time,
             height,
@@ -231,7 +270,7 @@ pub fn define_textfield_delegate() -> *const Class {
     }
     extern "C" fn keyboard_did_show(_: &Object, _: Sel, notif: ObjcId) {
         let height = get_height_delta(notif);
-        let time = get_ios_app_global().time_now();
+        let time = with_ios_app(|app| app.time_now());
         IosApp::send_virtual_keyboard_event(VirtualKeyboardEvent::DidShow {
             time,
             height: height

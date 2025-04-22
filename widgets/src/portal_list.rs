@@ -6,8 +6,23 @@ use crate::{
 };
 
 live_design!{
-    PortalListBase = {{PortalList}} {}
+    link widgets;
+    use link::theme::*;
+    use link::shaders::*;
+    use crate::scroll_bar::ScrollBar;
+    
+    pub PortalListBase = {{PortalList}} {}
+        
+    pub PortalList = <PortalListBase> {
+        width: Fill, height: Fill,
+        capture_overload: true
+        scroll_bar: <ScrollBar> {}
+        flow: Down
+    }
 }
+
+/// The maximum number of items that will be shown as part of a smooth scroll animation.
+const SMOOTH_SCROLL_MAXIMUM_WINDOW: usize = 20;
 
 #[derive(Clone,Copy)]
 struct ScrollSample{
@@ -59,8 +74,8 @@ pub struct PortalList {
     #[live(0.2)] flick_scroll_minimum: f64,
     #[live(80.0)] flick_scroll_maximum: f64,
     #[live(0.005)] flick_scroll_scaling: f64,
-    #[live(0.98)] flick_scroll_decay: f64,
-    #[live(100.0)] max_pull_down: f64,
+    #[live(0.97)] flick_scroll_decay: f64,
+    #[live(80.0)] max_pull_down: f64,
     #[live(true)] align_top_when_empty: bool,
     #[live(false)] grab_key_focus: bool,
     #[live(true)] drag_scrolling: bool,
@@ -74,14 +89,29 @@ pub struct PortalList {
     #[rust] draw_align_list: Vec<AlignItem>,
     #[rust] detect_tail_in_draw: bool,
     #[live(false)] auto_tail: bool,
+    #[live(false)] draw_caching: bool,
+    
     #[rust(false)] tail_range: bool,
     #[rust(false)] at_end: bool,
     #[rust(true)] not_filling_viewport: bool,
+    #[live(false)] reuse_items: bool,
     
     #[rust] templates: ComponentMap<LiveId, LivePtr>,
-    #[rust] items: ComponentMap<usize, (LiveId, WidgetRef)>,
+    #[rust] items: ComponentMap<usize, WidgetItem>,
+    #[rust] reusable_items: Vec<WidgetItem>,
+    #[rust] _draw_list_cache: Vec<DrawList>,
+    
     //#[rust(DragState::None)] drag_state: DragState,
-    #[rust(ScrollState::Stopped)] scroll_state: ScrollState
+    #[rust(ScrollState::Stopped)] scroll_state: ScrollState,
+    /// Whether the PortalList was actively scrolling during the most recent finger down hit.
+    #[rust] was_scrolling: bool,
+}
+
+
+#[derive(Default)]
+struct WidgetItem{
+    widget: WidgetRef,
+    template: LiveId,
 }
 
 struct AlignItem {
@@ -105,9 +135,9 @@ impl LiveHook for PortalList {
                 let id = nodes[index].id;
                 self.templates.insert(id, live_ptr);
                 // lets apply this thing over all our childnodes with that template
-                for (_, (templ_id, node)) in self.items.iter_mut() {
-                    if *templ_id == id {
-                        node.apply(cx, apply, index, nodes);
+                for (_, item) in self.items.iter_mut() {
+                    if item.template == id {
+                        item.widget.apply(cx, apply, index, nodes);
                     }
                 }
             }
@@ -149,7 +179,7 @@ impl PortalList {
 
         if let Some(ListDrawState::End {viewport}) = self.draw_state.get() {
             let list = &mut self.draw_align_list;
-            if list.len()>0 {
+            if list.len() > 0 {
                 list.sort_by( | a, b | a.index.cmp(&b.index));
                 let first_index = list.iter().position( | v | v.index == self.first_id).unwrap();
                 
@@ -218,11 +248,11 @@ impl PortalList {
                             -first_pos
                         }
                         else {
-                            let ret = (viewport.size.index(vi) - last_item_pos).max(0.0);
+                            let ret = viewport.size.index(vi) - last_item_pos;
                             if ret >= 0.0 {
                                 self.at_end = true;
                             }
-                            ret
+                            ret.max(0.0)
                         }
                     }
                     else {
@@ -296,14 +326,24 @@ impl PortalList {
                 self.scroll_bar.draw_scroll_bar(cx, ScrollAxis::Horizontal, rect, dvec2(rect.size.x * total_views, 100.0));
             }
         }        
+        
         if !self.keep_invisible{
-            self.items.retain_visible();
+            if self.reuse_items{
+                let reusable_items = &mut self.reusable_items;
+                self.items.retain_visible_with(|v|{
+                    reusable_items.push(v);
+                });
+            }
+            else{
+                self.items.retain_visible();
+            }
         }
 
         cx.end_turtle_with_area(&mut self.area);
         self.visible_items = visible_items;
     }
-
+    
+    
     /// Returns the index of the next visible item that will be drawn by this PortalList.
     pub fn next_visible_item(&mut self, cx: &mut Cx2d) -> Option<usize> {
         let vi = self.vec_index;
@@ -525,17 +565,35 @@ impl PortalList {
         if let Some(ptr) = self.templates.get(&template) {
             match self.items.entry(entry_id) {
                 Entry::Occupied(mut occ) => {
-                    if occ.get().0 == template {
-                        (occ.get().1.clone(), true)
+                    if occ.get().template == template {
+                        (occ.get().widget.clone(), true)
                     } else {
-                        let widget_ref = WidgetRef::new_from_ptr(cx, Some(*ptr));
-                        occ.insert((template, widget_ref.clone()));
+                        let widget_ref =  if let Some(pos) = self.reusable_items.iter().position(|v| v.template == template){
+                            self.reusable_items.remove(pos).widget
+                        }
+                        else{
+                            WidgetRef::new_from_ptr(cx, Some(*ptr))
+                        };
+                        occ.insert(WidgetItem{
+                            template, 
+                            widget:widget_ref.clone(),
+                            ..Default::default()
+                        });
                         (widget_ref, false)
                     }
                 }
                 Entry::Vacant(vac) => {
-                    let widget_ref = WidgetRef::new_from_ptr(cx, Some(*ptr));
-                    vac.insert((template, widget_ref.clone()));
+                    let widget_ref =  if let Some(pos) = self.reusable_items.iter().position(|v| v.template == template){
+                        self.reusable_items.remove(pos).widget
+                    }
+                    else{
+                        WidgetRef::new_from_ptr(cx, Some(*ptr))
+                    };
+                    vac.insert(WidgetItem{
+                        template, 
+                        widget: widget_ref.clone(),
+                        ..Default::default()
+                    });
                     (widget_ref, false)
                 }
             }
@@ -561,8 +619,8 @@ impl PortalList {
     pub fn position_of_item(&self, cx: &Cx, entry_id: usize) -> Option<f64> {
         const ZEROED: Rect = Rect { pos: DVec2 { x: 0.0, y: 0.0 }, size: DVec2 { x: 0.0, y: 0.0 } };
 
-        if let Some((_, item)) = self.items.get(&entry_id) {
-            let item_rect = item.area().rect(cx);
+        if let Some(item) = self.items.get(&entry_id) {
+            let item_rect = item.widget.area().rect(cx);
             if item_rect == ZEROED {
                 return None;
             }
@@ -578,8 +636,13 @@ impl PortalList {
     }
     
     /// Returns a reference to the template and widget for the given `entry_id`.
-    pub fn get_item(&self, entry_id: usize) -> Option<&(LiveId, WidgetRef)> {
-        self.items.get(&entry_id)
+    pub fn get_item(&self, entry_id: usize) -> Option<(LiveId,WidgetRef)> {
+        if let Some(item) = self.items.get(&entry_id){
+            Some((item.template.clone(), item.widget.clone()))
+        }
+        else{
+            None
+        }
     }
     
     pub fn set_item_range(&mut self, cx: &mut Cx, range_start: usize, range_end: usize) {
@@ -599,19 +662,44 @@ impl PortalList {
         // move the scrollbar to the right 'top' position
         self.scroll_bar.set_scroll_pos_no_action(cx, scroll_pos);
     }
-    
-    fn delta_top_scroll(&mut self, cx: &mut Cx, delta: f64, clip_top: bool) {
-        if self.range_start == self.range_end{
+
+    /// Sets the current scroll offset (`first_scroll`) based on the given `delta` value.
+    ///
+    /// ## Arguments
+    /// * `delta`: The amount to scroll by.
+    ///    A positive value scrolls upwards towards the top of the list,
+    ///    while a negative value scrolls downwards towards the bottom of the list.
+    /// * `clip_top`: If `true`, the scroll offset will be clamped to `0.0`, meaning that
+    ///    no pulldown "bounce" animation will occur when you scroll upwards beyond the top of the list.
+    /// * `transition_to_pulldown`: Whether to transition an existing scroll action to the `Pulldown`
+    ///    scroll state when an upwards scroll action reaches the top of the list.
+    fn delta_top_scroll(
+        &mut self,
+        cx: &mut Cx,
+        delta: f64,
+        clip_top: bool,
+        transition_to_pulldown: bool,
+    ) {
+        if self.range_start == self.range_end {
             self.first_scroll = 0.0
         }
-        else{
+        else {
             self.first_scroll += delta;
-        }            
+        }
+
         if self.first_id == self.range_start {
             self.first_scroll = self.first_scroll.min(self.max_pull_down);
+            if transition_to_pulldown && self.first_scroll > 0.0 {
+                self.scroll_state = ScrollState::Pulldown {next_frame: cx.new_next_frame()};
+            }
         }
-        if self.first_id == self.range_start && self.first_scroll > 0.0 && clip_top {
+        if clip_top && self.first_id == self.range_start && self.first_scroll > 0.0 {
             self.first_scroll = 0.0;
+        }
+        // Stop a downwards scroll when we reach the end of the list.
+        if self.at_end && delta < 0.0 {
+            self.was_scrolling = false;
+            self.scroll_state = ScrollState::Stopped;
         }
         self.update_scroll_bar(cx);
     }
@@ -635,6 +723,68 @@ impl PortalList {
         !self.tail_range
             && (self.first_id > self.range_end)
     }
+
+    /// Initiates a smooth scrolling animation to the specified target item in the list.
+    ///
+    /// ## Arguments
+    /// * `target_id`: The ID (index) of the item to scroll to.
+    /// * `speed`: A positive floating-point value that controls the speed of the animation.
+    ///    The `speed` will always be treated as an absolute value, with the direction of the scroll
+    ///    (up or down) determined by whether `target_id` is above or below the current item.
+    /// * `max_items_to_show`: The maximum number of items to show during the scrolling animation.
+    ///    If `None`, the default value of 20 is used.
+    ///
+    /// ## Example
+    /// ```rust,ignore
+    /// // Scrolls to item 42 at speed 100.0, including at most 30 items in the scroll animation.
+    /// smooth_scroll_to(&mut cx, 42, 100.0, Some(30));
+    /// ```
+    pub fn smooth_scroll_to(&mut self, cx: &mut Cx, target_id: usize, speed: f64, max_items_to_show: Option<usize>) {
+        if self.items.is_empty() { return };
+        if target_id < self.range_start || target_id > self.range_end { return };
+
+        let max_items_to_show = max_items_to_show.unwrap_or(SMOOTH_SCROLL_MAXIMUM_WINDOW);
+        let scroll_direction: f64;
+        let starting_id: Option<usize>;
+        if target_id > self.first_id {
+            // Scrolling down to a larger item index
+            scroll_direction = -1.0;
+            starting_id = ((target_id.saturating_sub(self.first_id)) > max_items_to_show)
+                .then_some(target_id.saturating_sub(max_items_to_show));
+        } else {
+            // Scrolling up to a smaller item index
+            scroll_direction = 1.0;
+            starting_id = ((self.first_id.saturating_sub(target_id)) > max_items_to_show)
+                .then_some(target_id + max_items_to_show);
+        };
+
+        // First, if the target_id was too far away, jump directly to a closer starting_id.
+        if let Some(start) = starting_id {
+            self.first_id = start;
+        }
+        // Then, we kick off the actual smooth scroll process.
+        self.scroll_state = ScrollState::ScrollingTo {
+            target_id,
+            delta: speed.abs() * scroll_direction as f64,
+            next_frame: cx.new_next_frame()
+        };
+    }
+
+    /// Trigger an scrolling animation to the end of the list
+    ///
+    /// ## Arguments
+    /// * `speed`: This value controls how fast the scrolling animation is.
+    ///    Note: This number should be large enough to reach the end, so it is important to
+    ///    test the passed number. TODO provide a better implementation to ensure that the end
+    ///    is always reached, no matter the speed value.
+    /// * `max_items_to_show`: The maximum number of items to show during the scrolling animation.
+    ///    If `None`, the default value of 20 is used.
+    pub fn smooth_scroll_to_end(&mut self, cx: &mut Cx, speed: f64, max_items_to_show: Option<usize>) {
+        if self.items.is_empty() { return };
+
+	let speed = speed * self.range_end as f64;
+	self.smooth_scroll_to(cx, self.range_end, speed, max_items_to_show);
+    }
 }
 
 
@@ -655,21 +805,21 @@ impl Widget for PortalList {
                 self.first_id = self.range_end.max(1) - 1;
                 self.first_scroll = 0.0;
                 self.tail_range = true;
-            }
-            else if self.tail_range {
+            } else {
                 self.tail_range = false;
             }
 
             self.first_id = ((scroll_to / self.scroll_bar.get_scroll_view_visible()) * self.view_window as f64) as usize;
             self.first_scroll = 0.0;
             cx.widget_action(uid, &scope.path, PortalListAction::Scroll);
+            self.was_scrolling = false;
             self.area.redraw(cx);
         }
-        
-        for (_, item) in self.items.values_mut() {
-            let item_uid = item.widget_uid();
+
+        for item in self.items.values_mut() {
+            let item_uid = item.widget.widget_uid();
             cx.group_widget_actions(uid, item_uid, |cx|{
-                item.handle_event(cx, event, scope)
+                item.widget.handle_event(cx, event, scope)
             });
         }
         
@@ -697,12 +847,12 @@ impl Widget for PortalList {
                     if !target_reached {
                         *next_frame = cx.new_next_frame();
                         let delta = *delta;
-
-                        self.delta_top_scroll(cx, delta, true);
+                        // Don't enable the pulldown animation when scrolling to a specific item.
+                        self.delta_top_scroll(cx, delta, true, false);
                         cx.widget_action(uid, &scope.path, PortalListAction::Scroll);
-
                         self.area.redraw(cx);
                     } else {
+                        self.was_scrolling = false;
                         self.scroll_state = ScrollState::Stopped;
                         cx.widget_action(uid, &scope.path, PortalListAction::SmoothScrollReached);
                     }
@@ -714,10 +864,11 @@ impl Widget for PortalList {
                     if delta.abs()>self.flick_scroll_minimum {
                         *next_frame = cx.new_next_frame();
                         let delta = *delta;
-                        self.delta_top_scroll(cx, delta, true);
+                        self.delta_top_scroll(cx, delta, false, true);
                         cx.widget_action(uid, &scope.path, PortalListAction::Scroll);
                         self.area.redraw(cx);
                     } else {
+                        self.was_scrolling = false;
                         self.scroll_state = ScrollState::Stopped;
                     }
                 }
@@ -726,9 +877,12 @@ impl Widget for PortalList {
                 if let Some(_) = next_frame.is_event(event) {
                     // we have to bounce back
                     if self.first_id == self.range_start && self.first_scroll > 0.0 {
-                        self.first_scroll *= 0.9;
+                        self.first_scroll *= 0.85;
                         if self.first_scroll < 1.0 {
                             self.first_scroll = 0.0;
+                            // the pulldown animation is finished
+                            self.was_scrolling = false;
+                            self.scroll_state = ScrollState::Stopped;
                         }
                         else {
                             *next_frame = cx.new_next_frame();
@@ -737,7 +891,8 @@ impl Widget for PortalList {
                         self.area.redraw(cx);
                     }
                     else {
-                        self.scroll_state = ScrollState::Stopped
+                        self.was_scrolling = false;
+                        self.scroll_state = ScrollState::Stopped;
                     }
                 }
             }
@@ -751,12 +906,11 @@ impl Widget for PortalList {
         if !self.scroll_bar.is_area_captured(cx) || is_scroll{ 
             match event.hits_with_capture_overload(cx, self.area, self.capture_overload) {
                 Hit::FingerScroll(e) => {
-                    if self.tail_range {
-                        self.tail_range = false;
-                    }
+                    self.tail_range = false;
                     self.detect_tail_in_draw = true;
+                    self.was_scrolling = false;
                     self.scroll_state = ScrollState::Stopped;
-                    self.delta_top_scroll(cx, -e.scroll.index(vi), true);
+                    self.delta_top_scroll(cx, -e.scroll.index(vi), false, true);
                     cx.widget_action(uid, &scope.path, PortalListAction::Scroll);
                     self.area.redraw(cx);
                 },
@@ -819,18 +973,23 @@ impl Widget for PortalList {
                     },
                     _ => ()
                 }
-                Hit::FingerDown(e) => {
+                Hit::FingerDown(fe) => {
+                    // We allow other mouse buttons to grab key focus and stop the tail range behavior,
+                    // but we only want the primary button (or touch) to actually scroll via dragging.
+
                     //log!("Finger down {} {}", e.time, e.abs);
                     if self.grab_key_focus {
                         cx.set_key_focus(self.area);
                     }
-                    // ok so fingerdown eh.
-                    if self.tail_range {
-                        self.tail_range = false;
-                    }
-                    if self.drag_scrolling{
+                    self.tail_range = false;
+                    self.was_scrolling = match &self.scroll_state {
+                        ScrollState::Drag { samples } => samples.len() > 1,
+                        ScrollState::Stopped => false,
+                        _ => true,
+                    };
+                    if self.drag_scrolling && fe.is_primary_hit() {
                         self.scroll_state = ScrollState::Drag {
-                            samples: vec![ScrollSample{abs:e.abs.index(vi),time:e.time}]
+                            samples: vec![ScrollSample{abs: fe.abs.index(vi), time: fe.time}]
                         };
                     }
                 }
@@ -845,13 +1004,13 @@ impl Widget for PortalList {
                             if samples.len()>4{
                                 samples.remove(0);
                             }
-                            self.delta_top_scroll(cx, new_abs - old_sample.abs, false);
+                            self.delta_top_scroll(cx, new_abs - old_sample.abs, false, false);
                             self.area.redraw(cx);
                         }
                         _=>()
                     }
                 }
-                Hit::FingerUp(_e) => {
+                Hit::FingerUp(fe) if fe.is_primary_hit() => {
                     //log!("Finger up {} {}", e.time, e.abs);
                     match &mut self.scroll_state {
                         ScrollState::Drag {samples}=>{
@@ -880,7 +1039,8 @@ impl Widget for PortalList {
                                     next_frame: cx.new_next_frame()
                                 };
                             }
-                            else{
+                            else {
+                                self.was_scrolling = false;
                                 self.scroll_state = ScrollState::Stopped;
                             }
                         }
@@ -966,6 +1126,11 @@ impl PortalListRef {
         inner.visible_items()
     }
 
+    /// Returns whether this PortalList was scrolling when the most recent finger hit occurred.
+    pub fn was_scrolling(&self) -> bool {
+        self.borrow().is_some_and(|inner| inner.was_scrolling)
+    }
+
     /// Returns whether the given `actions` contain an action indicating that this PortalList was scrolled.
     pub fn scrolled(&self, actions: &Actions) -> bool {
         if let PortalListAction::Scroll = actions.find_widget_action(self.widget_uid()).cast() {
@@ -1005,7 +1170,7 @@ impl PortalListRef {
     /// See [`PortalList::get_item()`].
     pub fn get_item(&self, entry_id: usize) -> Option<(LiveId, WidgetRef)> {
         let Some(inner) = self.borrow() else { return None };
-        inner.get_item(entry_id).cloned()
+        inner.get_item(entry_id)
     }
     
     pub fn position_of_item(&self, cx:&Cx, entry_id: usize) -> Option<f64>{
@@ -1026,9 +1191,9 @@ impl PortalListRef {
                 if let Some(action) = action.as_widget_action(){
                     if let Some(group) = &action.group{
                         if group.group_uid == uid{
-                            for (item_id, (_, item)) in inner.items.iter() {
-                                if group.item_uid == item.widget_uid(){
-                                    set.push((*item_id, item.clone()))
+                            for (item_id, item) in inner.items.iter() {
+                                if group.item_uid == item.widget.widget_uid(){
+                                    set.push((*item_id, item.widget.clone()))
                                 }
                             }
                         }
@@ -1051,40 +1216,34 @@ impl PortalListRef {
         }
         false
     }
+
     /// Initiates a smooth scrolling animation to the specified target item in the list.
     ///
-    /// # Parameters
-    /// - `target_id`: The ID of the item to scroll to.
-    /// - `speed`: A positive floating-point value that controls the speed of the animation.
-    ///   The `speed` will always be treated as an absolute value, with the direction of the scroll
-    ///   (up or down) determined by whether `target_id` is above or below the current item.
+    /// ## Arguments
+    /// * `target_id`: The ID (index) of the item to scroll to.
+    /// * `speed`: A positive floating-point value that controls the speed of the animation.
+    ///    The `speed` will always be treated as an absolute value, with the direction of the scroll
+    ///    (up or down) determined by whether `target_id` is above or below the current item.
+    /// * `max_items_to_show`: The maximum number of items to show during the scrolling animation.
+    ///    If `None`, the default value of 20 is used.
     ///
-    /// # Example
+    /// ## Example
+    /// ```rust,ignore
+    /// // Scrolls to item 42 at speed 100.0, including at most 30 items in the scroll animation.
+    /// smooth_scroll_to(&mut cx, 42, 100.0, Some(30));
     /// ```
-    /// smooth_scroll_to(&mut cx, 42, 100.0); // Scrolls to item 42 at speed 100.0
-    /// ```
-    pub fn smooth_scroll_to(&self, cx: &mut Cx, target_id: usize, speed: f64) {
+    pub fn smooth_scroll_to(&self, cx: &mut Cx, target_id: usize, speed: f64, max_items_to_show: Option<usize>) {
         let Some(mut inner) = self.borrow_mut() else { return };
-        if inner.items.is_empty() { return };
-
-        if !(inner.range_start..=inner.range_end).contains(&target_id) { return };
-
-	let scroll_direction = if target_id > inner.first_id { -1 } else { 1 };
-
-        inner.scroll_state = ScrollState::ScrollingTo {
-	    target_id,
-            delta: speed * scroll_direction as f64,
-            next_frame: cx.new_next_frame()
-        };
+	inner.smooth_scroll_to(cx, target_id, speed, max_items_to_show);
     }
 
-    /// Returns wether a smooth_scroll is happening or not.
-    pub fn is_smooth_scrolling(&self) -> bool {
-        let Some(inner) = self.borrow_mut() else { return false };
-        if let ScrollState::ScrollingTo { .. } = inner.scroll_state {
-            true
+    /// Returns the ID of the item that is currently being smoothly scrolled to, if any.
+    pub fn is_smooth_scrolling(&self) -> Option<usize> {
+        let Some(inner) = self.borrow_mut() else { return None };
+        if let ScrollState::ScrollingTo { target_id, .. } = inner.scroll_state {
+            Some(target_id)
         } else {
-            false
+            None
         }
     }
 
@@ -1099,24 +1258,17 @@ impl PortalListRef {
 
     /// Trigger an scrolling animation to the end of the list
     ///
-    /// `max_delta`: This is the max number of items that are part of the animation.
-    /// It is used when the starting position is far from the end of the list.
-    ///
-    /// `speed`: This value controls how fast is the animation.
-    /// Note: This number should be large enough to reach the end, so it is important to
-    /// test the passed number. TODO provide a better implementation to ensure that the end
-    /// is always reached, no matter the speed value.
-    pub fn smooth_scroll_to_end(&self, cx: &mut Cx, max_delta: usize, speed: f64) {
+    /// ## Arguments
+    /// * `speed`: This value controls how fast the scrolling animation is.
+    ///    Note: This number should be large enough to reach the end, so it is important to
+    ///    test the passed number. TODO provide a better implementation to ensure that the end
+    ///    is always reached, no matter the speed value.
+    /// * `max_items_to_show`: The maximum number of items to show during the scrolling animation.
+    ///    If `None`, the default value of 20 is used.
+    pub fn smooth_scroll_to_end(&self, cx: &mut Cx, speed: f64, max_items_to_show: Option<usize>) {
         let Some(mut inner) = self.borrow_mut() else { return };
-        if inner.items.is_empty() { return };
 
-        let start_from = (inner.first_id as i16).max(inner.range_end as i16 - max_delta as i16);
-        inner.first_id = start_from as usize;
-
-        inner.scroll_state = ScrollState::Flick {
-            delta: -speed,
-            next_frame: cx.new_next_frame()
-        };
+	inner.smooth_scroll_to_end(cx, speed, max_items_to_show);
     }
 
     /// It indicates if we have items not displayed towards the end of the list (below)

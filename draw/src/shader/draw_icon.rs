@@ -25,10 +25,15 @@ live_design!{
         
         fn clip_and_transform_vertex(self, rect_pos: vec2, rect_size: vec2) -> vec4 {
             let clipped: vec2 = clamp(
-                self.geom_pos * rect_size + rect_pos,
-                self.draw_clip.xy,
-                self.draw_clip.zw
-            )
+                clamp(
+                    self.geom_pos * rect_size + rect_pos,
+                    self.draw_clip.xy,
+                    self.draw_clip.zw
+                )
+                + self.view_shift,
+                self.view_clip.xy,
+                self.view_clip.zw
+            );
             self.pos = (clipped - rect_pos) / rect_size
             
             self.tex_coord1 = mix(
@@ -60,7 +65,7 @@ live_design!{
             
             // basic hardcoded mipmapping so it stops 'swimming' in VR
             // mipmaps are stored in red/green/blue channel
-            let s = sample2d_rt(self.tex, self.tex_coord1.xy).x;
+            let s = sample2d(self.tex, self.tex_coord1.xy).x;
             s = pow(s, self.u_curve);
             let col = self.get_color(); //color!(white);//get_color();
             return vec4(s * col.rgb * self.u_brightness * col.a, s * col.a);

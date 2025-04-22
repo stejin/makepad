@@ -137,7 +137,7 @@ pub struct Turtle {
     guard_area: Area
 }
 
-impl<'a> Cx2d<'a> {
+impl<'a,'b> Cx2d<'a,'b> {
     pub fn turtle(&self) -> &Turtle {
         self.turtles.last().unwrap()
     }
@@ -200,13 +200,22 @@ impl<'a> Cx2d<'a> {
     }
     
     pub fn begin_pass_sized_turtle_no_clip(&mut self, layout: Layout) {
-        self.begin_pass_sized_turtle(layout);
+        let size = self.current_pass_size();
+        self.begin_sized_turtle_no_clip(size, layout)
+    }
+    
+    pub fn begin_pass_sized_turtle(&mut self, layout: Layout) {
+        let size = self.current_pass_size();
+        self.begin_sized_turtle(size, layout)
+    }
+    
+    pub fn begin_sized_turtle_no_clip(&mut self, size:DVec2,layout: Layout) {
+        self.begin_sized_turtle(size, layout);
         *self.align_list.last_mut().unwrap() = AlignEntry::Unset;
     }
-            
-    pub fn begin_pass_sized_turtle(&mut self, layout: Layout) {
-        let pass_size = self.current_pass_size();
-        self.align_list.push(AlignEntry::BeginTurtle(dvec2(0.0,0.0),pass_size));
+                    
+    pub fn begin_sized_turtle(&mut self, size:DVec2, layout: Layout) {
+        self.align_list.push(AlignEntry::BeginTurtle(dvec2(0.0,0.0),size));
         let turtle = Turtle {
             walk: Walk::fill(),
             layout,
@@ -219,8 +228,8 @@ impl<'a> Cx2d<'a> {
             },
             wrap_spacing: 0.0,
             origin: dvec2(0.0, 0.0),
-            width: pass_size.x,
-            height: pass_size.y,
+            width: size.x,
+            height: size.y,
             shift: dvec2(0.0, 0.0),
             width_used: layout.padding.left,
             height_used: layout.padding.top,
@@ -335,9 +344,10 @@ impl<'a> Cx2d<'a> {
         self.end_turtle_with_guard(Area::Empty)
     }
     
-    pub fn end_turtle_with_area(&mut self, area: &mut Area) {
+    pub fn end_turtle_with_area(&mut self, area: &mut Area)->Rect {
         let rect = self.end_turtle_with_guard(Area::Empty);
-        self.add_aligned_rect_area(area, rect)
+        self.add_aligned_rect_area(area, rect);
+        rect
     }
     
     pub fn end_turtle_with_guard(&mut self, guard_area: Area) -> Rect {
@@ -503,16 +513,6 @@ impl<'a> Cx2d<'a> {
         self.turtle().rect_is_visible(rect)
     }
        
-    
-    pub fn walk_turtle_would_be_visible2(&mut self, walk: Walk) -> bool {
-        let rect = self.walk_turtle_peek(walk);
-        let t = self.turtle();
-        let view = Rect {pos: t.origin + t.layout.scroll, size: dvec2(t.width, t.height)};
-        self.debug.rect(view, vec4(1.0,1.0,0.0,1.0));
-        self.debug.rect(rect, vec4(0.0,1.0,0.0,1.0));
-        return view.intersects(rect)
-    }
-    
     pub fn peek_walk_pos(&self, walk: Walk) -> DVec2 {
         if let Some(pos) = walk.abs_pos {
             pos + walk.margin.left_top()
@@ -523,7 +523,7 @@ impl<'a> Cx2d<'a> {
         }
     }
     
-     fn walk_turtle_move(&mut self, walk: Walk, align_start: usize) -> Rect {
+    fn walk_turtle_move(&mut self, walk: Walk, align_start: usize) -> Rect {
         
         let turtle = self.turtles.last_mut().unwrap();
         let size = dvec2(
@@ -546,7 +546,7 @@ impl<'a> Cx2d<'a> {
                     turtle.update_height_max(pos.y,size.y);
                 }
                 Flow::RightWrap=>{
-                    panic!("Cannot use abs_pos in a flow::Rightwrap");
+                    turtle.update_height_max(pos.y, size.y + walk.margin.size().y);
                 }
             }
             Rect {pos: pos + walk.margin.left_top(), size}
@@ -571,11 +571,11 @@ impl<'a> Cx2d<'a> {
                 Flow::RightWrap => {
                     if turtle.pos.x - turtle.origin.x + size.x > turtle.width - turtle.layout.padding.right{
                         
-                        pos.x =  turtle.origin.x + turtle.layout.padding.left;
-                        let dx = pos.x - turtle.pos.x;                        
+                        pos.x =  turtle.origin.x + turtle.layout.padding.left - spacing.x;
+                        let dx = pos.x - turtle.pos.x;
                         turtle.pos.x = pos.x + size.x + margin_size.x + spacing.x;
                         
-                        pos.y = turtle.height_used + turtle.origin.y + turtle.wrap_spacing;//turtle.layout.line_spacing;
+                        pos.y = turtle.height_used + turtle.origin.y + turtle.wrap_spacing + spacing.x;//turtle.layout.line_spacing;
                         let dy = pos.y - turtle.pos.y;
                         turtle.pos.y = pos.y;
                         
@@ -621,6 +621,15 @@ impl<'a> Cx2d<'a> {
             });
             Rect {pos: pos + walk.margin.left_top() + spacing, size}
         }
+    }
+    
+    pub fn emit_turtle_walk(&mut self, rect:Rect){
+        let turtle = self.turtles.last().unwrap();
+        self.turtle_walks.push(TurtleWalk {
+            align_start: self.align_list.len(),
+            defer_index: turtle.defer_count,
+            rect
+        });
     }
     
     fn walk_turtle_peek(&self, walk: Walk) -> Rect {
@@ -682,10 +691,10 @@ impl<'a> Cx2d<'a> {
             let align_item = &mut self.align_list[c];
             match align_item {
                 AlignEntry::Area(Area::Instance(inst)) => {
-                    let draw_list = &mut self.cx.draw_lists[inst.draw_list_id];
+                    let draw_list = &mut self.cx.cx.draw_lists[inst.draw_list_id];
                     let draw_item = &mut draw_list.draw_items[inst.draw_item_id];
                     let draw_call = draw_item.draw_call().unwrap();
-                    let sh = &self.cx.draw_shaders[draw_call.draw_shader.draw_shader_id];
+                    let sh = &self.cx.cx.draw_shaders[draw_call.draw_shader.draw_shader_id];
                     let inst_buf = draw_item.instances.as_mut().unwrap();
                     for i in 0..inst.instance_count {
                         if let Some(rect_pos) = sh.mapping.rect_pos {
@@ -757,10 +766,10 @@ impl<'a> Cx2d<'a> {
                     self.turtle_clips.pop().unwrap();
                 }
                 AlignEntry::Area(Area::Instance(inst)) => if let Some((clip0, clip1)) = self.turtle_clips.last(){
-                    let draw_list = &mut self.cx.draw_lists[inst.draw_list_id];
+                    let draw_list = &mut self.cx.cx.draw_lists[inst.draw_list_id];
                     let draw_item = &mut draw_list.draw_items[inst.draw_item_id];
                     let draw_call = draw_item.draw_call().unwrap();
-                    let sh = &self.cx.draw_shaders[draw_call.draw_shader.draw_shader_id];
+                    let sh = &self.cx.cx.draw_shaders[draw_call.draw_shader.draw_shader_id];
                     let inst_buf = draw_item.instances.as_mut().unwrap();
                     for i in 0..inst.instance_count {
                         if let Some(draw_clip) = sh.mapping.draw_clip {
@@ -816,6 +825,13 @@ pub struct TurtleAlignRange{
 }
 
 impl Turtle {
+    pub fn row_height(&self)->f64{
+        // relative y pos
+        // bounding box from origin
+        // pos from origin
+        self.height_used - (self.pos.y - self.origin.y)
+    }
+    
     pub fn update_width_max(&mut self, pos:f64, dx: f64) {
         self.width_used = self.width_used.max((pos + dx) - self.origin.x);
     }
@@ -915,9 +931,23 @@ impl Turtle {
     pub fn pos(&self) -> DVec2 {
         self.pos
     }
-    
+
     pub fn scroll(&self) -> DVec2 {
         self.layout.scroll
+    }
+
+    pub fn max_width(&self, walk: Walk) -> Option<f64> {
+        if walk.width.is_fit() {
+            return None;
+        }
+        Some(self.eval_width(walk.width, walk.margin, self.layout().flow) as f64)
+    }
+
+    pub fn max_height(&self, walk: Walk) -> Option<f64> {
+        if walk.height.is_fit() {
+            return None
+        }
+        Some(self.eval_width(walk.height, walk.margin, self.layout().flow) as f64)
     }
     
     pub fn eval_width(&self, width: Size, margin: Margin, flow: Flow) -> f64 {

@@ -53,6 +53,10 @@ pub mod file_dialogs;
 
 mod media_api;
 
+pub mod ui_runner;
+
+pub mod display_context;
+
 #[macro_use]
 mod app_main;
 
@@ -82,7 +86,7 @@ pub use {
     log::*,
     makepad_math::*,
     makepad_live_id::*,
-    app_main::AppMain,
+    app_main::*,
     makepad_live_compiler::{
         vec4_ext::*,
         live_error_origin,
@@ -126,7 +130,7 @@ pub use {
     },
     crate::{
         os::*,
-        cx_api::{CxOsApi,OpenUrlInPlace},
+        cx_api::{CxOsApi,OpenUrlInPlace, CxOsOp},
         media_api::CxMediaApi,
         scope::*,
         draw_list::{
@@ -173,6 +177,7 @@ pub use {
             KeyModifiers,
             DrawEvent,
             DigitDevice,
+            MouseButton,
             MouseDownEvent,
             MouseMoveEvent,
             MouseUpEvent,
@@ -194,9 +199,12 @@ pub use {
             WindowClosedEvent,
             WindowDragQueryResponse,
             WindowDragQueryEvent,
-            XRButton,
-            XRInput,
-            XRUpdateEvent,
+            XrButton,
+            XrController,
+            XrHand,
+            XrState,
+            XrStick,
+            XrUpdateEvent,
             DragEvent,
             DropEvent,
             DragState,
@@ -220,7 +228,7 @@ pub use {
         cursor::MouseCursor,
         macos_menu::MacosMenu,
         draw_matrix::DrawMatrix,
-        window::{WindowHandle,CxWindowPool},
+        window::{WindowHandle,CxWindowPool, WindowId},
         pass::{
             PassId,
             CxPassParent,
@@ -235,6 +243,7 @@ pub use {
             TextureFormat,
             TextureSize,
             TextureUpdated,
+            TextureAnimation,
         },
         live_prims::{
             LiveDependency,
@@ -274,7 +283,8 @@ pub use {
             GeometryRef,
             Geometry,
         },
-        gpu_info::GpuPerformance,       
+        gpu_info::GpuPerformance,     
+        ui_runner::*,  
     },
 };
 

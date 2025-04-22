@@ -1,10 +1,11 @@
 use makepad_widgets::*;
 
 live_design!(
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*;
+    use link::theme::*;
+    use link::shaders::*;
+    use link::widgets::*;
 
-    Ui = {{Ui}} {
+    pub Ui = {{Ui}} {
         align: {x: 0.5, y: 0.5}
         body = <Label> {
             text: "Hello, world!"
@@ -18,7 +19,7 @@ live_design!(
 #[derive(Live, LiveHook, Widget)]
 pub struct Ui {
     #[deref]
-    deref: Window,
+    deref: View,
 }
 
 impl Widget for Ui {

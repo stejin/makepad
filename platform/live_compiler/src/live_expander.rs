@@ -9,7 +9,7 @@ use {
         live_error::{LiveError},
         live_eval::live_eval_value,
         live_document::{LiveOriginal, LiveExpanded},
-        live_node::{LiveValue, LiveNode, LiveFieldKind, LivePropType},
+        live_node::{LiveFont, LiveValue, LiveNode, LiveFieldKind, LivePropType, LiveNodeRoot},
         live_node_vec::{LiveNodeSliceApi, LiveNodeVecApi},
         live_registry::{LiveRegistry, LiveScopeTarget},
     }
@@ -45,22 +45,62 @@ impl<'a> LiveExpander<'a> {
         }
     }
     
+    fn resolve_path(&self, file_id:LiveFileId, path:&str)->Option<Arc<String>>{
+        if let Some(path) = path.strip_prefix("crate://self/") {
+            let mut final_path = self.live_registry.file_id_to_cargo_manifest_path(file_id);
+            final_path.push('/');
+            final_path.push_str(path);
+            return Some(Arc::new(final_path))
+        } else if let Some(path) = path.strip_prefix("crate://") {
+            let mut split = path.split('/');
+            if let Some(crate_name) = split.next() {
+                if let Some(mut final_path) = self.live_registry.crate_name_to_cargo_manifest_path(crate_name) {
+                    for next in split {
+                        final_path.push('/');
+                        final_path.push_str(next);
+                    }
+                    return Some(Arc::new(final_path))
+                }
+            }
+        }
+        None
+    }
+    
     pub fn expand(&mut self, in_doc: &LiveOriginal, out_doc: &mut LiveExpanded, generation: LiveFileGeneration) {
-         
+        
+        let mut root = LiveNodeRoot::default();
+        
+        // lets build up the final local pointers from our imports
+        let resolved_imports = in_doc.resolved_imports.as_ref().unwrap();
+        for (ident, file_id) in resolved_imports{
+            let other = &self.live_registry.live_files[file_id.to_index()].expanded;
+            if let LiveValue::Root(root2) = &other.nodes[0].value {
+                let index = root2.exports.get(&ident).unwrap();
+                root.locals.insert(
+                    *ident,
+                    LiveScopeTarget::LivePtr(
+                        self.live_registry.file_id_index_to_live_ptr(*file_id, *index)
+                    )
+                );
+            }
+        }
+        
         //out_doc.nodes.push(in_doc.nodes[0].clone());
         out_doc.nodes.push(LiveNode {
             origin: in_doc.nodes[0].origin,
             id: LiveId(0),
-            value: LiveValue::Root {id_resolve: Box::default()}
+            value: LiveValue::Root(Box::new(root))
         });
+        // alright lets build the locals from the import table
+        
         let mut current_parent = vec![(LiveId(0), 0usize)];
         let mut in_index = 1;
         let mut lazy_define_value = None;
         loop {
             
             if let Some((node_id, ptr)) = lazy_define_value.take() {
-                if let LiveValue::Root {id_resolve} = &mut out_doc.nodes[0].value {
-                    id_resolve.insert(node_id, ptr);
+                if let LiveValue::Root(root) = &mut out_doc.nodes[0].value {
+                    root.locals.insert(node_id, ptr);
                 }
             }
             
@@ -74,30 +114,39 @@ impl<'a> LiveExpander<'a> {
             match in_value {
                 
                 LiveValue::Close => {
+                    // inherit the close node origin so we can properly map to the original text range
+                    let close_index = out_doc.nodes.skip_node(current_parent.last().unwrap().1) - 1;
+                    let out_close = &mut out_doc.nodes[close_index];
+                    let mut origin = in_node.origin;
+                    origin.inherit_origin(out_close.origin);
+                    out_close.origin = origin;
+                    
                     current_parent.pop();
                     in_index += 1;
                     continue;
                 }
-                LiveValue::Import(live_import) => {
+                LiveValue::Import(_live_import) => {
+                    /*
                     // lets verify it points anywhere
                     let mut found = false;
                     let is_glob = in_node.id == LiveId::empty();
+                    
                     if let Some(nodes) = self.live_registry.module_id_to_expanded_nodes(live_import.module_id) {
                         let file_id = self.live_registry.module_id_to_file_id(live_import.module_id).unwrap();
                         let mut node_iter = Some(1);
                         while let Some(index) = node_iter {
-                            if is_glob{
-                                if let LiveValue::Root {id_resolve} = &mut out_doc.nodes[0].value {
-                                    id_resolve.insert(nodes[index].id, LiveScopeTarget::LivePtr(
+                            if is_glob{// its *
+                                if let LiveValue::Root(root) = &mut out_doc.nodes[0].value {
+                                    root.locals.insert(nodes[index].id, LiveScopeTarget::LivePtr(
                                         self.live_registry.file_id_index_to_live_ptr(file_id, index)
                                     ));
                                 }
                                 found = true;
                             }
-                            else if nodes[index].id == live_import.import_id { // its *
+                            else if nodes[index].id == live_import.import_id { 
                                 // ok so what do we store...
-                                if let LiveValue::Root {id_resolve} = &mut out_doc.nodes[0].value {
-                                    id_resolve.insert(in_node.id , LiveScopeTarget::LivePtr(
+                                if let LiveValue::Root(root) = &mut out_doc.nodes[0].value {
+                                    root.locals.insert(in_node.id , LiveScopeTarget::LivePtr(
                                         self.live_registry.file_id_index_to_live_ptr(file_id, index)
                                     ));
                                 }
@@ -112,7 +161,7 @@ impl<'a> LiveExpander<'a> {
                             span: in_node.origin.token_id().unwrap().into(),
                             message: format!("Import statement nothing found {}::{} as {}", live_import.module_id, live_import.import_id, in_node.id)
                         });
-                    }
+                    }*/
                     in_index += 1;
                     continue;
                 }
@@ -146,7 +195,7 @@ impl<'a> LiveExpander<'a> {
                     else if in_value.is_expr(){
                         
                         if !out_value.is_single_node(){
-                            panic!("overriding is_expr on not is_single_node ");
+                            panic!("overriding is_expr on not is_single_node in file {:?}", self.live_registry.file_id_to_file_name(self.in_file_id));
                         }
                         // lets expand it and output a single LiveValue instead
                         let mut index = in_index;
@@ -166,21 +215,6 @@ impl<'a> LiveExpander<'a> {
                         in_index = in_doc.nodes.skip_node(in_index);
                         continue;
                     }
-                    /*
-                    // replacing object types
-                    else if out_value.is_expr() || in_value.is_expr() && out_value.is_single_node() {
-                        // replace range
-                        let next_index = out_doc.nodes.skip_node(overwrite);
-                        
-                        // POTENTIAL SHIFT
-                        let old_len = out_doc.nodes.len();
-                        out_doc.nodes.splice(overwrite..next_index, in_doc.nodes.node_slice(in_index).iter().cloned());
-                        self.shift_parent_stack(&mut current_parent, &out_doc.nodes, overwrite, old_len, out_doc.nodes.len());
-                        
-                        in_index = in_doc.nodes.skip_node(in_index);
-                        out_doc.nodes[overwrite].origin.inherit_origin(out_origin);
-                        continue;
-                    }*/
                     else if out_value.is_open() && in_value.is_open() { // just replace the whole thing
                         let next_index = out_doc.nodes.skip_node(overwrite);
                         let old_len = out_doc.nodes.len();
@@ -255,26 +289,21 @@ impl<'a> LiveExpander<'a> {
             // process stacks
             match in_value {
                 LiveValue::Dependency(path) => {
-                    if let Some(path) = path.strip_prefix("crate://self/") {
-                        let file_id = in_node.origin.token_id().unwrap().file_id().unwrap();
-                        let mut final_path = self.live_registry.file_id_to_cargo_manifest_path(file_id);
-                        final_path.push('/');
-                        final_path.push_str(path);
-                        out_doc.nodes[out_index].value = LiveValue::Dependency(Arc::new(final_path));
-                    } else if let Some(path) = path.strip_prefix("crate://") {
-                        let mut split = path.split('/');
-                        if let Some(crate_name) = split.next() {
-                            if let Some(mut final_path) = self.live_registry.crate_name_to_cargo_manifest_path(crate_name) {
-                                for next in split {
-                                    final_path.push('/');
-                                    final_path.push_str(next);
-                                }
-                                out_doc.nodes[out_index].value = LiveValue::Dependency(Arc::new(final_path));
-                            }
-                        }
+                     let file_id = in_node.origin.token_id().unwrap().file_id().unwrap();
+                    if let Some(final_path) = self.resolve_path(file_id, &path){
+                        out_doc.nodes[out_index].value = LiveValue::Dependency(final_path);
                     }
                 },
-                LiveValue::Clone{clone,design_info:design_in,..} | LiveValue::Deref{clone,design_info:design_in,..}=> {
+                LiveValue::Font(font) => {
+                    let file_id = in_node.origin.token_id().unwrap().file_id().unwrap();
+                    if let Some(final_path) = self.resolve_path(file_id, &font.path){
+                        out_doc.nodes[out_index].value = LiveValue::Font(LiveFont{
+                            path:final_path,
+                            ..*font
+                        });
+                    }
+                },
+                LiveValue::Clone{clone,..} | LiveValue::Deref{clone,..}=> {
                     if let Some(target) = self.live_registry.find_scope_target(*clone, &out_doc.nodes) {
                         match target {
                             LiveScopeTarget::LocalPtr(local_ptr) => {
@@ -306,10 +335,9 @@ impl<'a> LiveExpander<'a> {
                                     out_doc.nodes[out_index].value = out_doc.nodes[local_ptr].value.clone();
                                 }
                                 
-                                if let LiveValue::Class {class_parent,design_info,..} = &mut out_doc.nodes[out_index].value {
+                                if let LiveValue::Class {class_parent,..} = &mut out_doc.nodes[out_index].value {
                                     //*class_parent = Some(LivePtr {file_id: self.in_file_id, index: out_index as u32, generation});
                                     *class_parent = LivePtr {file_id: self.in_file_id, index: local_ptr as u32, generation};
-                                    *design_info = *design_in;
                                 }
                             }
                             LiveScopeTarget::LivePtr(live_ptr) => {
@@ -321,14 +349,13 @@ impl<'a> LiveExpander<'a> {
                                 
                                 out_doc.nodes[out_index].value = doc.nodes[live_ptr.node_index()].value.clone();
                                 
-                                if let LiveValue::Class {class_parent,live_type,design_info, ..} = &mut out_doc.nodes[out_index].value {
+                                if let LiveValue::Class {class_parent,live_type, ..} = &mut out_doc.nodes[out_index].value {
                                     if let LiveValue::Deref{live_type:new_live_type,..} = in_value{
                                         *live_type = *new_live_type;
                                     }
                                     else{
                                         *class_parent = live_ptr;
                                     }
-                                    *design_info = *design_in;
                                     //*class_parent = Some(LivePtr {file_id: self.in_file_id, index: out_index as u32, generation});
                                 }
                             }
@@ -339,7 +366,7 @@ impl<'a> LiveExpander<'a> {
                         self.errors.push(LiveError {
                             origin: live_error_origin!(),
                             span: in_doc.token_id_to_span(in_node.origin.token_id().unwrap()).into(),
-                            message: format!("Can't find live definition of {} did you forget to call live_design for it?", clone)
+                            message: format!("Can't find live definition of {} did you forget to call live_design for it, put the definition above the place where you use it or if imported put pub before the definition?", clone)
                         });
                     }
                     current_parent.push((out_doc.nodes[out_index].id, out_index));
@@ -414,7 +441,7 @@ impl<'a> LiveExpander<'a> {
                                     self.errors.push(LiveError {
                                         origin: live_error_origin!(),
                                         span: in_doc.token_id_to_span(in_node.origin.token_id().unwrap()).into(),
-                                        message: format!("Can't find live definition of {} did you forget to call live_design for it?", lti.type_name)
+                                        message: format!("Can't find live definition of {} did you forget to call live_design for it, put the definition above the place where you use it or if imported put pub before the definition?", lti.type_name)
                                     });
                                 }
                             }
@@ -462,7 +489,7 @@ impl<'a> LiveExpander<'a> {
                             self.errors.push(LiveError {
                                 origin: live_error_origin!(),
                                 span: in_doc.token_id_to_span(in_node.origin.token_id().unwrap()).into(),
-                                message: format!("Can't find live definition of {} did you forget to call live_design for it?", lti.type_name)
+                                message: format!("Can't find live definition of {} did you forget to call live_design for it, put the definition above the place where you use it or if imported put pub before the definition?", lti.type_name)
                             });
                         }
                     }
@@ -487,13 +514,30 @@ impl<'a> LiveExpander<'a> {
         }
         out_doc.nodes.push(in_doc.nodes.last().unwrap().clone());
         // this stores the node index on nodes that don't have a node index
+        let mut level = 0;
+        
         for i in 1..out_doc.nodes.len() {
-            if out_doc.nodes[i].value.is_dsl() {
-                out_doc.nodes[i].value.set_dsl_expand_index_if_none(i);
+            // check if we have a prefix and its export
+            // store this pointer
+            //let exports: HashMap<LiveId, usize> = Default::default();
+            let node = &mut out_doc.nodes[i];
+            if node.value.is_dsl() {
+                node.value.set_dsl_expand_index_if_none(i);
             }
-            /*if out_doc.nodes[i].value.is_expr() {
-                out_doc.nodes[i].value.set_expr_expand_index_if_none(i);
-            }*/
+            if level == 0 && in_doc.exports.get(&node.id).is_some(){
+                let id = node.id;
+                if let LiveValue::Root(root) = &mut out_doc.nodes[0].value{
+                    root.exports.insert(id, i);
+                }
+            }
+            let node = &mut out_doc.nodes[i];
+            if node.value.is_open(){
+                level += 1
+            }
+            else if node.value.is_close() && level > 0{
+                level -= 1
+            }
+
         }
     }
     

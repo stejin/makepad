@@ -403,7 +403,10 @@ impl XlibApp {
                                 }
                             }
                             else {
-                                window.send_mouse_down(button.button as usize, self.xkeystate_to_modifiers(button.state))
+                                window.send_mouse_down(
+                                    self.xbutton_to_mouse_button(button.button),
+                                    self.xkeystate_to_modifiers(button.state)
+                                );
                             }
                         }
                     }
@@ -414,7 +417,10 @@ impl XlibApp {
                     let button = event.xbutton;
                     if let Some(window_ptr) = self.window_map.get(&button.window) {
                         let window = &mut (**window_ptr);
-                        window.send_mouse_up(button.button as usize, self.xkeystate_to_modifiers(button.state))
+                        window.send_mouse_up(
+                            self.xbutton_to_mouse_button(button.button),
+                            self.xkeystate_to_modifiers(button.state),
+                        );
                     }
                 },
                 x11_sys::KeyPress => {
@@ -700,7 +706,7 @@ impl XlibApp {
 
             MouseCursor::Default => self.load_first_cursor(&[b"left_ptr\0"]),
             MouseCursor::Crosshair => self.load_first_cursor(&[b"crosshair\0"]),
-            MouseCursor::Hand => self.load_first_cursor(&[b"left_ptr\0", b"hand1\0"]),
+            MouseCursor::Hand => self.load_first_cursor(&[b"hand2\0", b"left_ptr\0"]),
             MouseCursor::Arrow => self.load_first_cursor(&[b"left_ptr\0\0"]),
             MouseCursor::Move => self.load_first_cursor(&[b"move\0"]),
             MouseCursor::NotAllowed => self.load_first_cursor(&[b"crossed_circle\0"]),
@@ -713,6 +719,8 @@ impl XlibApp {
             MouseCursor::NwseResize => self.load_first_cursor(&[b"bd_double_arrow\0", b"size_bdiag\0"]),
             MouseCursor::ColResize => self.load_first_cursor(&[b"split_h\0", b"h_double_arrow\0"]),
             MouseCursor::RowResize => self.load_first_cursor(&[b"split_v\0", b"v_double_arrow\0"]),
+            MouseCursor::Grab => self.load_first_cursor(&[b"grab\0"]),
+            MouseCursor::Grabbing => self.load_first_cursor(&[b"grabbing\0"]),
         };
         if let Some(x11_cursor) = x11_cursor {
             unsafe {
@@ -723,6 +731,20 @@ impl XlibApp {
                 }
                 x11_sys::XFreeCursor(self.display, x11_cursor);
             }
+        }
+    }
+
+    fn xbutton_to_mouse_button(&self, button: u32) -> MouseButton {
+        match button {
+            0 => MouseButton::empty(), 
+            1 => MouseButton::PRIMARY,
+            2 => MouseButton::MIDDLE,
+            3 => MouseButton::SECONDARY,
+            // Button values 4, 5, 6, 7 are scroll directions
+            4..=7 => MouseButton::empty(), 
+            8 => MouseButton::BACK,
+            9 => MouseButton::FORWARD,
+            10.. => MouseButton::from_raw_button(button as usize - 4),
         }
     }
 
