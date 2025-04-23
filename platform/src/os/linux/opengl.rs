@@ -204,7 +204,11 @@ impl Cx {
                         GlShader::set_uniform_array(gl, &shgl.uniforms.draw_call_uniforms, draw_call_uniforms);
                         GlShader::set_uniform_array(gl, &shgl.uniforms.user_uniforms, &draw_call.user_uniforms);
                     }
-                    // lets set our textures
+                    
+                    // give openXR a chance to set its depth texture
+                    #[cfg(target_os="android")]
+                    if self.os.in_xr_mode{self.os.openxr.depth_texture_hook(gl, shgl, &sh.mapping)};
+                    
                     for i in 0..sh.mapping.textures.len() {
                         let texture_id = if let Some(texture) = &draw_call.texture_slots[i] {
                             texture.texture_id()
@@ -251,7 +255,9 @@ impl Cx {
                                 _ => (gl.glBindTexture)(gl_sys::TEXTURE_2D, 0)     
                             }
                         }
-                        (gl.glUniform1i)(shgl.textures[i].loc, i as i32);
+                        if let Some(loc) = shgl.textures[i].loc{
+                            (gl.glUniform1i)(loc, i as i32);
+                        }
                     }
                     
                     (gl.glDrawElementsInstanced)(
@@ -494,12 +500,7 @@ impl Cx {
                 );
                 
                 if cx_shader.mapping.flags.debug {
-                    
                     crate::log!("{}\n{}", vertex, pixel);
-                    crate::log!(
-                        "{:?}", cx_shader.mapping.const_table.table
-                    );
-                    
                 }
                 
                 // lets see if we have the shader already
@@ -592,7 +593,7 @@ pub struct GlShader {
     pub geometries: Vec<OpenglAttribute>,
     pub instances: Vec<OpenglAttribute>,
     pub textures: Vec<OpenglUniform>,
-    
+    pub xr_depth_texture: OpenglUniform, 
     // all these things need to be uniform buffers
     pub uniforms: GlShaderUniforms
         
@@ -765,6 +766,7 @@ impl GlShader{
                 geometries:Self::opengl_get_attributes(gl, program, "packed_geometry_", mapping.geometries.total_slots),
                 instances: Self::opengl_get_attributes(gl, program, "packed_instance_", mapping.instances.total_slots),
                 textures: Self::opengl_get_texture_slots(gl, program, &mapping.textures),
+                xr_depth_texture: Self::opengl_get_uniform(gl, program, "xr_depth_texture"),
                 uniforms
             };
             t
@@ -773,8 +775,10 @@ impl GlShader{
 
     
     pub fn set_uniform_array(gl: &LibGl, loc: &OpenglUniform, array: &[f32]) {
-        unsafe {
-            (gl.glUniform1fv)(loc.loc as i32, array.len() as i32, array.as_ptr());
+        if let Some(loc) = loc.loc{
+            unsafe {
+                (gl.glUniform1fv)(loc, array.len() as i32, array.as_ptr());
+            }
         }
     }
     
@@ -782,8 +786,7 @@ impl GlShader{
         unsafe {
             let loc = (gl.glGetUniformLocation)(program, std::ffi::CString::new(name).unwrap().as_ptr());
             OpenglUniform {
-                loc,
-                //name: name.to_string(),
+                loc: if loc < 0{None} else {Some(loc)},
             }
         }
     }
@@ -908,7 +911,7 @@ impl GlShader{
             unsafe {
                 let loc = (gl.glGetUniformLocation)(program, name0.as_ptr().cast());
                 // crate::warning!("opengl_get_texture_slots(): texture slot: ({:?}, {:?}), name0: {:X?}, loc: {loc:#X}", slot.id, slot.ty, name0.as_bytes());
-                gl_texture_slots.push(OpenglUniform { loc });
+                gl_texture_slots.push(OpenglUniform { loc: if loc<0{None}else{Some(loc)} });
             }
         }
         gl_texture_slots
@@ -960,22 +963,45 @@ impl CxOsDrawShader {
         
         //#extension GL_OVR_multiview2 : require
        // layout(num_views=2) in;
-        
-        
+        let depth_clip = "
+            uniform sampler2DArray xr_depth_texture;
+            vec4 depth_clip(vec4 world, vec4 color, float clip){
+                vec4 cube_depth_camera_position = pass.depth_projection[VIEW_ID] * pass.depth_view[VIEW_ID] * world;
+                
+                vec3 cube_depth_camera_position_hc = cube_depth_camera_position.xyz / cube_depth_camera_position.w;
+                cube_depth_camera_position_hc = cube_depth_camera_position_hc*0.5f + 0.5f;
+                
+                vec3 depth_view_coord = vec3(cube_depth_camera_position_hc.xy, VIEW_ID);
+                
+                gl_FragDepth = cube_depth_camera_position_hc.z;
+                
+                float depth_view_eye_z = texture(xr_depth_texture, depth_view_coord).r;
+                if(clip  < 0.5 || depth_view_eye_z >= cube_depth_camera_position_hc.z){
+                    return color;
+                }
+                return vec4(0.0,0.0,0.0,0.0);
+            }
+        ";
+        let nop_depth_clip="
+            vec4 depth_clip(vec4 w, vec4 c, float clip){return c;}
+        ";
         let (version, vertex_exts, pixel_exts, vertex_defs, pixel_defs, sampler) = if os_type.has_xr_mode(){(
             "#version 300 es",
+            // Vertex shader
             "
             #define VIEW_ID 0
             #extension GL_OVR_multiview2 : require
             layout(num_views=2) in;
             ",
+            // Pixel shader
             "
             #define VIEW_ID 0
             #extension GL_OVR_multiview2 : require
             ",
             "",
-            "out vec4 gl_FragColor;",
+            "out vec4 fragColor;",
             "
+            vec4 depth_clip(vec4 w, vec4 c, float clip);
             vec4 sample2d(sampler2D sampler, vec2 pos){{return texture(sampler, vec2(pos.x, pos.y));}} 
             vec4 sample2d_rt(sampler2D sampler, vec2 pos){{return texture(sampler, vec2(pos.x, pos.y));}} 
             " 
@@ -985,19 +1011,20 @@ impl CxOsDrawShader {
             "",
             "",
             "",
-            "out vec4 gl_FragColor;",
+            "out vec4 fragColor;",
             "
+            vec4 depth_clip(vec4 w, vec4 c, float clip);
             vec4 sample2d(sampler2D sampler, vec2 pos){{return texture(sampler, vec2(pos.x, pos.y));}} 
             vec4 sample2d_rt(sampler2D sampler, vec2 pos){{return texture(sampler, vec2(pos.x, pos.y));}} 
             " 
         )};
-        
+        /*
         let transpose_impl = "
         mat4 transpose(mat4 m){{return mat4(m[0][0],m[1][0],m[2][0],m[3][0],m[0][1],m[1][1],m[2][1],m[3][1],m[0][2],m[1][2],m[2][2],m[3][3], m[3][0], m[3][1], m[3][2], m[3][3]);}}
         mat3 transpose(mat3 m){{return mat3(m[0][0],m[1][0],m[2][0],m[0][1],m[1][1],m[2][1],m[0][2],m[1][2],m[2][2]);}}
         mat2 transpose(mat2 m){{return mat2(m[0][0],m[1][0],m[0][1],m[1][1]);}}
         ";
-        
+        */
         let vertex = format!("
             {version}
             {vertex_exts}
@@ -1006,7 +1033,6 @@ impl CxOsDrawShader {
             precision highp int;
             {sampler}
             {tex_ext_sampler}
-            {transpose_impl}
             {vertex_defs}
             {vertex}\0",
         );
@@ -1020,15 +1046,24 @@ impl CxOsDrawShader {
             precision highp int;
             {sampler}
             {tex_ext_sampler}
-            {transpose_impl}
             {pixel_defs}
-            {pixel}\0",
+            {pixel}
+            {nop_depth_clip}
+            \0",
         );
 
         // lets fetch the uniform positions for our uniforms
         CxOsDrawShader {
-            vertex: [vertex.clone(), vertex.replace("#define VIEW_ID 0","#define VIEW_ID gl_ViewID_OVR")],
-            pixel: [pixel.clone(), pixel.replace("#define VIEW_ID 0","#define VIEW_ID gl_ViewID_OVR")],
+            vertex: [
+                vertex.clone(), 
+                vertex.replace("#define VIEW_ID 0","#define VIEW_ID gl_ViewID_OVR")
+            ],
+            pixel: [
+                pixel.clone(),
+                pixel
+                .replace("#define VIEW_ID 0","#define VIEW_ID gl_ViewID_OVR")
+                .replace(nop_depth_clip, depth_clip),
+            ],
             gl_shader: [None,None],
             //const_table_uniforms: Default::default(),
             live_uniforms: Default::default(),
@@ -1066,7 +1101,7 @@ pub struct OpenglAttribute {
 
 #[derive(Debug, Default, Clone)]
 pub struct OpenglUniform {
-    pub loc: i32,
+    pub loc: Option<i32>,
     //pub name: String,
 }
 
@@ -1518,9 +1553,9 @@ impl OpenglBuffer {
                 gl_sys::UNIFORM_BUFFER,
                 (data.len() * mem::size_of::<f32>()) as gl_sys::GLsizeiptr,
                 data.as_ptr() as *const _,
-                gl_sys::DYNAMIC_DRAW
+                gl_sys::STATIC_DRAW
             );
-            //(gl.glBindBuffer)(gl_sys::UNIFORM_BUFFER, 0);
+            (gl.glBindBuffer)(gl_sys::UNIFORM_BUFFER, 0);
             crate::gl_log_error!(gl);
         }
     }

@@ -42,7 +42,8 @@ impl Widget for XrHands {
         let speed = 32.0;
         
         let rot = (xr_state.time*speed).rem_euclid(360.0) as f32;
-        
+        self.cube.color = vec4(1.0,1.0,1.0,1.0);
+        self.cube.depth_clip = 1.0;
         self.cube.cube_size = vec3(0.05,0.05,0.05);
         self.cube.transform = Mat4::txyz_s_ry_rx_txyz(
             vec3(0.,0.,0.),
@@ -52,6 +53,8 @@ impl Widget for XrHands {
         );
         self.cube.draw(cx);
         
+        self.cube.depth_clip = 1.0;
+                                
         // lets draw our hand controllers
         let mata = xr_state.left_controller.grip_pose.to_mat4();
         self.cube.cube_size = vec3(0.05,0.05,0.05);
@@ -61,23 +64,25 @@ impl Widget for XrHands {
         let mata = xr_state.right_controller.grip_pose.to_mat4();
         self.cube.cube_size = vec3(0.05,0.05,0.05);
         self.cube.transform = mata;
+        self.cube.depth_clip = 0.0;
         self.cube.draw(cx);
         
         // lets draw all the fingers
-        if xr_state.left_hand.in_view{
-            for joint in &xr_state.left_hand.joints{
-                let mat = joint.pose.to_mat4();
-                self.cube.cube_size = vec3(0.01,0.01,0.015);
-                self.cube.transform = mat;
-                self.cube.draw(cx);
-            }
-        }
-        if xr_state.right_hand.in_view{
-            for joint in &xr_state.right_hand.joints{
-                let mat = joint.pose.to_mat4();
-                self.cube.cube_size = vec3(0.01,0.01,0.015);
-                self.cube.transform = mat;
-                self.cube.draw(cx);
+        for hand in [&xr_state.left_hand, &xr_state.right_hand]{
+            if hand.in_view{
+                for (index,joint) in hand.joints.iter().enumerate(){
+                    if XrHand::is_tip(index){
+                        self.cube.cube_size = vec3(0.01,0.01,0.005);
+                        self.cube.color = vec4(1.0,0.0,0.0,1.0)
+                    }
+                    else {
+                        self.cube.cube_size = vec3(0.01,0.01,0.015);
+                        self.cube.color = vec4(1.0,1.0,1.0,1.0)
+                    }
+                    let mat = joint.pose.to_mat4();
+                    self.cube.transform = mat;
+                    self.cube.draw(cx);
+                }
             }
         }
         

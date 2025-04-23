@@ -132,7 +132,7 @@ live_design! {
                         self.down
                     )
                 )
-                return sdf.result
+                return sdf.result;
             }
         }
         
@@ -464,7 +464,7 @@ pub struct Button {
     #[live]
     draw_bg: DrawQuad,
     #[live]
-    draw_text: DrawText2,
+    draw_text: DrawText,
     #[live]
     draw_icon: DrawIcon,
     #[live]

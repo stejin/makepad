@@ -161,12 +161,10 @@ impl Cx {
                 if self.os.in_xr_mode && self.os.openxr.session.is_none(){
                     if let Err(e) = self.os.openxr.create_session(self.os.display.as_ref().unwrap(),CxOpenXrOptions{
                         buffer_scale: 1.5,
-                        multisamples: 4
+                        multisamples: 4,
+                        remove_hands_from_depth: false
                     }){
                         crate::error!("OpenXR create_xr_session failed: {}", e);
-                    }
-                    else{
-                        self.openxr_init_textures();
                     }
                 }
                 
@@ -983,6 +981,15 @@ impl CxOsApi for Cx {
     
     fn in_xr_mode(&self)->bool{
         self.os.in_xr_mode
+    }
+    
+    fn micro_zbias_step(&self)->f32{
+        if self.os.in_xr_mode{
+            -0.0001
+        }
+        else{
+            0.00001
+        }
     }
 }
 

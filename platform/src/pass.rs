@@ -218,6 +218,12 @@ impl Pass {
         cxpass.debug = debug;
     }
     
+        
+    pub fn set_dpi_factor(&mut self, cx: &mut Cx, dpi: f64) {
+        let cxpass = &mut cx.passes[self.pass_id()];
+        cxpass.dpi_factor = Some(dpi);
+    }
+    
 }
 
 #[derive(Clone)]
@@ -251,6 +257,10 @@ pub struct PassUniforms {
     pub camera_projection_r: Mat4,
     pub camera_view: Mat4,
     pub camera_view_r: Mat4,
+    pub depth_projection: Mat4,
+    pub depth_projection_r: Mat4,
+    pub depth_view: Mat4,
+    pub depth_view_r: Mat4,
     pub camera_inv: Mat4,
     pub dpi_factor: f32,
     pub dpi_dilate: f32,
