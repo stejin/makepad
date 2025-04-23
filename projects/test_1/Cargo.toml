@@ -1,5 +1,5 @@
 [package]
-name = "test_1"
+name = "makepad-projects-test-1"
 version = "0.6.0"
 authors = ["Makepad <info@makepad.nl>"]
 edition = "2021"

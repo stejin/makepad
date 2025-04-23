@@ -1,10 +1,12 @@
 use makepad_widgets::*;
+use makepad_platform::live_atomic::*;
 
 live_design!{
     use link::theme::*;
     use link::shaders::*;
     use link::widgets::*;
-    use test_1::my_widget::MyWidget;
+    
+    use makepad_projects_test_1::my_widget::MyWidget;
 
     COLOR_CONTAINER = (THEME_COLOR_D_1)
     COLOR_ACCENT = (THEME_COLOR_MAKEPAD)
