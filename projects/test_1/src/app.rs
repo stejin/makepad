@@ -1,12 +1,10 @@
 use makepad_widgets::*;
 
-//mod shader;
-   
 live_design!{
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*;
-    import test_1::my_widget::*;
-    import makepad_draw::shader::std::*;
+    use link::theme::*;
+    use link::shaders::*;
+    use link::widgets::*;
+    use test_1::my_widget::MyWidget;
 
     COLOR_CONTAINER = (THEME_COLOR_D_1)
     COLOR_ACCENT = (THEME_COLOR_MAKEPAD)
@@ -39,7 +37,7 @@ live_design!{
         flow: Right,
         align: { x: 0.0, y: 0.5},
         margin: 0.,
-        show_bg: false;
+        show_bg: false,
         draw_bg: { color: (COLOR_CONTAINER) }
     }
 
@@ -50,7 +48,7 @@ live_design!{
         margin: 0.,
         spacing: 0.,
 
-        show_bg: true;
+        show_bg: true,
         draw_bg: {
             fn get_color(self) -> vec4 {
                 return mix(self.color, self.color*0.5, self.pos.y);
@@ -108,7 +106,7 @@ live_design!{
                         text: "Shader Demo."
                     }
                     <MyWidget> {
-                    //<RoundedView dx:395.4 dy:2855.5 dw:390.0 dh:137.4> {
+                    //<RoundedView dx: 395.4, dy: 2855.5, dw: 390.0, dh: 137.4> {
                         width: 300, height: 300,
                         draw: {
                             // this example shader is ported from kishimisu's tutorial
@@ -138,7 +136,11 @@ live_design!{
                     }
                 }
 
-                <RoundedView dx:395.4 dy:2855.5 dw:390.0 dh:137.4> {
+                <RoundedView> {
+                    dx: 395.4,
+                    dy: 2855.5,
+                    dw: 390.0,
+                    dh: 137.4,
                     width: Fill,
                     height: 120
                     draw_bg: {
@@ -537,15 +539,15 @@ live_design!{
             }
         }
     }
-}  
-              
+}
+
 app_main!(App); 
- 
+
 #[derive(Live, LiveHook)]
 pub struct App {
     #[live] ui: WidgetRef,
     #[rust] counter: usize,
- }
+}
 
 impl LiveRegister for App {
     fn live_register(cx: &mut Cx) {
