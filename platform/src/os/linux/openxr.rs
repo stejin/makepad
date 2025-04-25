@@ -10,12 +10,13 @@ use{
                 android::android_jni::*
             }
         },
+        makepad_micro_serde::*,
         draw_shader::CxDrawShaderMapping,
         event::Event,
         event::xr::*,
         pass::{CxPassParent,PassId},
         cx::{Cx},
-        makepad_math::Mat4,
+        makepad_math::{Mat4, Pose},
     },
     std::rc::Rc,
     std::sync::{mpsc},
@@ -57,27 +58,106 @@ impl Cx{
             if unsafe{(openxr.libxr.as_ref().unwrap().xrPollEvent)(openxr.instance.unwrap(), &mut event_buffer)} != XrResult::SUCCESS{
                 break;
             }
-            if event_buffer.ty == XrStructureType::EVENT_DATA_SESSION_STATE_CHANGED{
-                let edssc = unsafe{*(&event_buffer as *const _ as *const XrEventDataSessionStateChanged)};
-                match edssc.state{
-                    XrSessionState::IDLE=>{
+
+            match event_buffer.ty{
+                XrStructureType::EVENT_DATA_SESSION_STATE_CHANGED=>{
+                    let edssc = &unsafe{*(&event_buffer as *const _ as *const XrEventDataSessionStateChanged)};
+                    match edssc.state{
+                        XrSessionState::IDLE=>{
+                        }
+                        XrSessionState::FOCUSED=>{
+                        }
+                        XrSessionState::VISIBLE=>{}
+                        XrSessionState::READY=>{
+                            openxr.session.as_mut().unwrap().begin_session(
+                                openxr.libxr.as_ref().unwrap(),
+                                self.os.activity_thread_id.unwrap(), 
+                                self.os.render_thread_id.unwrap()
+                            );
+                        }
+                        XrSessionState::STOPPING=>{
+                            openxr.session.as_mut().unwrap().end_session(openxr.libxr.as_ref().unwrap());
+                        }
+                        XrSessionState::EXITING=>{}
+                        _=>()
                     }
-                    XrSessionState::FOCUSED=>{
-                    }
-                    XrSessionState::VISIBLE=>{}
-                    XrSessionState::READY=>{
-                        openxr.session.as_mut().unwrap().begin_session(
-                            &openxr.libxr.as_ref().unwrap(),
-                            self.os.activity_thread_id.unwrap(), 
-                            self.os.render_thread_id.unwrap()
-                        );
-                    }
-                    XrSessionState::STOPPING=>{
-                        openxr.session.as_mut().unwrap().end_session(openxr.libxr.as_ref().unwrap());
-                    }
-                    XrSessionState::EXITING=>{}
-                    _=>()
                 }
+                XrStructureType::EVENT_DATA_SPATIAL_ANCHOR_CREATE_COMPLETE_FB=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataSpatialAnchorCreateCompleteFB)};
+                    openxr.session.as_mut().unwrap().create_anchor_response(
+                        openxr.libxr.as_ref().unwrap(),
+                        response,
+                    );
+                }
+                XrStructureType::EVENT_DATA_SHARE_SPACES_COMPLETE_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataShareSpacesCompleteMETA)};
+                    openxr.session.as_mut().unwrap().share_anchor_response(
+                        openxr.libxr.as_ref().unwrap(),
+                        response,
+                    );
+                }
+                XrStructureType::EVENT_DATA_START_COLOCATION_DISCOVERY_COMPLETE_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataStartColocationDiscoveryCompleteMETA)};
+                    if response.result != XrResult::SUCCESS{
+                        crate::log!("START_COLOCATION_DISCOVERY_COMPLETE_META: {:?}", response.result);
+                    }
+                    
+                },
+                XrStructureType::EVENT_DATA_COLOCATION_DISCOVERY_RESULT_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataColocationDiscoveryResultMETA)};
+                    openxr.session.as_mut().unwrap().start_colocation_discovery_result(
+                        openxr.libxr.as_ref().unwrap(),
+                        response,
+                    );
+                },
+                XrStructureType::EVENT_DATA_COLOCATION_DISCOVERY_COMPLETE_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataColocationDiscoveryCompleteMETA)};
+                    if response.result != XrResult::SUCCESS{
+                        crate::log!("COLOCATION_DISCOVERY_COMPLETE_META: {:?}", response.result);
+                    }
+                },
+                XrStructureType::EVENT_DATA_STOP_COLOCATION_DISCOVERY_COMPLETE_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataStopColocationDiscoveryCompleteMETA)};
+                    if response.result != XrResult::SUCCESS{
+                        crate::log!("STOP_COLOCATION_DISCOVERY_COMPLETE_META: {:?}", response.result);
+                    }
+                },
+                XrStructureType::EVENT_DATA_START_COLOCATION_ADVERTISEMENT_COMPLETE_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataStartColocationAdvertisementCompleteMETA)};
+                    if response.result != XrResult::SUCCESS{
+                        crate::log!("START_COLOCATION_ADVERTISEMENT_COMPLETE_META: {:?} {:?}", response.result, response.advertisement_uuid);
+                    }
+                    else{
+                        // this signals others to reload the colocation
+                        openxr.session.as_mut().unwrap().anchor_discovery += 1;
+                    }
+                }
+                XrStructureType::EVENT_DATA_COLOCATION_ADVERTISEMENT_COMPLETE_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataColocationAdvertisementCompleteMETA)};
+                    if response.result != XrResult::SUCCESS{
+                        crate::log!("COLOCATION_ADVERTISEMENT_COMPLETE_META: {:?}", response.result);
+                    }
+                }
+                XrStructureType::EVENT_DATA_STOP_COLOCATION_ADVERTISEMENT_COMPLETE_META=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataStopColocationAdvertisementCompleteMETA)};
+                    if response.result != XrResult::SUCCESS{
+                        crate::log!("STOP_COLOCATION_ADVERTISEMENT_COMPLETE_META: {:?}", response.result);
+                    }
+                }
+                XrStructureType::EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataSpaceSetStatusCompleteFB)};
+                    if response.result != XrResult::SUCCESS{
+                        crate::log!("SPACE_SET_STATUS_COMPLETE_FB: {:?}", response.result);
+                    }
+                }
+                XrStructureType::EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB=>{
+                    let response = &unsafe{*(&event_buffer as *const _ as *const XrEventDataSpaceQueryResultsAvailableFB)};
+                    openxr.session.as_mut().unwrap().query_anchors_response(
+                        openxr.libxr.as_ref().unwrap(),
+                        response,
+                    );
+                }
+                _=>()
             }
             /*      
             //crate::log!("{:?}", event_buffer.ty);
@@ -206,8 +286,12 @@ impl Cx{
             openxr.libxr.as_ref().unwrap(),
             openxr.session.as_ref().unwrap()
         ){
+            let session = openxr.session.as_mut().unwrap();
+            session.depth_swap_chain_index = frame.depth_image.map(|v| v.swapchain_index as usize).unwrap_or(0);
+            session.frame_state = frame.frame_state;
+            
             // lets send in the state
-            let event = openxr.session.as_mut().unwrap().new_xr_update_event(
+            let event = session.new_xr_update_event(
                 openxr.libxr.as_ref().unwrap(),
                 &frame
             );
@@ -226,7 +310,7 @@ impl Cx{
             }
             
             // copy on the depth image
-            self.os.openxr.session.as_mut().unwrap().depth_swap_chain_index = frame.depth_image.map(|v| v.swapchain_index as usize).unwrap_or(0);
+            
             
             self.openxr_handle_repaint(&frame);
             
@@ -296,16 +380,21 @@ impl CxOpenXr{
         let exts_needed = [
             "XR_KHR_opengl_es_enable\0",
             "XR_EXT_performance_settings\0",
+            "XR_EXT_hand_tracking\0",
+            "XR_EXT_hand_interaction\0",
             "XR_KHR_android_thread_settings\0",
             "XR_FB_passthrough\0",
             "XR_META_environment_depth\0",
             "XR_META_touch_controller_plus\0",
-            "XR_EXT_hand_interaction\0",
             "XR_META_detached_controllers\0",
             "XR_META_simultaneous_hands_and_controllers\0",
-            "XR_EXT_hand_tracking\0",
             "XR_FB_hand_tracking_mesh\0",
             "XR_FB_hand_tracking_aim\0",
+            "XR_META_colocation_discovery\0",
+            "XR_META_spatial_entity_sharing\0",
+            "XR_META_spatial_entity_group_sharing\0",
+            "XR_FB_spatial_entity\0",
+            "XR_FB_spatial_entity_query\0",
         ];
                 
         for ext_needed in exts_needed{
@@ -426,11 +515,26 @@ impl CxOpenXr{
         Ok(())
     }
     
+    pub fn advertise_anchor(&mut self, pose:Pose){
+        if let Some(session) = &mut self.session{
+            let xr =  self.libxr.as_ref().unwrap();
+            crate::log!("Creating advertising anchor");
+            session.create_anchor_request(pose, xr);
+        }
+    }
+    
+    pub fn discover_anchor(&mut self, id:u32){
+        if let Some(session) = &mut self.session{
+            let xr =  self.libxr.as_ref().unwrap();
+            session.anchor_discovery = id;
+            crate::log!("Discovering anchor {id}");
+            session.start_colocation_discovery_request(xr);
+        }
+    }
 }
 
 
 pub struct CxOpenXrSession{
-    pub depth_swap_chain_index: usize,
     pub color_images: Vec<XrSwapchainImageOpenGLESKHR>,
     pub depth_images: Vec<XrSwapchainImageOpenGLESKHR>,
     pub gl_depth_textures: Vec<u32>,
@@ -446,8 +550,21 @@ pub struct CxOpenXrSession{
     pub local_space: XrSpace,
     pub handle: XrSession,
     pub active: bool,
+    pub anchor_discovery: u32,
     pub inputs: CxOpenXrInputs,
+    shared_anchor: Option<XrSpace>,
+    anchor_advertisement: Option<AnchorAdvertisement>,
+    // leaked from Frame onto state
+    pub depth_swap_chain_index: usize,
+    pub frame_state: XrFrameState,
 }
+
+#[derive(SerBin, DeBin)]
+struct AnchorAdvertisement{
+    group_uuid: XrUuid,
+    anchor_uuid: XrUuid,
+}
+
 
 impl CxOpenXrSession{
             
@@ -693,6 +810,7 @@ impl CxOpenXrSession{
         let inputs = CxOpenXrInputs::new_inputs(xr, session, instance)?;
                 
         Ok(CxOpenXrSession{
+            anchor_discovery: 0,
             color_images,
             depth_images,
             color_swap_chain,
@@ -708,7 +826,10 @@ impl CxOpenXrSession{
             head_space,
             local_space,
             active:false,
+            shared_anchor: None,
+            anchor_advertisement: None,
             depth_swap_chain_index: 0,
+            frame_state: XrFrameState::default(),
             inputs
         })
     }
@@ -796,7 +917,8 @@ impl CxOpenXrSession{
     fn new_xr_update_event(&mut self, xr: &LibOpenXr, frame:&CxOpenXrFrame)->Option<XrUpdateEvent>{
         let predicted_display_time = frame.frame_state.predicted_display_time;
         let local_space = self.local_space;
-                
+        let last_state = self.inputs.last_state.clone();
+                        
         let active_action_set = XrActiveActionSet{
             action_set: self.inputs.action_set,
             subaction_path: XrPath(0)
@@ -812,28 +934,332 @@ impl CxOpenXrSession{
             return None
         };
                 
-        let left_controller = self.inputs.left_controller.poll(xr, self.handle, local_space, predicted_display_time);
-        let right_controller = self.inputs.right_controller.poll(xr, self.handle, local_space, predicted_display_time);
+        let left_controller = self.inputs.left_controller.poll(xr, self.handle, local_space, predicted_display_time, true, &self.inputs.actions, last_state.left_controller.buttons);
+        let right_controller = self.inputs.right_controller.poll(xr, self.handle, local_space, predicted_display_time, false, &self.inputs.actions, last_state.right_controller.buttons);
                 
         let left_hand = self.inputs.left_hand.poll(xr, self.handle, local_space, predicted_display_time);
         let right_hand = self.inputs.right_hand.poll(xr, self.handle, local_space, predicted_display_time);
                         
-                
+        let shared_anchor = if let Some(shared_anchor) = self.shared_anchor{
+            Some(XrSpaceLocation::locate(xr, local_space, predicted_display_time, shared_anchor).pose)
+        }
+        else{
+            None
+        };
+                        
         let new_state = Rc::new(XrState{
+            anchor_discovery: self.anchor_discovery,
             time: (frame.frame_state.predicted_display_time.as_nanos() as f64) / 1e9f64,
             head_pose: frame.local_from_head.pose,
+            shared_anchor,
             left_controller,
             right_controller,
             left_hand,
             right_hand,
         });
-        let last_state = self.inputs.last_state.clone();
         self.inputs.last_state = new_state.clone();
+        
+        
         Some(XrUpdateEvent{
             state: new_state,
             last: last_state
         })
     }
+    
+    // STEP ONE. share the anchor
+    pub fn create_anchor_request(&mut self, pose:XrPosef, xr: &LibOpenXr){
+        let anchor_create_info = XrSpatialAnchorCreateInfoFB{
+            space: self.local_space,
+            pose_in_space: pose,
+            time: self.frame_state.predicted_display_time,
+            ..Default::default()
+        };
+        let mut request = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrCreateSpatialAnchorFB)(
+            self.handle,
+            &anchor_create_info,
+            &mut request
+        )}.log_error("xrCreateSpatialAnchorFB");
+    }
+    
+    pub fn create_anchor_response(&mut self, xr: &LibOpenXr, response:&XrEventDataSpatialAnchorCreateCompleteFB){
+        // got response.
+        if response.result != XrResult::SUCCESS{
+            crate::log!("share_anchor_response failed {:?}", response.result);
+            return
+        }
+        // alright so lets get the space
+        //let space = edsacc.space;
+        //let space_uuid = edsacc.uuid;
+        let components = xr_array_fetch(XrSpaceComponentTypeFB::default(), |cap, len, buf|{
+            unsafe{(xr.xrEnumerateSpaceSupportedComponentsFB)(
+                response.space,
+                cap,
+                len, 
+                buf
+            )}.to_result("xrEnumerateSpaceSupportedComponentsFB")
+        }).unwrap_or(vec![]);
+        if !components.iter().any(|v| *v == XrSpaceComponentTypeFB::STORABLE) {
+            crate::log!("share_anchor_response space not STORABLE");
+            return
+        }
+        if !components.iter().any(|v| *v == XrSpaceComponentTypeFB::SHARABLE){
+            crate::log!("share_anchor_response space not SHARABLE");
+            return
+        }
+        // flag it
+        let request = XrSpaceComponentStatusSetInfoFB{
+            component_type: XrSpaceComponentTypeFB::STORABLE,
+            enabled: XrBool32::from_bool(true),
+            ..Default::default()
+        };
+        let mut request_id = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrSetSpaceComponentStatusFB)(
+            response.space,
+            &request,
+            &mut request_id
+        )}.log_error("xrSetSpaceComponentStatusFB");
+        // its shareable
+        let request = XrSpaceComponentStatusSetInfoFB{
+            component_type: XrSpaceComponentTypeFB::SHARABLE,
+            enabled: XrBool32::from_bool(true),
+            ..Default::default()
+        };
+        let mut request_id = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrSetSpaceComponentStatusFB)(
+            response.space,
+            &request,
+            &mut request_id
+        )}.log_error("xrSetSpaceComponentStatusFB");
+        
+        let group_uuid = XrUuid::generate();
+                
+        self.anchor_advertisement = Some(AnchorAdvertisement{
+            anchor_uuid: response.uuid,
+            group_uuid,
+        });
+        
+        self.shared_anchor = Some(response.space);
+        // lets share the anchor
+        self.share_anchor_request(xr, response.space);
+    }
+    
+    pub fn share_anchor_request(&self, xr: &LibOpenXr, space:XrSpace){
+        // lets generate a uid for our space
+        let anchor_advertisement = self.anchor_advertisement.as_ref().unwrap();
+        
+        //crate::log!("SHARING ADVERTISEMENT: {:?}",anchor_advertisement.group_uuid);
+        
+        let recipient_info = XrShareSpacesRecipientGroupsMETA{
+            group_count: 1,
+            groups: &anchor_advertisement.group_uuid,
+            ..Default::default()
+        };
+        let spaces_info = XrShareSpacesInfoMETA{
+            space_count: 1,
+            spaces: &space,
+            recipient_info: &recipient_info as *const _ as *const _,
+            ..Default::default()
+        };
+        let mut request = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrShareSpacesMETA)(
+            self.handle,
+            &spaces_info,
+            &mut request
+        )}.log_error("xrShareSpacesMETA");
+    }
+    
+    pub fn share_anchor_response(&mut self, xr: &LibOpenXr, response:&XrEventDataShareSpacesCompleteMETA){
+        if response.result != XrResult::SUCCESS{
+            crate::log!("share_anchor_response result: {:?}", response.result);
+            self.shared_anchor.take();
+        }
+        else{
+            crate::log!("Anchor shared!");
+            self.start_colocation_advertisement_request(xr);
+        }
+    }
+    
+    pub fn start_colocation_advertisement_request(&mut self, xr: &LibOpenXr){
+        self.stop_colocation_advertisement_request(xr);
+        self.stop_colocation_discovery_request(xr);
+        let anchor_advertisement = self.anchor_advertisement.as_ref().unwrap();
+        let buffer = anchor_advertisement.serialize_bin();
+        let advertisement_info = XrColocationAdvertisementStartInfoMETA{
+            buffer: buffer.as_ptr(),
+            buffer_size: buffer.len() as _,
+            ..Default::default()
+        };
+        let mut request = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrStartColocationAdvertisementMETA)(
+            self.handle,
+            &advertisement_info,
+            &mut request
+        )}.log_error("xrStartColocationAdvertisementMETA");
+    }
+    
+    pub fn stop_colocation_advertisement_request(&mut self, xr: &LibOpenXr){
+        let mut request = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrStopColocationAdvertisementMETA)(
+            self.handle,
+            0 as *const _,
+            &mut request
+        )}.log_error("xrStopColocationAdvertisementMETA");
+    }
+        
+    pub fn start_colocation_discovery_request(&mut self, xr: &LibOpenXr){
+        self.stop_colocation_advertisement_request(xr);
+        self.stop_colocation_discovery_request(xr);
+        
+        let mut request = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrStartColocationDiscoveryMETA)(
+            self.handle,
+            0 as *const _,
+            &mut request
+        )}.log_error("xrStartColocationDiscoveryMETA");
+    }
+    
+    pub fn start_colocation_discovery_result(&mut self, xr: &LibOpenXr, response:&XrEventDataColocationDiscoveryResultMETA){
+        
+        // alright lets parse the buffer
+        let buffer = &response.buffer[0..response.buffer_size as usize];
+        if let Ok(data) = AnchorAdvertisement::deserialize_bin(&buffer){
+            // alright! we have a discovery result
+            //crate::log!("COLOCATED DISCOVERY: {:?} {:?}",response.advertisement_uuid, data.group_uuid);
+            self.query_anchors_request(xr, data.group_uuid)
+        }
+        else{
+            crate::log!("start_colocation_discovery_result deserialize failure");
+        }
+    }
+        
+    pub fn stop_colocation_discovery_request(&mut self, xr: &LibOpenXr){
+        let mut request = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrStopColocationDiscoveryMETA)(
+            self.handle,
+            0 as *const _,
+            &mut request
+        )}.log_error("xrStopColocationDiscoveryMETA");              
+    }
+    
+    pub fn query_anchors_request(&mut self, xr: &LibOpenXr, group_uuid:XrUuid){
+        let location_filter_info = XrSpaceStorageLocationFilterInfoFB{
+            location: XrSpaceStorageLocationFB::CLOUD,
+            ..Default::default()
+        };
+        let group_filter_info = XrSpaceGroupUuidFilterInfoMETA{
+            group_uuid,
+            next: &location_filter_info as *const _ as *const _,
+            ..Default::default()
+        };
+        let space_query_info = XrSpaceQueryInfoFB{
+            query_action: XrSpaceQueryActionFB::LOAD,
+            max_result_count: 32,
+            filter: &group_filter_info as *const _ as *const _,
+            ..Default::default()
+        };
+        let mut request = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrQuerySpacesFB)(
+            self.handle,
+            & space_query_info as *const _ as *const _,
+            &mut request
+        )}.log_error("xrQuerySpacesFB");          
+    }
+    
+    pub fn query_anchors_response(&mut self, xr: &LibOpenXr, response:&XrEventDataSpaceQueryResultsAvailableFB){
+        
+        let mut query = XrSpaceQueryResultsFB::default();
+        if unsafe{(xr.xrRetrieveSpaceQueryResultsFB)(
+            self.handle,
+            response.request_id,
+            &mut query
+        )}.log_error("xrRetrieveSpaceQueryResultsFB"){
+            return;
+        }
+        
+        let mut results_vec = Vec::new();
+        results_vec.resize(query.result_count_output as usize, XrSpaceQueryResultFB::default());
+        let mut query = XrSpaceQueryResultsFB{
+            results: results_vec.as_mut_ptr() as *mut _,
+            result_capacity_input: results_vec.len() as _,
+            result_count_output: results_vec.len() as _,
+            ..Default::default()
+        };
+        if results_vec.len() == 0{
+            crate::log!("query_anchors_response zero spaces returned");
+            return
+        }
+        if unsafe{(xr.xrRetrieveSpaceQueryResultsFB)(
+            self.handle,
+            response.request_id,
+            &mut query
+        )}.log_error("xrRetrieveSpaceQueryResultsFB"){
+            return;
+        }
+
+        if results_vec.len() > 1{
+            crate::log!("query_anchors_response more than one space returned {}", results_vec.len());
+        }
+        let response = results_vec[0];
+        let components = xr_array_fetch(XrSpaceComponentTypeFB::default(), |cap, len, buf|{
+            unsafe{(xr.xrEnumerateSpaceSupportedComponentsFB)(
+                response.space,
+                cap,
+                len, 
+                buf
+            )}.to_result("query_anchors_response xrEnumerateSpaceSupportedComponentsFB")
+        }).unwrap_or(vec![]);
+        if !components.iter().any(|v| *v == XrSpaceComponentTypeFB::LOCATABLE) {
+            crate::log!("query_anchors_response space not LOCATABLE");
+            return
+        }
+        if !components.iter().any(|v| *v == XrSpaceComponentTypeFB::SHARABLE){
+            crate::log!("query_anchors_response space not SHARABLE");
+            return
+        }
+        if !components.iter().any(|v| *v == XrSpaceComponentTypeFB::STORABLE){
+            crate::log!("query_anchors_response space not STORABLE");
+            return
+        }
+        let request = XrSpaceComponentStatusSetInfoFB{
+            component_type: XrSpaceComponentTypeFB::LOCATABLE,
+            enabled: XrBool32::from_bool(true),
+            ..Default::default()
+        };
+        let mut request_id = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrSetSpaceComponentStatusFB)(
+            response.space,
+            &request,
+            &mut request_id
+        )}.log_error("query_anchors_response xrSetSpaceComponentStatusFB LOCATABLE");
+        // its shareable
+        let request = XrSpaceComponentStatusSetInfoFB{
+            component_type: XrSpaceComponentTypeFB::SHARABLE,
+            enabled: XrBool32::from_bool(true),
+            ..Default::default()
+        };
+        let mut request_id = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrSetSpaceComponentStatusFB)(
+            response.space,
+            &request,
+            &mut request_id
+        )}.log_error("query_anchors_response xrSetSpaceComponentStatusFB SHARABLE");
+        let request = XrSpaceComponentStatusSetInfoFB{
+            component_type: XrSpaceComponentTypeFB::STORABLE,
+            enabled: XrBool32::from_bool(true),
+            ..Default::default()
+        };
+        let mut request_id = XrAsyncRequestIdFB(0);
+        unsafe{(xr.xrSetSpaceComponentStatusFB)(
+            response.space,
+            &request,
+            &mut request_id
+        )}.log_error("query_anchors_response xrSetSpaceComponentStatusFB STORABLE");
+        // alright we have a shared space!
+        crate::log!("Anchor retrieved!");
+        self.shared_anchor = Some(response.space);
+    }
+    
 }
 
 #[derive(Default, Clone, Copy)]
@@ -1062,7 +1488,31 @@ pub struct CxOpenXrOptions{
     pub remove_hands_from_depth: bool,
 }
 
+#[derive(Copy, Clone)]
+struct CxOpenXrInputActions{
+    trigger_action: XrAction,
+    grip_action: XrAction,
+    thumbstick_action: XrAction,
+    click_a_action: XrAction,
+    click_b_action: XrAction,
+    click_x_action: XrAction,
+    click_y_action: XrAction,
+    click_menu_action: XrAction,
+    click_thumbstick_action: XrAction,
+    touch_thumbstick_action: XrAction,
+    touch_trigger_action: XrAction,
+    touch_a_action: XrAction,
+    touch_b_action: XrAction,
+    touch_x_action: XrAction,
+    touch_y_action: XrAction,
+    touch_thumbrest_action: XrAction,
+    aim_pose_action: XrAction,
+    grip_pose_action: XrAction,
+    
+}
+
 pub struct CxOpenXrInputs{
+    actions: CxOpenXrInputActions,
     action_set: XrActionSet,
     left_controller: CxOpenXrController,
     right_controller: CxOpenXrController,
@@ -1114,7 +1564,9 @@ impl CxOpenXrHand{
         let mut s = 0;
         for i in 0..self.joint_locations.len(){
             let tracked = self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::ORIENTATION_TRACKED) && self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::POSITION_TRACKED);
-            
+            /*
+            let valid = valid: self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::ORIENTATION_VALID) && self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::POSITION_VALID)
+            */
             // we're going to skip the tips and only store the distance
             if i == 5 || i == 10 || i == 15 || i ==20 || i == 25{
                 // only store the distance to the tip so we can fit the entire
@@ -1125,13 +1577,7 @@ impl CxOpenXrHand{
             }
             
             hand.joints[s] = XrHandJoint{
-                pose: self.joint_locations[i].pose,
-                /*
-                valid: self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::ORIENTATION_VALID) && self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::POSITION_VALID)
-                ,
-                tracked: 
-                self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::ORIENTATION_TRACKED) && self.joint_locations[i].location_flags.contains(XrSpaceLocationFlags::POSITION_TRACKED)
-                 */     
+                pose: self.joint_locations[i].pose,    
             };
             s += 1;
             if tracked{
@@ -1145,9 +1591,6 @@ impl CxOpenXrHand{
 
 pub struct CxOpenXrController{
     path: XrPath,
-    trigger_action: XrAction,
-    aim_pose_action: XrAction,
-    grip_pose_action: XrAction,
     aim_space: XrSpace,
     grip_space: XrSpace,
     detached_aim_space: XrSpace,
@@ -1162,11 +1605,28 @@ impl CxOpenXrController{
         self.detached_grip_space.destroy(xr);
     }
     
-    fn poll(&self, xr: &LibOpenXr, session:XrSession, local_space:XrSpace, time:XrTime)->XrController{
+    fn poll(&self, xr: &LibOpenXr, session:XrSession, local_space:XrSpace, time:XrTime, is_left: bool, actions: &CxOpenXrInputActions, last_buttons:u16)->XrController{
         // lets query the trigger bool
-        let trigger = XrActionStateFloat::get(xr, session, self.trigger_action, self.path);
-        let grip_state = XrActionStatePose::get(xr, session, self.grip_pose_action, self.path);
-        let aim_state = XrActionStatePose::get(xr, session, self.aim_pose_action, self.path);
+        let stick = XrActionStateVector2f::get(xr, session, actions.thumbstick_action, self.path);
+        let trigger = XrActionStateFloat::get(xr, session, actions.trigger_action, self.path);
+        let grip = XrActionStateFloat::get(xr, session, actions.grip_action, self.path);
+        let grip_state = XrActionStatePose::get(xr, session, actions.grip_pose_action, self.path);
+        let aim_state = XrActionStatePose::get(xr, session, actions.aim_pose_action, self.path);
+        
+        //crate::log!("{:?}", XrActionStateBoolean::get(xr, session, actions.click_x_action, self.path).current_state.as_bool());
+        
+        fn bf(xr: &LibOpenXr, session:XrSession, path:XrPath, action:XrAction, flag:u16, on:bool)->u16{
+            if !on{
+                return 0
+            }
+            if XrActionStateBoolean::get(xr, session, action, path).current_state.as_bool(){
+                flag
+            }
+            else{
+                0
+            }
+        }
+        
         XrController{
             grip_pose:  if grip_state.is_active.as_bool(){
                 XrSpaceLocation::locate(xr, local_space, time, self.grip_space).pose
@@ -1180,19 +1640,25 @@ impl CxOpenXrController{
             else{
                 XrSpaceLocation::locate(xr, local_space, time, self.detached_aim_space).pose
             },
-            trigger: XrFloatButton{
-                value: trigger.current_state,
-                /*
-                last_change_time: trigger.last_change_time.as_secs_f64(),
-                analog: trigger.current_state,
-                pressed: trigger.current_state > 0.5,
-                touched: trigger.is_active.as_bool(),
-                last_pressed: false*/
-            },
-            grip: XrFloatButton::default(),
+            stick: stick.current_state,
+            trigger: trigger.current_state,
+            grip: grip.current_state,
+            last_buttons,
             buttons: 
-                if aim_state.is_active.as_bool(){XrController::ACTIVE}else{0},
-            stick: XrStick::default(),            
+                if aim_state.is_active.as_bool(){XrController::ACTIVE}else{0}|
+                bf(xr, session, self.path, actions.click_a_action, XrController::CLICK_A, !is_left) | 
+                bf(xr, session, self.path, actions.click_b_action, XrController::CLICK_B, !is_left) | 
+                bf(xr, session, self.path, actions.click_x_action, XrController::CLICK_X, is_left) | 
+                bf(xr, session, self.path, actions.click_y_action, XrController::CLICK_Y, is_left) | 
+                bf(xr, session, self.path, actions.click_menu_action, XrController::CLICK_MENU, is_left) | 
+                bf(xr, session, self.path, actions.click_thumbstick_action, XrController::CLICK_THUMBSTICK, true) | 
+                bf(xr, session, self.path, actions.touch_thumbstick_action, XrController::TOUCH_THUMBSTICK, true) | 
+                bf(xr, session, self.path, actions.touch_trigger_action, XrController::TOUCH_TRIGGER, true) | 
+                bf(xr, session, self.path, actions.touch_a_action, XrController::TOUCH_A, !is_left) | 
+                bf(xr, session, self.path, actions.touch_b_action, XrController::TOUCH_B, !is_left) | 
+                bf(xr, session, self.path, actions.touch_x_action, XrController::TOUCH_X, is_left) | 
+                bf(xr, session, self.path, actions.touch_y_action, XrController::TOUCH_Y, is_left) | 
+                bf(xr, session, self.path, actions.touch_thumbrest_action, XrController::TOUCH_THUMBREST, true) 
         }
     }
 }
@@ -1223,8 +1689,25 @@ impl CxOpenXrInputs{
         let detached_paths = [left_detached_path, right_detached_path];
         
         let trigger_action = XrAction::new(xr, action_set, XrActionType::FLOAT_INPUT, "trigger", "", &hand_paths)?;
+        let grip_action = XrAction::new(xr, action_set, XrActionType::FLOAT_INPUT, "grip", "", &hand_paths)?;
+        let thumbstick_action = XrAction::new(xr, action_set, XrActionType::VECTOR2F_INPUT, "thumbstick_xy", "", &hand_paths)?;
+        let click_a_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "click_a", "", &hand_paths)?;
+        let click_b_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "click_b", "", &hand_paths)?;
+        let click_x_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "click_x", "", &hand_paths)?;
+        let click_y_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "click_y", "", &hand_paths)?;
+        let click_menu_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "click_menu", "", &hand_paths)?;
+        let click_thumbstick_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "click_thumbstick", "", &hand_paths)?;
+        let touch_thumbstick_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "touch_thumbstick", "", &hand_paths)?;
+        let touch_trigger_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "touch_trigger", "", &hand_paths)?;
+        let touch_a_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "touch_a", "", &hand_paths)?;
+        let touch_b_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "touch_b", "", &hand_paths)?;
+        let touch_x_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "touch_x", "", &hand_paths)?;
+        let touch_y_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "touchy_y", "", &hand_paths)?;
+        let touch_thumbrest_action = XrAction::new(xr, action_set, XrActionType::BOOLEAN_INPUT, "touch_thumbrest", "", &hand_paths)?;
+                                                
         let aim_pose_action = XrAction::new(xr, action_set, XrActionType::POSE_INPUT, "aim_pose", "", &hand_paths)?;
         let grip_pose_action = XrAction::new(xr, action_set, XrActionType::POSE_INPUT, "grip_pose", "", &hand_paths)?;
+        
         let detached_aim_pose_action = XrAction::new(xr, action_set, XrActionType::POSE_INPUT, "detached_aim_pose", "", &detached_paths)?;
         let detached_grip_pose_action = XrAction::new(xr, action_set, XrActionType::POSE_INPUT, "detached_grip_pose", "", &detached_paths)?;
                 
@@ -1233,10 +1716,39 @@ impl CxOpenXrInputs{
         let bindings = [
             XrActionSuggestedBinding::new(xr, instance, trigger_action, "/user/hand/left/input/trigger")?,
             XrActionSuggestedBinding::new(xr, instance, trigger_action, "/user/hand/right/input/trigger")?,
+            
+            XrActionSuggestedBinding::new(xr, instance, grip_action, "/user/hand/left/input/squeeze/value")?,
+            XrActionSuggestedBinding::new(xr, instance, grip_action, "/user/hand/right/input/squeeze/value")?,
+            
+            XrActionSuggestedBinding::new(xr, instance, thumbstick_action, "/user/hand/left/input/thumbstick")?,
+            XrActionSuggestedBinding::new(xr, instance, thumbstick_action, "/user/hand/right/input/thumbstick")?,
+            
+            XrActionSuggestedBinding::new(xr, instance, click_a_action, "/user/hand/right/input/a/click")?,
+            XrActionSuggestedBinding::new(xr, instance, click_b_action, "/user/hand/right/input/b/click")?,
+            XrActionSuggestedBinding::new(xr, instance, click_x_action, "/user/hand/left/input/x/click")?,
+            XrActionSuggestedBinding::new(xr, instance, click_y_action, "/user/hand/left/input/y/click")?,
+            XrActionSuggestedBinding::new(xr, instance, click_menu_action, "/user/hand/left/input/menu/click")?,
+            XrActionSuggestedBinding::new(xr, instance, click_thumbstick_action, "/user/hand/left/input/thumbstick/click")?,
+            XrActionSuggestedBinding::new(xr, instance, click_thumbstick_action, "/user/hand/right/input/thumbstick/click")?,
+            XrActionSuggestedBinding::new(xr, instance, touch_thumbstick_action, "/user/hand/left/input/thumbstick/touch")?,
+            XrActionSuggestedBinding::new(xr, instance, touch_thumbstick_action, "/user/hand/right/input/thumbstick/touch")?,
+            
+            XrActionSuggestedBinding::new(xr, instance, touch_trigger_action, "/user/hand/left/input/trigger/touch")?,
+            XrActionSuggestedBinding::new(xr, instance, touch_trigger_action, "/user/hand/right/input/trigger/touch")?,
+            
+            XrActionSuggestedBinding::new(xr, instance, touch_a_action, "/user/hand/right/input/a/touch")?,
+            XrActionSuggestedBinding::new(xr, instance, touch_b_action, "/user/hand/right/input/b/touch")?,
+            XrActionSuggestedBinding::new(xr, instance, touch_x_action, "/user/hand/left/input/x/touch")?,
+            XrActionSuggestedBinding::new(xr, instance, touch_y_action, "/user/hand/left/input/y/touch")?,
+            
+            XrActionSuggestedBinding::new(xr, instance, touch_thumbrest_action, "/user/hand/left/input/thumbrest/touch")?,
+            XrActionSuggestedBinding::new(xr, instance, touch_thumbrest_action, "/user/hand/right/input/thumbrest/touch")?,
+            
             XrActionSuggestedBinding::new(xr, instance, aim_pose_action, "/user/hand/left/input/aim/pose")?,
             XrActionSuggestedBinding::new(xr, instance, aim_pose_action, "/user/hand/right/input/aim/pose")?,
             XrActionSuggestedBinding::new(xr, instance, grip_pose_action, "/user/hand/left/input/grip/pose")?,
             XrActionSuggestedBinding::new(xr, instance, grip_pose_action, "/user/hand/right/input/grip/pose")?,
+            
             XrActionSuggestedBinding::new(xr, instance, detached_aim_pose_action, "/user/detached_controller_meta/left/input/aim/pose")?,
             XrActionSuggestedBinding::new(xr, instance, detached_aim_pose_action, "/user/detached_controller_meta/right/input/aim/pose")?,
             XrActionSuggestedBinding::new(xr, instance, detached_grip_pose_action, "/user/detached_controller_meta/left/input/grip/pose")?,
@@ -1272,8 +1784,30 @@ impl CxOpenXrInputs{
         unsafe{(xr.xrResumeSimultaneousHandsAndControllersTrackingMETA)(session, &resume_info)}
         .log_error("xrResumeSimultaneousHandsAndControllersTrackingMETA");
         
+        let actions = CxOpenXrInputActions{
+            trigger_action,
+            grip_action,
+            thumbstick_action,
+            click_a_action,
+            click_b_action,
+            click_x_action,
+            click_y_action,
+            click_menu_action,
+            click_thumbstick_action,
+            touch_thumbstick_action,
+            touch_trigger_action,
+            touch_a_action,
+            touch_b_action,
+            touch_x_action,
+            touch_y_action,
+            touch_thumbrest_action,
+            aim_pose_action,
+            grip_pose_action,
+        };
+        
         Ok(CxOpenXrInputs{
             action_set,
+            actions,
             left_hand: CxOpenXrHand{
                 tracker:left_hand_track,
                 joint_locations: Default::default()
@@ -1284,9 +1818,6 @@ impl CxOpenXrInputs{
             },
             left_controller: CxOpenXrController{
                 path: left_hand_path,
-                trigger_action,
-                aim_pose_action,
-                grip_pose_action,
                 aim_space: XrSpace::new_action_space(xr, session, aim_pose_action, left_hand_path, pose)?,
                 grip_space: XrSpace::new_action_space(xr, session, grip_pose_action, left_hand_path, pose)?,
                 detached_aim_space: XrSpace::new_action_space(xr, session, detached_aim_pose_action, left_detached_path, pose)?,
@@ -1294,9 +1825,6 @@ impl CxOpenXrInputs{
             },
             right_controller: CxOpenXrController{
                 path: right_hand_path,
-                trigger_action,
-                aim_pose_action,
-                grip_pose_action,
                 aim_space: XrSpace::new_action_space(xr, session, aim_pose_action, right_hand_path, pose)?,
                 grip_space: XrSpace::new_action_space(xr, session, grip_pose_action, right_hand_path, pose)?,
                 detached_aim_space: XrSpace::new_action_space(xr, session, detached_aim_pose_action, right_detached_path, pose)?,
