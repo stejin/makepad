@@ -30,10 +30,10 @@ Add the following code to the call to the `live_design` macro in `app.rs`:
 ```
 
 This code defines variables named `LEFT_ARROW` and `RIGHT_ARROW` to refer to the arrow icons that we added to the `resource` directory earlier, just as we did for the placeholder image in step 2.
-### Defining a `SlideshowButton`
+### Defining a `SlideshowNavigationButton`
 Add the following code to the call to the `live_design` macro in `app.rs`:
 ```
-    SlideshowButton = <Button> {
+    SlideshowNavigationButton = <Button> {
         width: 50,
         height: Fill,
         grab_key_focus: false,
@@ -46,9 +46,9 @@ Add the following code to the call to the `live_design` macro in `app.rs`:
     }
 ```
 
-This code defines a `SlideshowButton`. A `SlideshowButton` is a tall, narrow strip that takes up the height of its container and contains a single arrow icon. We'll use two `SlideshowButton`s to navigate the slideshow by mouse.
+This code defines a `SlideshowNavigationButton`. A `SlideshowNavigationButton` is a tall, narrow strip that takes up the height of its container and contains a single arrow icon. We'll use two `SlideshowNavigationButton`s to navigate the slideshow by mouse.
 
-This `SlideshowButton` has the following properties:
+This `SlideshowNavigationButton` has the following properties:
 - `width: 50` and `height: Fill` ensure the button has the desired size.
 - `grab_key_focus: false` prevents the button from grabbing key focus when it is clicked (we'll explain this further when we talk about how key focus works).
 - `draw_bg { ... }` controls how the button's background is drawn.
@@ -69,16 +69,16 @@ Inheritance in Makepad works very similar to prototypal inheritance in languages
 - Objects can override existing properties to change their values.
 - Objects can also add new properties that weren't present in the original.
 
-An example of this is is the `SlideshowButton` we just defined. The definition of `SlideshowButton` looks like this:
+An example of this is is the `SlideshowNavigationButton` we just defined. The definition of `SlideshowNavigationButton` looks like this:
 ```
-    SlideshowButton = <Button> {
+    SlideshowNavigationButton = <Button> {
         ...
     }
 ```
 
-That means `SlideshowButton` derives from `Button`. Recall that Button is one of the built-in widgets we imported with `use link::widgets::*;`. `SlideshowButton` copies over all properties from `Button`, and then overrides several of its properties.
+That means `SlideshowNavigationButton` derives from `Button`. Recall that Button is one of the built-in widgets we imported with `use link::widgets::*;`. `SlideshowNavigationButton` copies over all properties from `Button`, and then overrides several of its properties.
 
-You may have noticed that we did not specify an image for the icon in our definition of `SlideshowButton`. That is because `SlideshowButton` is *itself* intended to be used as a base class: each time we create an instance of it, we'll specify an image for the icon of that specific instance. You'll see an example of this in `SlideshowOverlay`, just below.
+You may have noticed that we did not specify an image for the icon in our definition of `SlideshowNavigationButton`. That is because `SlideshowNavigationButton` is *itself* intended to be used as a base class: each time we create an instance of it, we'll specify an image for the icon of that specific instance. You'll see an example of this in `SlideshowOverlay`, just below.
 ### Defining a `SlideshowOverlay`
 Add the following code to the call to the `live_design` macro in `app.rs`:
 ```
@@ -88,37 +88,37 @@ Add the following code to the call to the `live_design` macro in `app.rs`:
         cursor: Arrow,
         capture_overload: true,
 
-        left = <SlideshowButton> {
+        navigate_left = <SlideshowNavigationButton> {
             draw_icon: { svg_file: (LEFT_ARROW) }
         }
         <Filler> {}
-        right = <SlideshowButton> {
+        navigate_right = <SlideshowNavigationButton> {
             draw_icon: { svg_file: (RIGHT_ARROW) }
         }
     }
 ```
 
-This code defines a `SlideshowOverlay`. A `SlideshowOverlay` is a transparent container that sits on top of an `Image`, and contains the two `SlideshowButton`s we'll use for navigating the slideshow by mouse.
+This code defines a `SlideshowOverlay`. A `SlideshowOverlay` is a transparent container that sits on top of an `Image`, and contains the two `SlideshowNavigationButton`s we'll use for navigating the slideshow by mouse.
 
 This `SlideshowOverlay` has the following properties:
 - `height: Fill` and `width: Fill` ensure the overlay stretches to fill its container.
 - `cursor: Arrow` sets the icon of the mouse cursor to an arrow when it hovers over the overlay.
 - `capture_overload: true` allows the overlay to capture events that have already been captured by one of its children (we'll explain this further when we talk about how key focus works).
 
-Each `SlideshowOverlay` contains two `SlideshowButton`s, with a `Filler` in between:
+Each `SlideshowOverlay` contains two `SlideshowNavigationButton`s, with a `Filler` in between:
 ```
-        left = <SlideshowButton> {
+        navigate_left = <SlideshowNavigationButton> {
             draw_icon: { svg_file: (LEFT_ARROW) }
         }
         <Filler> {}
-        right = <SlideshowButton> {
+        navigate_right = <SlideshowNavigationButton> {
             draw_icon: { svg_file: (RIGHT_ARROW) }
         }
 ```
 
-For each `SlideshowButton`, we override the `svg_file` property of `draw_icon` with the variables for the arrow icons we defined earlier.
+For each `SlideshowNavigationButton`, we override the `svg_file` property of `draw_icon` with the variables for the arrow icons we defined earlier.
 
-`Filler` is a helper widget that fills up any unused space in a container. This ensures that the first `SlideshowButton` is laid out on the left while the second is laid out on the right.
+`Filler` is a helper widget that fills up any unused space in a container. This ensures that the first `SlideshowNavigationButton` is laid out on the left while the second is laid out on the right.
 ### Handling Key Focus
 We want `SlideshowOverlay` to handle keyboard input for navigating the slideshow, so this would be a good time to talk about how **key focus** works.
 
@@ -126,9 +126,9 @@ In Makepad, a widget only responds to keyboard events if it has key focus — me
 
 Most built-in widgets automatically grabs key focus when they are clicked — but only when the widget itself is clicked directly. If one of its children is clicked instead, then that child grabs the key focus, not the widget itself.
 
-For `SlideshowOverlay`, that's *not* the behaviour we want: we want `SlideshowOverlay` to grab key focus, even when one of the `SlideshowButton`s  is clicked. That's why we added the following properties earlier:
+For `SlideshowOverlay`, that's *not* the behaviour we want: we want `SlideshowOverlay` to grab key focus, even when one of the `SlideshowNavigationButton`s  is clicked. That's why we added the following properties earlier:
 
-- `grab_key_focus: false` on `SlideshowButton` prevents the button from grabbing key focus when it is clicked  — allowing the overlay to grab it instead.
+- `grab_key_focus: false` on `SlideshowNavigationButton` prevents the button from grabbing key focus when it is clicked  — allowing the overlay to grab it instead.
 - `capture_overload: true` on `SlideshowOverlay` allows the overlay to capture events (and thus grab key focus) that have already been captured by one of its children.
 
 ### Defining a `Slideshow`
@@ -152,21 +152,38 @@ This code defines a `Slideshow`. A `Slideshow` combines an `Image` with the `Sli
 This `Slideshow` has the following properties:
 - `flow: Overlay` ensures the slideshow's children are stacked on top of each other.
 ### Updating `App`
-Replace the definition of `App` in the call to the `live_design` macro in `app.rs` with the one here below:
+Replace the definition of `App` in the call to the `live_design` macro with the one here below:
 ```
     App = {{App}} {
         ui: <Root> {
             <Window> {
-                body = <View> {
-                    // <ImageGrid> {}
-                    slideshow = <Slideshow> {}
-                }
+                body = {
+	                <View> {
+	                    // <ImageGrid> {}
+	                    slideshow = <Slideshow> {}
+	                }
+	            }
             }
         }
+        placeholder: (PLACEHOLDER)
     }
 ```
 
-We've simply commented out our `ImageGrid`, and replaced it with our `Slideshow`. This is just a temporary measure so that we can develop our slideshow without worrying about the image grid. In the next step, we'll make it so we can switch between the image grid and the slideshow at will. 
+We've commented out our `ImageGrid`, and replaced it with our `Slideshow`. This is just a temporary measure so that we can develop our slideshow without worrying about the image grid. In the next step, we'll make it so we can switch between the image grid and the slideshow at will.
+
+We've also added a `placeholder` field, storing a reference to our placeholder image. This will allow us to refer to the placeholder image from Rust code. For this to work, we need to make sure to also add a placeholder field to the corresponding `App` struct:
+
+```
+#[derive(Live)]
+pub struct App {
+    #[live]
+    ui: WidgetRef,
+    #[live]
+    placeholder: LiveDependency,
+    #[rust]
+    state: State,
+}
+```
 ## Extending the State
 Now that we've updated the DSL code with the definitions we need, it's time to extend the state for our app with some additional fields and methods we need to make the slideshow dynamic.
 
@@ -174,7 +191,6 @@ Specifically, we’ll add a field to track which image is currently displayed in
 ### Updating the `State` struct
 Replace the definition of the `State` struct and its corresponding implementation of the `Default` trait with the one here below:
 ```
-
 #[derive(Debug)]
 pub struct State {
     image_paths: Vec<PathBuf>,
@@ -202,6 +218,7 @@ Note that `current_image_idx` is actually an `Option<usize>`. This is to handle 
 ### Adding Helper Methods
 To facilitate updating the slideshow at runtime, we're going to add a few helper methods to the `App` struct.
 
+#### Adding the `set_current_image` method
 The `set_current_image` method is used to change which image is currently displayed in the slideshow:
 ```
 impl App {
@@ -213,10 +230,7 @@ impl App {
             image.load_image_file_by_path(cx, &image_path).unwrap();
         } else {
             image
-                .load_image_dep_by_path(
-                    cx,
-                    "crate://self/resources/placeholder_image.jpg",
-                )
+                .load_image_dep_by_path(cx, self.placeholder.as_str())
                 .unwrap();
         }
         self.ui.view(id!(slideshow)).redraw(cx);
@@ -234,6 +248,7 @@ Here's what the `set_current_image` method does:
 	- It reloads the `Image` with the placeholder image.
 - It calls `redraw(..)` on the `Slideshow` to schedule it to be redrawn with the new image.
 
+#### Adding the `navigate_left/navigate_right` methods
 Now that we have a method to change which image is currently displayed in the slideshow, we'll add two more helper methods: `navigate_left` and `navigate_right`. These are used to navigate the slideshow to the previous and next image, respectively:
 
 ```
@@ -263,6 +278,7 @@ Here's what these methods do:
 ### Updating the `update_image_paths` method
 Replace the definition of the `update_image_paths` method on `App` with the one here below:
 ```
+impl App {
     pub fn update_image_paths(&mut self, cx: &mut Cx, path: &Path) {
         self.state.image_paths.clear();
         for entry in path.read_dir().unwrap() {
@@ -279,6 +295,7 @@ Replace the definition of the `update_image_paths` method on `App` with the one 
             self.set_current_image(cx, Some(0));
         }
     }
+}
 ```
 
 The only thing that's changed here is the 4 new lines at the end:
@@ -334,10 +351,10 @@ Next, we'll implement the `MatchEvent` trait for the `App` struct. For our use c
 ```
 impl MatchEvent for App {
     fn handle_actions(&mut self, cx: &mut Cx, actions: &Actions) {
-        if self.ui.button(id!(left)).clicked(&actions) {
+        if self.ui.button(id!(navigate_left)).clicked(&actions) {
             self.navigate_left(cx);
         }
-        if self.ui.button(id!(right)).clicked(&actions) {
+        if self.ui.button(id!(navigate_right)).clicked(&actions) {
             self.navigate_right(cx);
         }
         if let Some(event) =
@@ -357,17 +374,18 @@ Let's look at what this code does in more detail.
 #### Handling Button Clicks
 The following code:
 ```
-        if self.ui.button(id!(left)).clicked(&actions) {
+        if self.ui.button(id!(navigate_left)).clicked(&actions) {
             self.navigate_left(cx);
         }
-        if self.ui.button(id!(right)).clicked(&actions) {
+        if self.ui.button(id!(navigate_right)).clicked(&actions) {
             self.navigate_right(cx);
         }
 ```
 
 checks whether one of the buttons in the slideshow were clicked. If so, it calls the appropriate helper method (either `navigate_left` or `navigate_right`) to update the slideshow.
 
-**Note:** Whenever an action is dispatched by a widget, 
+**Note:**
+Whenever one or more actions are dispatched by a widget, an **action event** is dispatched containing the list of dispatched actions. When the `match_event` method on the `MatchEvent` is trait called with an action event, it causes the `handle_actions` method to be called with the list of dispatched actions. To handle actions, each widget provides one or more helper methods such as the `clicked` method on Button above. When you call this method with a list of  actions, it checks if one of the actions signified a button click, and if so, returns `true`.
 #### Handling Key Presses
 The following code:
 ```
@@ -392,7 +410,9 @@ cargo run --release -- path/to/your/images
 ```
 
 If everything is working correctly, a slideshow should now appear in your window:
-![[Slideshow.png]]
-We now have a working implementation of a slideshow. Clicking the buttons on the left/right should navigate the slideshow to the previous/next image, respectively. Alternatively, pressing the left/right arrow keys on the keyboard should have the same effect.
+![[Slideshow 1.png]]
+Clicking the buttons on the left/right should navigate the slideshow to the previous/next image, respectively. Alternatively, pressing the left/right arrow keys on the keyboard should have the same effect:
+![[Slideshow 2.png]]
+We now have a working implementation of a slideshow. In the next step, we'll enable switching between the image grid and the slideshow.
 
 **Note:** For keyboard input to work, you need to make sure that the slideshow overlay has keyboard focus. To do this, click anywhere on the slideshow first.

@@ -13,7 +13,7 @@ live_design! {
     LEFT_ARROW = dep("crate://self/resources/left_arrow.svg");
     RIGHT_ARROW = dep("crate://self/resources/right_arrow.svg");
 
-    TopMenu = <View> {
+    MenuBar = <View> {
         width: Fill,
         height: Fit,
 
@@ -55,11 +55,11 @@ live_design! {
     ImageBrowser = <View> {
         flow: Down,
 
-        <TopMenu> {}
+        <MenuBar> {}
         <ImageGrid> {}
     }
 
-    SlideshowButton = <Button> {
+    SlideshowNavigationButton = <Button> {
         width: 50,
         height: Fill,
         grab_key_focus: false,
@@ -77,11 +77,11 @@ live_design! {
         cursor: Arrow,
         capture_overload: true,
 
-        left = <SlideshowButton> {
+        navigate_left = <SlideshowNavigationButton> {
             draw_icon: { svg_file: (LEFT_ARROW) }
         }
         <Filler> {}
-        right = <SlideshowButton> {
+        navigate_right = <SlideshowNavigationButton> {
             draw_icon: { svg_file: (RIGHT_ARROW) }
         }
     }
@@ -102,14 +102,17 @@ live_design! {
     App = {{App}} {
         ui: <Root> {
             <Window> {
-                body = <PageFlip> {
-                    active_page: image_browser,
+                body = {
+                    page_flip = <PageFlip> {
+                        active_page: image_browser,
 
-                    image_browser = <ImageBrowser> {}
-                    slideshow = <Slideshow> {}
+                        image_browser = <ImageBrowser> {}
+                        slideshow = <Slideshow> {}
+                    }
                 }
             }
-        }
+        },
+        placeholder: (PLACEHOLDER)
     }
 }
 
@@ -179,6 +182,9 @@ impl Widget for ImageGrid {
                     state.image_paths.len().div_ceil(state.images_per_row);
                 list.set_item_range(cx, 0, num_rows);
                 while let Some(row_idx) = list.next_visible_item(cx) {
+                    if row_idx >= num_rows {
+                        continue;
+                    }
                     let row = list.item(cx, row_idx, live_id!(ImageRow));
                     row.draw_all(
                         cx,
@@ -199,6 +205,8 @@ impl Widget for ImageGrid {
 pub struct App {
     #[live]
     ui: WidgetRef,
+    #[live]
+    placeholder: LiveDependency,
     #[rust]
     state: State,
 }
@@ -226,13 +234,12 @@ impl App {
         let image = self.ui.image(id!(slideshow.image));
         if let Some(image_idx) = self.state.current_image_idx {
             let image_path = &self.state.image_paths[image_idx];
-            image.load_image_file_by_path_async(cx, &image_path).unwrap();
+            image
+                .load_image_file_by_path_async(cx, &image_path)
+                .unwrap();
         } else {
             image
-                .load_image_dep_by_path(
-                    cx,
-                    "crate://self/resources/placeholder.jpg",
-                )
+                .load_image_dep_by_path(cx, self.placeholder.as_str())
                 .unwrap();
         }
         self.ui.view(id!(slideshow)).redraw(cx);
@@ -279,14 +286,14 @@ impl MatchEvent for App {
     fn handle_actions(&mut self, cx: &mut Cx, actions: &Actions) {
         if self.ui.button(id!(slideshow_button)).clicked(&actions) {
             self.ui
-                .page_flip(id!(body))
+                .page_flip(id!(page_flip))
                 .set_active_page(cx, live_id!(slideshow));
             self.ui.view(id!(slideshow.overlay)).set_key_focus(cx);
         }
-        if self.ui.button(id!(left)).clicked(&actions) {
+        if self.ui.button(id!(navigate_left)).clicked(&actions) {
             self.navigate_left(cx);
         }
-        if self.ui.button(id!(right)).clicked(&actions) {
+        if self.ui.button(id!(navigate_right)).clicked(&actions) {
             self.navigate_right(cx);
         }
         if let Some(event) =
@@ -297,7 +304,7 @@ impl MatchEvent for App {
                 KeyCode::ArrowRight => self.navigate_right(cx),
                 KeyCode::Escape => self
                     .ui
-                    .page_flip(id!(body))
+                    .page_flip(id!(page_flip))
                     .set_active_page(cx, live_id!(image_browser)),
                 _ => {}
             }
