@@ -189,7 +189,7 @@ live_design!{
                 <ZooHeader> {
                     title = {text: "Intro"}
                     <ZooDesc> {
-                        text: "Intro."
+                        text: "Introduction."
                     }
                     <View> {
                         width: Fill, height: Fit,

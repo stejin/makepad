@@ -66,9 +66,9 @@ live_design!{
                 }
                 <Markdown>{
                     body:"
-                    # MD H1 
+                    # MD H1
                     ## H2 **Bold** *italic*
-                    1. aitem
+                    1. My items go here item
                     1. item
                       1. item  
                       1. test  
