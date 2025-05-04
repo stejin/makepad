@@ -22,7 +22,7 @@ workspace.members = [
     "libs/array_vec",
     "libs/btree",
     "libs/btree_vec",
-    "experiments/scroll",
+    #"experiments/scroll",
     "examples/image_viewer_1",
     "examples/image_viewer_2",
     "examples/image_viewer_3",
