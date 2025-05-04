@@ -173,9 +173,9 @@ live_design!{
                             sdf.move_to(pad_s, self.rect_size.y - pad_b)
                             sdf.line_to(pad_s + width * (self.attack / total), pad_b)
                             sdf.line_to(pad_s + width * ((self.attack + self.hold) / total), pad_b)
-                            sdf.line_to(pad_s + width * ((self.attack + self.decay + self.hold) / total), sustain)
+                            sdf.line_to(pad_s + width * ((self.attack + self.decay + self.hold) / total), sustain * sin(self.time) + sustain)
                             sdf.line_to(pad_s + width * (1.0 - self.release / total), sustain)
-                            sdf.line_to(pad_s + width, self.rect_size.y - pad_b)
+                            sdf.line_to(pad_s + width, self.rect_size.y - pad_b )
                             sdf.stroke_keep(#xFFC49910, 8.0);
                             sdf.stroke_keep(#xFFC49910, 6.0);
                             sdf.stroke_keep(#xFFC49920, 4.0);
@@ -189,7 +189,7 @@ live_design!{
                 <ZooHeader> {
                     title = {text: "Intro"}
                     <ZooDesc> {
-                        text: "Intro."
+                        text: "Introduction."
                     }
                     <View> {
                         width: Fill, height: Fit,
