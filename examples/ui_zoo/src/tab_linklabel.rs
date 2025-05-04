@@ -10,7 +10,7 @@ live_design!{
 
     pub DemoLinkLabel = <UIZooTabLayout_B> {
         desc = {
-            <H3> { text: "<LinkLabel>"}
+            <Markdown> { body: dep("crate://self/resources/linklabel.md") } 
         }
         demos = {
             <H4> { text: "Standard" }
@@ -19,19 +19,59 @@ live_design!{
             }
 
             <Hr> {}
-            <H4> { text: "Styled" }
+            <H4> { text: "Standard, disabled" }
             <UIZooRowH> {
                 <LinkLabel> {
-                    draw_bg: {
-                        color: #0AA
-                        color_hover: #0FF
-                        color_down: #0
+                    text: "Click me!"
+                    animator: {
+                        disabled = {
+                            default: on
+                        }
                     }
+                }
+            }
 
+            <Hr> {}
+            <H4> { text: "Standard, fully customized" }
+            <UIZooRowH> {
+                <LinkLabel> {
+                    label_walk: { width: Fit, height: Fit, margin: { left: 10.} }
                     draw_text: {
                         color: #0AA
-                        color_hover: #0FF
+                        color_hover: #0ff
                         color_down: #0
+                        color_focus: #0CC
+                        color_disabled: #8
+
+                        text_style: {
+                            font_size: 20.,
+                            line_spacing: 1.4,
+                            font_family:{ latin = font("crate://makepad_widgets/resources/IBMPlexSans-Italic.ttf", 0.0, 0.0) }
+                        }
+                        wrap: Word
+                    }
+
+                    draw_bg: {
+                        color: #0AA
+                        color_hover: #0ff
+                        color_down: #0
+                        color_focus: #0CC
+                        color_disabled: #8
+                    }
+
+                    icon_walk: {
+                        width: 20.
+                        height: Fit,
+                    }
+
+                    draw_icon: {
+                        color: #A00
+                        color_hover: #f00
+                        color_down: #0
+                        color_focus: #C00
+                        color_disabled: #8
+                    
+                        svg_file: dep("crate://self/resources/Icon_Favorite.svg"),
                     }
 
                     text: "Click me!"

@@ -8,6 +8,7 @@ use crate::{
     makepad_widgets::file_tree::*,
     makepad_platform::os::cx_stdin::*,
     makepad_file_protocol::SearchItem,
+    makepad_file_server::FileSystemRoots,
     file_system::file_system::*,
     studio_editor::*,
     run_view::*,
@@ -26,6 +27,7 @@ use crate::{
 use std::fs::File;
 use std::io::Write;
 use std::env;
+
 live_design!{
     use crate::app_ui::*;
     use link::widgets::*;
@@ -42,7 +44,7 @@ pub struct App {
     #[live] pub ui: WidgetRef,
     #[rust] pub data: AppData,
 }
-
+ 
 impl LiveRegister for App{
     fn live_register(cx: &mut Cx) {
         crate::makepad_widgets::live_design(cx);
@@ -69,7 +71,7 @@ impl App {
     pub fn open_code_file_by_path(&mut self, cx: &mut Cx, path: &str) {
         if let Some(file_id) = self.data.file_system.path_to_file_node_id(&path) {
             let dock = self.ui.dock(id!(dock));            
-            let tab_id = dock.unique_tab_id(file_id.0);
+            let tab_id = dock.unique_id(file_id.0);
             self.data.file_system.request_open_file(tab_id, file_id);
             let (tab_bar, pos) = dock.find_tab_bar_of_tab(live_id!(edit_first)).unwrap();
             // lets pick the template
@@ -175,18 +177,31 @@ pub enum AppAction{
 
 impl MatchEvent for App{
     fn handle_startup(&mut self, cx:&mut Cx){
-        let mut root = "./".to_string();
+        let mut roots = Vec::new();
+        let current_dir = env::current_dir().unwrap();
+        
         for arg in std::env::args(){
             if let Some(prefix) = arg.strip_prefix("--root="){
-                root = prefix.to_string();
-                break;
+                for root in prefix.split(","){
+                    let mut parts = root.splitn(2,":");
+                    let base = parts.next().expect("name:path expected");
+                    let path = parts.next().expect("name:path expected");
+                    let dir = current_dir.clone();
+                    roots.push((base.to_string(), dir.join(path)));
+                }
+            }
+            else{
             }
         }
-        let root_path = env::current_dir().unwrap().join(root);
-                
-        self.data.file_system.init(cx, &root_path);
-        self.data.build_manager.init(cx, &root_path);
-        
+        if roots.is_empty(){
+            let dir1 = current_dir.join("./");
+            roots.push(("makepad".to_string(),dir1));
+            roots.push(("experiments".to_string(),current_dir.join("../experiments")));
+            roots.push(("ai_snake".to_string(),current_dir.join("../snapshots/ai_snake")));
+        }
+        let roots = FileSystemRoots{roots};
+        self.data.file_system.init(cx, roots.clone());
+        self.data.build_manager.init(cx, roots);
                 
         //self.data.build_manager.discover_external_ip(cx);
         self.data.build_manager.start_http_server();
@@ -279,7 +294,7 @@ impl MatchEvent for App{
                     }
                     else{
                         // lets open the editor
-                        let tab_id = dock.unique_tab_id(file_id.0);
+                        let tab_id = dock.unique_id(file_id.0);
                         self.data.file_system.request_open_file(tab_id, file_id);
                         // lets add a file tab 'somewhere'
                         let (tab_bar, pos) = dock.find_tab_bar_of_tab(live_id!(edit_first)).unwrap();
@@ -535,7 +550,7 @@ impl MatchEvent for App{
                             pre_word_boundary:true,
                             post_word_boundary:true
                         }];
-                        search.text_input(id!(search_input)).set_text(cx, word);
+                        search.text_input(id!(search_input)).set_text(cx, &word);
                         self.data.file_system.search_string(cx, set);
                     } 
                 },
@@ -548,7 +563,7 @@ impl MatchEvent for App{
                             pre_word_boundary:ke.modifiers.control,
                             post_word_boundary:ke.modifiers.control
                         }];
-                        search.text_input(id!(search_input)).set_text(cx, word);
+                        search.text_input(id!(search_input)).set_text(cx, &word);
                         self.data.file_system.search_string(cx, set);
                     } 
                 },
@@ -590,7 +605,7 @@ impl MatchEvent for App{
                     if let DragItem::FilePath {path, internal_id} = &drop_event.items[0] {
                         if let Some(internal_id) = internal_id { // from inside the dock
                             if drop_event.modifiers.logo {
-                                let tab_id = dock.unique_tab_id(internal_id.0);
+                                let tab_id = dock.unique_id(internal_id.0);
                                 dock.drop_clone(cx, drop_event.abs, *internal_id, tab_id, live_id!(CloseableTab));
                             }
                             else {
@@ -600,7 +615,7 @@ impl MatchEvent for App{
                         }
                         else { // external file, we have to create a new tab
                             if let Some(file_id) = self.data.file_system.path_to_file_node_id(&path) {
-                                let tab_id = dock.unique_tab_id(file_id.0);
+                                let tab_id = dock.unique_id(file_id.0);
                                 self.data.file_system.request_open_file(tab_id, file_id);
                                 let template = FileSystem::get_editor_template_from_path(&path);
                                 dock.drop_create(cx, drop_event.abs, tab_id, template, "".to_string(), live_id!(CloseableTab));
@@ -667,7 +682,7 @@ impl MatchEvent for App{
                 // If the tab is already open, focus it
                 dock.select_tab(cx, tab_id);
             } else {
-                let tab_id = dock.unique_tab_id(file_id.0);
+                let tab_id = dock.unique_id(file_id.0);
                 self.data.file_system.request_open_file(tab_id, file_id);
                 self.data.file_system.request_open_file(tab_id, file_id);
                                 
