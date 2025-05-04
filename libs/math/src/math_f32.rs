@@ -48,6 +48,13 @@ pub struct Pose {
 }
 
 impl Pose {
+    pub fn new(orientation:Quat, position:Vec3)->Self{
+        Self{
+            orientation,
+            position
+        }
+    }
+    
     pub fn transform_vec3(&self, v:&Vec3)->Vec3{
         let r0 = self.orientation.rotate_vec3(v);
         r0 + self.position
@@ -503,12 +510,16 @@ pub struct CameraFov {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Default, Debug, PartialEq, SerBin, DeBin)]
+#[derive(Clone, Copy, Debug, PartialEq, SerBin, DeBin)]
 pub struct Quat {
     pub x: f32,
     pub y: f32,
     pub z: f32,
     pub w: f32
+}
+
+impl Default for Quat{
+    fn default()->Self{Self{x:0.0,y:0.0,z:0.0,w:1.0}}
 }
 
 impl Quat {
@@ -588,6 +599,54 @@ impl Quat {
             y: self.y / len,
             z: self.z / len,
             w: self.w / len,
+        }
+    }
+    
+    pub fn look_rotation(forward: Vec3, up:Vec3)->Self{
+        let forward = forward.normalize();
+        let up = up.normalize();
+        let v2 = forward;
+        let v0 = Vec3::cross(up, forward).normalize();
+        let v1 = Vec3::cross(v2, v0);
+        
+        let num = (v0.x + v1.y) + v2.z;
+        if num > 0.0{
+            let num = (num+1.0).sqrt();
+            let numh = 0.5 / num;
+            return Quat{
+                x: (v1.z - v2.y) * numh,
+                y: (v2.x - v0.z) * numh,
+                z: (v0.y - v1.x) * numh,
+                w: num * 0.5,
+            }
+        }
+        if (v0.x >= v1.y) && (v0.x >= v2.z){
+            let num = (((1.0+v0.x) - v1.y) - v2.z).sqrt();
+            let numh = 0.5 / num;
+            return Quat{
+                x: 0.5 * num,
+                y: (v0.y + v1.x) * numh,
+                z: (v0.z + v2.x) * numh,
+                w: (v1.z - v2.y) * numh
+            }
+        }
+        if v1.y > v2.z{
+            let num = ((((1.0+v1.y) - v0.x) - v2.z)).sqrt();
+            let numh = 0.5 / num;
+            return Quat{
+                x: (v1.x + v0.y) * numh,
+                y: 0.5 * num,
+                z: (v2.y + v1.z) * numh,
+                w: (v2.x - v0.z) * numh
+            }
+        }
+        let num = (((1.0 + v2.z) - v0.x) - v1.y).sqrt();
+        let numh = 0.5 / num;
+        Quat{
+            x: (v2.x + v0.z) * numh,
+            y: (v2.y + v1.z) * numh,
+            z: 0.5 * num,
+            w: (v0.y - v1.x) * numh
         }
     }
     
@@ -822,7 +881,7 @@ impl Mat4 {
         }
     }
     
-    pub const fn translation(x: f32, y: f32, z: f32) -> Mat4 {
+    pub const fn translation(v:Vec3) -> Mat4 {
         Mat4 {v: [
             1.0,
             0.0,
@@ -836,34 +895,54 @@ impl Mat4 {
             0.0,
             1.0,
             0.0,
-            x,
-            y,
-            z,
+            v.x,
+            v.y,
+            v.z,
             1.0
         ]}
         
     }
     
-    pub const fn scaled_translation(sx: f32, sy:f32, sz:f32,  x: f32, y: f32, z: f32) -> Mat4 {
+    pub const fn nonuniform_scaled_translation(s:Vec3,  t:Vec3) -> Mat4 {
         Mat4 {v: [
-            sx,
+            s.x,
             0.0,
             0.0,
             0.0,
             0.0,
-            sy,
+            s.y,
             0.0,
             0.0,
             0.0,
             0.0,
-            sz,
+            s.z,
             0.0,
-            x,
-            y,
-            z,
+            t.x,
+            t.y,
+            t.z,
             1.0
         ]}
-        
+    }
+    
+    pub const fn scaled_translation(s:f32,  t:Vec3) -> Mat4 {
+        Mat4 {v: [
+            s,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            s,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            s,
+            0.0,
+            t.x,
+            t.y,
+            t.z,
+            1.0
+        ]}
     }
         
     pub const fn scale(s: f32) -> Mat4 {
@@ -887,14 +966,15 @@ impl Mat4 {
         ]}
                 
     }
-    pub fn rotation(rx: f32, ry: f32, rz: f32) -> Mat4 {
-        const TORAD: f32 = 0.017453292;
-        let cx = f32::cos(rx * TORAD);
-        let cy = f32::cos(ry * TORAD);
-        let cz = f32::cos(rz * TORAD);
-        let sx = f32::sin(rx * TORAD);
-        let sy = f32::sin(ry * TORAD);
-        let sz = f32::sin(rz * TORAD);
+    
+    pub fn rotation(r:Vec3) -> Mat4 {
+        //const TORAD: f32 = 0.017453292;
+        let cx = f32::cos(r.x);
+        let cy = f32::cos(r.y);
+        let cz = f32::cos(r.z);
+        let sx = f32::sin(r.x);
+        let sy = f32::sin(r.y);
+        let sz = f32::sin(r.z);
         let m0 = cy * cz + sx * sy * sz;
         let m1 = -sz * cy + cz * sx * sy;
         let m2 = sy * cx;
