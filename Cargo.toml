@@ -37,6 +37,8 @@ workspace.members = [
     "examples/slides",
     #"examples/graph",
     #"examples/image_viewer",
+    # === projects ===
+    "projects/test_1",
     "studio",
     # "makepad_wonderous",
     # "complex_layout",
