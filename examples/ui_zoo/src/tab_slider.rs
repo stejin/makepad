@@ -29,6 +29,7 @@ live_design!{
                 <Slider> { text: "precision", precision: 20 }
                 <Slider> { text: "stepped", step: 0.1 }
                 
+                <Hr> {}
                 <H4> { text: "SliderGradientY"}
                 <SliderGradientY> { text: "Default" }
                 <SliderGradientY> { text: "label_align", label_align: { x: 0.5, y: 0. } }
@@ -52,6 +53,7 @@ live_design!{
                 <SliderFlatter> { text: "precision", precision: 20 }
                 <SliderFlatter> { text: "stepped", step: 0.1 }
 
+                <Hr> {}
                 <H4> { text: "SliderMinimal"}
                 <SliderMinimal> { text: "Default" }
                 <SliderMinimal> {
@@ -68,6 +70,7 @@ live_design!{
                 <SliderMinimal> { text: "precision", precision: 20 }
                 <SliderMinimal> { text: "stepped", step: 0.1 }
 
+                <Hr> {}
                 <H4> { text: "SliderMinimalFlat"}
                 <SliderMinimalFlat> { text: "Default" }
                 <SliderMinimalFlat> { text: "label_align", label_align: { x: 0.5, y: 0. } }
@@ -455,7 +458,6 @@ live_design!{
                         color: (THEME_COLOR_TEXT_VAL)
                         color_hover: (THEME_COLOR_TEXT_HOVER)
                         color_focus: (THEME_COLOR_TEXT_FOCUS)
-                        color_drag: (THEME_COLOR_TEXT_DOWN)
                         color_disabled: (THEME_COLOR_TEXT_DISABLED)
                         color_empty: (THEME_COLOR_TEXT_PLACEHOLDER)
                         color_empty_hover: (THEME_COLOR_TEXT_PLACEHOLDER_HOVER)

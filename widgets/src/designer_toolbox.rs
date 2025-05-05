@@ -39,13 +39,12 @@ live_design!{
         
         <DockToolbar> {
             content = {
-                align: { x: 0., y: 0.5 }
-                spacing: (THEME_SPACE_3 * 1.5)
-                <ButtonFlat> {
-                    width: 32.
+                align: { x: 0., y: 0. }
+                spacing: (THEME_SPACE_3)
+                <ButtonFlatter> {
+                    width: Fit
                     text: ""
-                    margin: { right: -10. }
-                    icon_walk: { width: 11. }
+                    icon_walk: { width: 11., margin: { left: 3., right: -3.} }
                     draw_icon: {
                         svg_file: dep("crate://self/resources/icons/icon_typography.svg"),
                     }
@@ -55,16 +54,14 @@ live_design!{
                     width: Fit,
                     flow: Right,
                     spacing: (THEME_SPACE_1)
-                    <Pbold> {
+                    <Labelbold> {
                         width: Fit,
                         text: "Font",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
-                    <P> {
+                    <Label> {
                         width: Fit,
                         text: "Noto Sans",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
                 }
@@ -72,16 +69,14 @@ live_design!{
                     width: Fit,
                     spacing: (THEME_SPACE_1)
                     flow: Right,
-                    <Pbold> {
+                    <Labelbold> {
                         width: Fit,
                         text: "Weight",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
-                    <P> {
+                    <Label> {
                         width: Fit,
                         text: "bold",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
                 }
@@ -89,16 +84,14 @@ live_design!{
                     width: Fit,
                     spacing: (THEME_SPACE_1)
                     flow: Right,
-                    <Pbold> {
+                    <Labelbold> {
                         width: Fit,
                         text: "Size",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
-                    <P> {
+                    <Label> {
                         width: Fit,
                         text: "11 pt",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
                 } 
@@ -106,16 +99,14 @@ live_design!{
                     width: Fit,
                     spacing: (THEME_SPACE_1)
                     flow: Right,
-                    <Pbold> {
+                    <Labelbold> {
                         width: Fit,
                         text: "Line height",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
-                    <P> {
+                    <Label> {
                         width: Fit,
                         text: "1.2",
-                        margin: 0.,
                         padding: <THEME_MSPACE_V_1> {}
                     }
                 } 
@@ -124,7 +115,7 @@ live_design!{
                     width: Fit,
                     flow: Right,
                     spacing: 0,
-                    <ButtonFlat> {
+                    <ButtonFlatter> {
                         width: 25.
                         text: ""
                         icon_walk: { width: 11. }
@@ -132,7 +123,7 @@ live_design!{
                             svg_file: dep("crate://self/resources/icons/icon_text_align_left.svg"),
                         }
                     }
-                    <ButtonFlat> {
+                    <ButtonFlatter> {
                         width: 25.
                         text: ""
                         icon_walk: { width: 11. }
@@ -141,7 +132,7 @@ live_design!{
                             svg_file: dep("crate://self/resources/icons/icon_text_align_justify.svg"),
                         }
                     }
-                    <ButtonFlat> {
+                    <ButtonFlatter> {
                         width: 25.
                         text: ""
                         icon_walk: { width: 11. }
@@ -152,7 +143,7 @@ live_design!{
                     }
                 }
                 <Vr> {}
-                <P> { width: Fit, text: "Stroke" }
+                <Label> { width: Fit, text: "Stroke" }
                 <RoundedView> {
                     width: 15., height: 15.,
                     draw_bg: {
@@ -160,7 +151,7 @@ live_design!{
                         border_radius: 5.0
                     }
                 }
-                <P> { width: Fit, text: "Fill" }
+                <Label> { width: Fit, text: "Fill" }
                 <RoundedView> {
                     width: 15., height: 15.,
                     draw_bg: {
@@ -170,9 +161,9 @@ live_design!{
                 }
                 <Filler> {}
                 <Vr> {}
-                <P> { width: Fit, text: "Canvas" }
+                <Label> { width: Fit, text: "Canvas" }
                 <RoundedView> {
-                    margin: { right: (THEME_SPACE_1)}
+                    margin: { right: (THEME_SPACE_2)}
                     width: 15., height: 15.,
                     draw_bg: {
                         color: (THEME_COLOR_D_3),
@@ -206,20 +197,20 @@ live_design!{
                 align: { x: 0.5, y: 0.5}
                 <ButtonFlatter> {
                     flow: Down,
-                    icon_walk: { width: 9. }
+                    icon_walk: { margin: {top: 25.}, width: 9. }
                     draw_icon: {
                         svg_file: dep("crate://self/resources/icons/icon_select.svg"),
                     }
                     text: ""
                 }
             }
-            <Hr> { margin: 0. }
+            <Hr> { margin: 0., height: 10.}
             <View> {
                 width: Fit, height: 36.,
                 align: { x: 0.5, y: 0.5}
                 <ButtonFlatter> {
                     flow: Down,
-                    icon_walk: { width: 14.5 }
+                    icon_walk: { margin: {top: 20.}, width: 14.5 }
                     align: { x: 0.5, y: 0.5 }
                     draw_icon: {
                         svg_file: dep("crate://self/resources/icons/icon_draw.svg"),
@@ -227,14 +218,14 @@ live_design!{
                     text: ""
                 }
             }
-            <Hr> { margin: 0. }
+            <Hr> { margin: 0., height: 10.}
             <View> {
                 width: Fit, height: 36.,
                 
                 align: { x: 0.5, y: 0.5}
                 <ButtonFlatter> {
                     flow: Down,
-                    icon_walk: { width: 12. }
+                    icon_walk: { margin: {top: 20.}, width: 12. }
                     align: { x: 0.5, y: 0.5 }
                     draw_icon: {
                         svg_file: dep("crate://self/resources/icons/icon_text.svg"),
@@ -242,13 +233,13 @@ live_design!{
                     text: ""
                 }
             }
-            <Hr> { margin: 0. }
+            <Hr> { margin: 0., height: 10. }
             <View> {
                 width: Fit, height: 36.,
                 align: { x: 0.5, y: 0.5}
                 <ButtonFlatter> {
                     flow: Down,
-                    icon_walk: { width: 13.5 }
+                    icon_walk: { margin: {top: 18.}, width: 13.5 }
                     align: { x: 0.5, y: 0.5 }
                     draw_icon: {
                         svg_file: dep("crate://self/resources/icons/icon_layout.svg"),
@@ -256,14 +247,14 @@ live_design!{
                     text: ""
                 }
             }
-            <Hr> { margin: 0. }
+            <Hr> { margin: 0., height: 10. }
             <View> {
                 width: Fit, height: 36.,
                 align: { x: 0.5, y: 0.5}
                 <ButtonFlatter> {
                     flow: Down,
                     flow: Down,
-                    icon_walk: { width: 15.5 }
+                    icon_walk: { margin: {top: 20.}, width: 15.5 }
                     align: { x: 0.5, y: 0.5 }
                     draw_icon: {
                         svg_file: dep("crate://self/resources/icons/icon_widget.svg"),
@@ -271,13 +262,13 @@ live_design!{
                     text: ""
                 }
             }
-            <Hr> { margin: 0. }
+            <Hr> { margin: 0., height: 10. }
             <View> {
                 width: Fit, height: 36.,
                 align: { x: 0.5, y: 0.5}
                 <ButtonFlatter> {
                     flow: Down,
-                    icon_walk: { width: 15.5 }
+                    icon_walk: { margin: {top: 17.}, width: 15.5 }
                     align: { x: 0.5, y: 0.5 }
                     draw_icon: {
                         svg_file: dep("crate://self/resources/icons/icon_image.svg"),

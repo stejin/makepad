@@ -371,7 +371,7 @@ impl BuildManager {
                         file.to_string()
                     }
                     // nonlocal file, make full path
-                    else if let Some(root) = self.roots.find_root(root){
+                    else if let Ok(root) = self.roots.find_root(root){
                         root.join(file).into_os_string().into_string().unwrap()
                     }
                     else{
@@ -473,7 +473,6 @@ impl BuildManager {
                 for msg in msgs.0 {
                     match msg {
                         AppToStudio::LogItem(item) => {
-                            log!("GOT APP TO STUDIO {:?}", item);
                             let file_name = if let Some(build) = active.builds.get(&build_id){
                                 self.roots.map_path(&build.root, &item.file_name)
                             }
