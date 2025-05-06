@@ -12,6 +12,8 @@ use crate::{
     file_system::file_system::*,
     studio_editor::*,
     run_view::*,
+    snapshot::*,
+    studio_file_tree::*,
     makepad_platform::studio::{JumpToFile,EditFile, SelectInFile, PatchFile, SwapSelection},
     log_list::*,
     makepad_code_editor::{CodeSession,text::{Position}},
@@ -47,17 +49,7 @@ pub struct App {
  
 impl LiveRegister for App{
     fn live_register(cx: &mut Cx) {
-        crate::makepad_widgets::live_design(cx);
-        crate::makepad_code_editor::live_design(cx);
-        crate::run_list::live_design(cx);
-        crate::log_list::live_design(cx);
-        crate::profiler::live_design(cx);
-        crate::run_view::live_design(cx);
-        crate::studio_editor::live_design(cx);
-        crate::studio_file_tree::live_design(cx);
-        crate::app_ui::live_design(cx);
-        crate::ai_chat::ai_chat_view::live_design(cx);
-        crate::search::live_design(cx);
+        crate::live_design(cx);
         // for macos
         cx.start_stdin_service();
     }
@@ -67,7 +59,6 @@ app_main!(App);
 
 impl App {
      
-    
     pub fn open_code_file_by_path(&mut self, cx: &mut Cx, path: &str) {
         if let Some(file_id) = self.data.file_system.path_to_file_node_id(&path) {
             let dock = self.ui.dock(id!(dock));            
@@ -165,7 +156,9 @@ pub enum AppAction{
     StartRecompile,
     ReloadFileTree,
     RecompileStarted,
+    RedrawSnapshots,
     ClearLog, 
+    SetSnapshotMessage{message:String},
     SendAiChatToBackend{chat_id:LiveId, history_slot:usize},
     CancelAiGeneration{chat_id:LiveId},
     SaveAiChat{chat_id:LiveId},
@@ -187,17 +180,17 @@ impl MatchEvent for App{
                     let base = parts.next().expect("name:path expected");
                     let path = parts.next().expect("name:path expected");
                     let dir = current_dir.clone();
-                    roots.push((base.to_string(), dir.join(path)));
+                    roots.push((base.to_string(), dir.join(path).canonicalize().unwrap()));
                 }
             }
             else{
             }
         }
         if roots.is_empty(){
-            let dir1 = current_dir.join("./");
+            let dir1 = current_dir.join("./").canonicalize().unwrap();
+            //roots.push(("ai_snake".to_string(),current_dir.join("../snapshots/ai_snake").canonicalize().unwrap()));
             roots.push(("makepad".to_string(),dir1));
-            roots.push(("experiments".to_string(),current_dir.join("../experiments")));
-            roots.push(("ai_snake".to_string(),current_dir.join("../snapshots/ai_snake")));
+            //roots.push(("experiments".to_string(),current_dir.join("../experiments").canonicalize().unwrap()));
         }
         let roots = FileSystemRoots{roots};
         self.data.file_system.init(cx, roots.clone());
@@ -210,11 +203,12 @@ impl MatchEvent for App{
     
     fn handle_action(&mut self, cx:&mut Cx, action:&Action){
         let dock = self.ui.dock(id!(dock));
-        let file_tree = self.ui.view(id!(file_tree));
+        let file_tree = self.ui.studio_file_tree(id!(file_tree));
         let log_list = self.ui.log_list(id!(log_list));
         let run_list = self.ui.view(id!(run_list_tab));
         let profiler = self.ui.view(id!(profiler));
         let search = self.ui.view(id!(search));
+        let snapshot = self.ui.snapshot(id!(snapshot_tab));
         
         match action.cast(){
             AppAction::SwapSelection(ss)=>{
@@ -377,7 +371,7 @@ impl MatchEvent for App{
                 profiler.redraw(cx);
             }
             AppAction::ReloadFileTree=>{
-                self.data.file_system.reload_file_tree();
+                self.data.file_system.file_client.load_file_tree();
             }
             AppAction::RedrawProfiler=>{
                 profiler.redraw(cx);
@@ -439,6 +433,12 @@ impl MatchEvent for App{
                 dock.close_tab(cx, run_view_id.add(2));
                 dock.redraw(cx);
                 log_list.redraw(cx);
+            }
+            AppAction::SetSnapshotMessage{message}=>{
+                snapshot.set_message(cx, message);
+            }
+            AppAction::RedrawSnapshots=>{
+                snapshot.redraw(cx);
             }
         }
                 
@@ -513,7 +513,9 @@ impl MatchEvent for App{
                 file_tree.redraw(cx);
                 self.load_state(cx, 0);
                 self.data.ai_chat_manager.init(&mut self.data.file_system);
-                //self.open_code_file_by_path(cx, "examples/slides/src/app.rs");
+            }
+            FileSystemAction::SnapshotImageLoaded => {
+                snapshot.redraw(cx);
             }
             FileSystemAction::RecompileNeeded => {
                 self.data.build_manager.start_recompile_timer(cx);

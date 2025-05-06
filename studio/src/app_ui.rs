@@ -13,6 +13,7 @@ live_design!{
     use makepad_studio::run_list::RunList;
     use makepad_studio::profiler::Profiler;
     use makepad_studio::search::Search;
+    use makepad_studio::snapshot::Snapshot;
     
     ICO_SEARCH = dep("crate://self/resources/icons/Icon_Search.svg")
 
@@ -23,6 +24,7 @@ live_design!{
                 return (THEME_COLOR_D_1)
             }
         }
+        text:""
         icon_walk: {width: 250.0, height: Fit}
         draw_bg: {
             fn pixel(self) -> vec4 {
@@ -120,11 +122,12 @@ live_design!{
         caption_bar = { margin: {left: -100}, visible: true, caption_label = {label = {text: "Makepad"}} 
         <View>{
             width: Fit,
-            padding:{top:0,right:7}
-            preset_1 = <Button>{text:"A"}
-            preset_2 = <Button>{text:"C"}
-            preset_3 = <Button>{text:"D"}
-            preset_4 = <Button>{text:"P"}
+            spacing: (THEME_SPACE_2)
+            padding: <THEME_MSPACE_1> { right: (THEME_SPACE_2)  }
+            preset_1 = <ButtonFlatter> { text: "A" }
+            preset_2 = <ButtonFlatter> { text: "C" }
+            preset_3 = <ButtonFlatter> { text: "D" }
+            preset_4 = <ButtonFlatter> { text: "P" }
             }
         },
         window: { inner_size: vec2(1600, 900), /*dpi_override:3.0 */},
@@ -186,7 +189,7 @@ live_design!{
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 10.
-                            margin: { top: 5. }
+                            margin: { top: 5., left: 5. }
                         }
                         draw_icon: {
                             color: (STUDIO_PALETTE_1)
@@ -197,7 +200,7 @@ live_design!{
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 5.
-                            margin: { top: 5. }
+                            margin: { top: 5., left: 5. }
                         }
                         draw_icon: {
                             color: (STUDIO_PALETTE_6)
@@ -208,7 +211,7 @@ live_design!{
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 8.
-                            margin: { top: 5.5 }
+                            margin: { top: 5.5, left: 5. }
                         }
                         draw_icon: {
                             color: (STUDIO_PALETTE_6)
@@ -219,14 +222,14 @@ live_design!{
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 11.
-                            margin: { top: 4. }
+                            margin: { top: 4., left: 5. }
                         }
                         draw_icon: {
                             color: (STUDIO_PALETTE_3)
                             svg_file: dep("crate://self/resources/icons/icon_designer.svg"),
                         }
                     }
-                    FilesFirstTab = <IconTab> {
+                    FilesTab = <IconTab> {
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 8.5,
@@ -241,7 +244,7 @@ live_design!{
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 11.,
-                            margin: { top: 6. }
+                            margin: { top: 6., left: 5. }
                         }
                         draw_icon: {
                             color: (STUDIO_PALETTE_4)
@@ -249,6 +252,17 @@ live_design!{
                         }
                     }
                     RunListTab = <IconTab> {
+                        spacing: (THEME_SPACE_2)
+                        icon_walk: {
+                            width: 7.
+                            margin: { top: 5. }
+                        }
+                        draw_icon: {
+                            color: (STUDIO_PALETTE_5)
+                            svg_file: dep("crate://self/resources/icons/icon_run.svg"),
+                        }
+                    }
+                    SnapshotTab = <IconTab> {
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 7.
@@ -281,7 +295,7 @@ live_design!{
                             svg_file: dep("crate://self/resources/icons/icon_profiler.svg"),
                         }
                     }
-                    SearchFirstTab = <IconTab> {
+                    SearchTab = <IconTab> {
                         spacing: (THEME_SPACE_2)
                         icon_walk: {
                             width: 10.5,
@@ -334,7 +348,7 @@ live_design!{
                 }*/
     
                 file_tree_tabs = Tabs {
-                    tabs: [file_tree_tab, run_list_tab, search],
+                    tabs: [file_tree_tab, run_list_tab, search, snapshot_tab],
                     selected: 0
                 }
     
@@ -370,13 +384,13 @@ live_design!{
     
                 file_tree_tab = Tab {
                     name: "Files",
-                    template: FilesFirstTab,
+                    template: FilesTab,
                     kind: StudioFileTree
                 }
     
                 search = Tab {
                     name: "Search"
-                    template: SearchFirstTab,
+                    template: SearchTab,
                     kind: Search
                 }
     
@@ -413,7 +427,11 @@ live_design!{
                     template: RunListTab,
                     kind: RunList
                 }
-                
+                snapshot_tab = Tab {
+                    name: "Snapshot"
+                    template: SnapshotTab,
+                    kind: Snapshot
+                }
                 log_list_tab = Tab {
                     name: "Log",
                     template: LogTab,
@@ -535,19 +553,20 @@ live_design!{
                                 margin: 0.,
                                 padding: <THEME_MSPACE_1> {}
                             }
-                            <Toggle> { text: "Release", }
-                            <Toggle> { text: "Debug"}
+                            <ToggleFlat> { text: "Release", }
+                            <ToggleFlat> { text: "Debug"}
                         }
                     }
                     <RunList> {}
                 }
+                Snapshot = <Snapshot> {}
                 Search = <Search> {}
                 RunView = <RunView> {}
                 StudioFileTree = <View> {
                     flow: Down,
                     <DockToolbar> {
                         content = {
-                            <TextInput> {
+                            <TextInputFlat> {
                                 width: Fill,
                                 empty_text: "Filter",
                             }
@@ -563,13 +582,10 @@ live_design!{
                             <View> {
                                 width: Fit
                                 flow: Right,
-                                spacing: (THEME_SPACE_1)
                                 <CheckBoxCustom> {
-                                    margin: {left: (THEME_SPACE_1)}
                                     text:"Error"
                                     align: { y: 0.5 }
                                     draw_bg: { check_type: None }
-                                    spacing: (THEME_SPACE_1),
                                     icon_walk: {width: 7.}
                                     draw_icon: {
                                         color: (THEME_COLOR_D_2),
@@ -581,7 +597,6 @@ live_design!{
                                     text:"Warning"
                                     align: { y: 0.5 }
                                     draw_bg: { check_type: None }
-                                    spacing: (THEME_SPACE_1),
                                     icon_walk: {width: 7.}
                                     draw_icon: {
                                         color: (THEME_COLOR_D_2),
@@ -593,7 +608,6 @@ live_design!{
                                     text:"Log"
                                     align: { y: 0.5 }
                                     draw_bg: { check_type: None }
-                                    spacing: (THEME_SPACE_1),
                                     icon_walk: {width: 7.}
                                     draw_icon: {
                                         color: (THEME_COLOR_D_2),
@@ -605,7 +619,6 @@ live_design!{
                                     text:"Wait"
                                     align: { y: 0.5 }
                                     draw_bg: { check_type: None }
-                                    spacing: (THEME_SPACE_1),
                                     icon_walk: {width: 7.}
                                     draw_icon: {
                                         color: (THEME_COLOR_D_2),
@@ -617,7 +630,6 @@ live_design!{
                                     text:"Panic"
                                     align: { y: 0.5 }
                                     draw_bg: { check_type: None }
-                                    spacing: (THEME_SPACE_1),
                                     icon_walk: {width: 7.}
                                     draw_icon: {
                                         color: (THEME_COLOR_D_2),
@@ -626,9 +638,8 @@ live_design!{
                                     }
                                 }
                             }
-                            // <Vr> {}
                             <Filler> {}
-                            <TextInput> {
+                            <TextInputFlat> {
                                 width: 200.
                                 empty_text: "Filter",
                             }

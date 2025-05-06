@@ -1,19 +1,7 @@
 use {
+    makepad_shell::*,
     crate::{
-        makepad_file_protocol::{
-            DirectoryEntry,
-            FileNodeData,
-            FileTreeData,
-            FileError,
-            FileNotification,
-            FileRequest,
-            FileResponse,
-            SearchItem,
-            SearchResult,
-            SaveKind,
-            SaveFileResponse,
-            OpenFileResponse
-        },
+        makepad_file_protocol::*,
     },
     std::{
         time::Instant,
@@ -90,6 +78,11 @@ impl FileServerConnection {
             FileRequest::LoadFileTree {with_data} => FileResponse::LoadFileTree(self.load_file_tree(with_data)),
             FileRequest::OpenFile{path,id} => FileResponse::OpenFile(self.open_file(path, id)),
             FileRequest::SaveFile{path, data, id, patch} => FileResponse::SaveFile(self.save_file(path, data, id, patch)),
+            FileRequest::LoadSnapshotImage{root, hash}=>FileResponse::LoadSnapshotImage(self.load_snapshot_image(root, hash)),
+            FileRequest::SaveSnapshotImage{root, hash, data}=>FileResponse::SaveSnapshotImage(self.save_snapshot_image(root, hash, data)),
+            FileRequest::CreateSnapshot{root, message}=>FileResponse::CreateSnapshot(self.create_snapshot(root, message)),
+            FileRequest::LoadSnapshot{root, hash}=>FileResponse::LoadSnapshot(self.load_snapshot(root, hash)),
+                                    
         }
     }
     
@@ -216,6 +209,52 @@ impl FileServerConnection {
         });
     }
     
+    fn create_snapshot(&self, root:String, message:String) -> Result<CreateSnapshotResponse, CreateSnapshotError> {
+        let root_path = self.shared.read().unwrap().roots.find_root(&root).map_err(|error|{
+            CreateSnapshotError{error:format!("{:?}",error), root:root.clone()}
+        })?;
+        
+        match shell_env_cap(&[], &root_path, "git", &["commit", "-a",&format!("-m {message}")]) {
+            Ok(_) => {
+                match shell_env_cap(&[], &root_path, "git", &["log", "--pretty=format:%H","--max-count=1"]) {
+                    Ok(stdout) => {
+                        // ok we have the last commit hash, return that
+                        Ok(CreateSnapshotResponse{
+                            root,
+                            hash: stdout.trim().to_string()
+                        })
+                    }
+                    // we expect it on stderr
+                    Err(e) => {
+                        Err(CreateSnapshotError{root, error:e})
+                    }
+                }
+            }
+            // we expect it on stderr
+            Err(e) => {
+                Err(CreateSnapshotError{root, error:e})
+            }
+        }
+    }
+    
+        
+    fn load_snapshot(&self, root:String, hash:String) -> Result<LoadSnapshotResponse, LoadSnapshotError> {
+        
+        let root_path = self.shared.read().unwrap().roots.find_root(&root).map_err(|error|{
+            LoadSnapshotError{error:format!("{:?}",error), root:root.clone()}
+        })?;
+                
+        match shell_env_cap(&[], &root_path, "git", &["checkout", &hash]) {
+            Ok(_) => {
+                Ok(LoadSnapshotResponse{root, hash})
+            }
+            // we expect it on stderr
+            Err(e) => {
+                Err(LoadSnapshotError{root, error:e})
+            }
+        }
+    }
+
     // Handles a `LoadFileTree` request.
     fn load_file_tree(&self, with_data: bool) -> Result<FileTreeData, FileError> {
         // A recursive helper function for traversing the entries of a directory and creating the
@@ -251,6 +290,7 @@ impl FileServerConnection {
                         // If this entry is a subdirectory, recursively create `DirectoryEntry`'s
                         // for its entries as well.
                         FileNodeData::Directory {
+                            git_log: None,
                             entries: get_directory_entries(&entry_path, with_data) ?,
                         }
                     } else if entry_path.is_file() {
@@ -292,14 +332,41 @@ impl FileServerConnection {
         let roots = self.shared.read().unwrap().roots.clone();
         let mut entries = Vec::new();
         for (root_name, root_path) in roots.roots{
+            let mut commits = Vec::new();
+            match shell_env_cap(&[], &root_path, "git", &["log", "--pretty=format:%H %s"]) {
+                Ok(stdout) => {
+                    for line in stdout.split("\n"){
+                        let mut parts = line.splitn(2," ");
+                        if let Some(hash) = parts.next(){
+                            if let Some(message) = parts.next(){
+                                if hash.len() == 40{
+                                    // we have something
+                                    commits.push(GitCommit{
+                                        hash: hash.to_string(),
+                                        message: message.to_string()
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+                // we expect it on stderr
+                Err(_e) => {}
+            }
+            
             entries.push(DirectoryEntry{
-                name: root_name,
+                name: root_name.clone(),
                 node: FileNodeData::Directory {
+                    git_log: Some(GitLog{
+                        root: root_name,
+                        commits
+                    }),
                     entries: get_directory_entries(&root_path, with_data) ?,
                 }
             });
         }
         Ok(FileTreeData {root_path: "".into(), root:FileNodeData::Directory {
+            git_log: None,
             entries,
         }})
     }
@@ -341,6 +408,38 @@ impl FileServerConnection {
                 thread::sleep(Duration::from_millis(100));
             }
         });
+    }
+    
+    fn load_snapshot_image(&self, root: String, hash:String) -> Result<LoadSnapshotImageResponse, LoadSnapshotImageError> {
+        // alright letrs find the root
+        let root_path = self.shared.read().unwrap().roots.find_root(&root).map_err(|error|{
+            LoadSnapshotImageError{error, root:root.clone(), hash:hash.clone()}
+        })?;
+        let path = root_path.join("snapshots").join(&hash).with_extension("jpg");
+        let bytes = fs::read(&path).map_err(
+            | error | LoadSnapshotImageError{error:FileError::Unknown(error.to_string()), root:root.clone(), hash:hash.clone()}
+        ) ?;
+        
+        return Ok(LoadSnapshotImageResponse{
+            root,
+            hash,
+            data: bytes,
+        })
+    }
+    
+    fn save_snapshot_image(&self, root: String, hash:String, data:Vec<u8>) -> Result<SaveSnapshotImageResponse, FileError> {
+        // alright letrs find the root
+        let root_path = self.shared.read().unwrap().roots.find_root(&root)?;
+        let path = root_path.join("snapshots").join(&hash).with_extension("jpg");
+                
+        fs::write(&path, data).map_err(
+            | error | FileError::Unknown(error.to_string())
+        ) ?;
+                
+        return Ok(SaveSnapshotImageResponse{
+            root,
+            hash,
+        })
     }
     
     // Handles an `OpenFile` request.
@@ -450,12 +549,35 @@ pub struct FileSystemRoots{
 }
 
 impl FileSystemRoots{
-    pub fn find_root(&self, root:&str)->Option<PathBuf>{
-        if let Some(p) = self.roots.iter().find(|v| v.0 == root){
-            Some(p.1.clone())
+    pub fn map_path(&self, possible_root:&str, what:&str)->String{
+
+        let what_path = Path::new(what);
+        if what_path.is_absolute(){
+            for (root_name, root_path) in &self.roots{
+                if let Ok(end) = what_path.strip_prefix(root_path){
+                    if let Ok(end) = end.to_path_buf().into_os_string().into_string(){
+                        return format!("{root_name}/{end}");
+                    }
+                }
+            }
+            return what.to_string()
         }
         else{
-            None
+            if possible_root.len() == 0{
+                what.to_string()
+            }
+            else{
+                format!("{possible_root}/{}",  what)
+            }
+        }
+    }
+    
+    pub fn find_root(&self, root:&str)->Result<PathBuf,FileError>{
+        if let Some(p) = self.roots.iter().find(|v| v.0 == root){
+            Ok(p.1.clone())
+        }
+        else{
+            Err(FileError::RootNotFound(root.to_string()))
         }
     }
     
