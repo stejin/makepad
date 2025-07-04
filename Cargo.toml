@@ -39,6 +39,7 @@ workspace.members = [
     #"examples/image_viewer",
     # === projects ===
     "projects/test_1",
+    "projects/test_2",
     "studio",
     # "makepad_wonderous",
     # "complex_layout",
